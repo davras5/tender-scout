@@ -1017,6 +1017,67 @@
       color: var(--color-text-primary);
     }
 
+    /* ========== Animations ========== */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(24px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* Hero entrance animations */
+    .hero-badge {
+      animation: fadeInUp var(--duration-entrance) var(--ease-out) both;
+      animation-delay: 100ms;
+    }
+
+    .hero-title {
+      animation: fadeInUp var(--duration-entrance) var(--ease-out) both;
+      animation-delay: 250ms;
+    }
+
+    .hero-subtitle {
+      animation: fadeInUp var(--duration-entrance) var(--ease-out) both;
+      animation-delay: 400ms;
+    }
+
+    .hero-actions {
+      animation: fadeInUp var(--duration-entrance) var(--ease-out) both;
+      animation-delay: 550ms;
+    }
+
+    .hero-note {
+      animation: fadeIn var(--duration-entrance) var(--ease-out) both;
+      animation-delay: 750ms;
+    }
+
+    /* Scroll-triggered animations */
+    .animate-on-scroll {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity var(--duration-entrance) var(--ease-out),
+                  transform var(--duration-entrance) var(--ease-out);
+    }
+
+    .animate-on-scroll.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Staggered children animation */
+    .stagger-children .animate-on-scroll:nth-child(1) { transition-delay: 0ms; }
+    .stagger-children .animate-on-scroll:nth-child(2) { transition-delay: 200ms; }
+    .stagger-children .animate-on-scroll:nth-child(3) { transition-delay: 400ms; }
+
     /* ========== Utilities ========== */
     .sr-only {
       position: absolute;
@@ -1161,19 +1222,19 @@
       <div class="container">
         <div class="stats-grid">
           <div class="stat">
-            <div class="stat-value">CHF 40 Mrd.</div>
+            <div class="stat-value" data-count="40" data-prefix="CHF " data-suffix=" Mrd.">CHF 0 Mrd.</div>
             <div class="stat-label">Schweizer Beschaffungsmarkt</div>
           </div>
           <div class="stat">
-            <div class="stat-value">50'000+</div>
+            <div class="stat-value" data-count="50000" data-suffix="+" data-format="swiss">0+</div>
             <div class="stat-label">SIMAP-Anbieter</div>
           </div>
           <div class="stat">
-            <div class="stat-value">10+ Std.</div>
+            <div class="stat-value" data-count="10" data-suffix="+ Std.">0+ Std.</div>
             <div class="stat-label">Zeitersparnis pro Woche</div>
           </div>
           <div class="stat">
-            <div class="stat-value">4</div>
+            <div class="stat-value" data-count="4">0</div>
             <div class="stat-label">Sprachen</div>
           </div>
         </div>
@@ -1242,20 +1303,20 @@
           </p>
         </div>
 
-        <div class="solution-grid">
-          <div class="solution-card">
+        <div class="solution-grid stagger-children">
+          <div class="solution-card animate-on-scroll">
             <div class="solution-number">1</div>
             <h3>Profil erstellen</h3>
             <p>Erzählen Sie uns von Ihrem Unternehmen: CPV-Codes, Regionen die Sie bedienen, Auftragsvolumen das Sie stemmen können. Dauert 5 Minuten.</p>
           </div>
 
-          <div class="solution-card">
+          <div class="solution-card animate-on-scroll">
             <div class="solution-number">2</div>
             <h3>Passende Ausschreibungen erhalten</h3>
             <p>Unsere Algorithmen durchsuchen täglich SIMAP, TED und EU-Portale. Sie werden nur über Möglichkeiten informiert, die zu Ihrem Profil passen.</p>
           </div>
 
-          <div class="solution-card">
+          <div class="solution-card animate-on-scroll">
             <div class="solution-number">3</div>
             <h3>Aufträge gewinnen</h3>
             <p>Matches prüfen, Fristen verfolgen und Angebote mit Zuversicht einreichen. Ihr erster Auftrag könnte nur eine Suche entfernt sein.</p>
@@ -1491,7 +1552,7 @@
     <!-- CTA -->
     <section class="cta">
       <div class="container">
-        <div class="cta-content">
+        <div class="cta-content animate-on-scroll">
           <h2>Bereit Ihren ersten öffentlichen Auftrag zu gewinnen?</h2>
           <p>
             Schliessen Sie sich tausenden Schweizer KMU an die über 10 Stunden pro Woche bei der Ausschreibungssuche sparen.
@@ -1639,6 +1700,84 @@
         card.classList.add('is-selected');
       });
     });
+
+    // Scroll-triggered animations
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    };
+
+    const animationObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+        }
+      });
+    }, observerOptions);
+
+    // Observe solution cards and CTA
+    document.querySelectorAll('.solution-card, .cta-content').forEach(el => {
+      animationObserver.observe(el);
+    });
+
+    // Stats counting animation
+    function formatNumber(num, format) {
+      if (format === 'swiss') {
+        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "'");
+      }
+      return num.toString();
+    }
+
+    function animateCount(element) {
+      const target = parseInt(element.dataset.count);
+      const prefix = element.dataset.prefix || '';
+      const suffix = element.dataset.suffix || '';
+      const format = element.dataset.format || '';
+      // Scale duration: small numbers finish quickly, large numbers take longer
+      const minDuration = 400;
+      const maxDuration = 1500;
+      const duration = Math.min(maxDuration, minDuration + Math.log10(target + 1) * 300);
+      const startTime = performance.now();
+
+      function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const easeOut = 1 - Math.pow(1 - progress, 3);
+        const current = Math.floor(easeOut * target);
+
+        element.textContent = prefix + formatNumber(current, format) + suffix;
+
+        if (progress < 1) {
+          requestAnimationFrame(update);
+        }
+      }
+
+      requestAnimationFrame(update);
+    }
+
+    const statsObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const statValues = entry.target.querySelectorAll('.stat-value[data-count]');
+          const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          statValues.forEach(el => {
+            if (prefersReducedMotion) {
+              // Show final values immediately
+              const target = parseInt(el.dataset.count);
+              const prefix = el.dataset.prefix || '';
+              const suffix = el.dataset.suffix || '';
+              const format = el.dataset.format || '';
+              el.textContent = prefix + formatNumber(target, format) + suffix;
+            } else {
+              animateCount(el);
+            }
+          });
+          statsObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.3 });
+
+    statsObserver.observe(document.querySelector('.stats-grid'));
 
     // Smooth scroll
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
