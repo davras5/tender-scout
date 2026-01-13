@@ -687,9 +687,10 @@
       box-shadow: var(--shadow-lg);
     }
 
-    .stagger-children .solution-card.is-visible {
+    /* Reset transition for hover after scroll animation completes */
+    .stagger-children .solution-card.is-visible:hover {
       transition: all var(--duration-normal) var(--ease-out);
-      transition-delay: 0ms !important;
+      transition-delay: 0ms;
     }
 
     .solution-number {
