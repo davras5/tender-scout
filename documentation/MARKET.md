@@ -216,7 +216,6 @@ Medium – specialized requirements benefit from intelligent matching. Consortiu
 | **IntelliProcure** | Research | CHF 200–800/yr | 2.1M doc search, 5.2TB, NLP analysis | Academic focus, not commercially scaled |
 | **Tender Service** | All | Subscription | AI TenderChat, 25+ countries, eligibility checks | Swiss depth limited, premium price |
 | **it-beschaffung.ch** | IT | Free | 100K+ IT records | Aggregation only, no transactions |
-| **smino** | Construction | SaaS | BIM integration, 15K users, VC-backed | Collaboration focus, not tender-centric |
 
 ### International Platforms (Active in CH)
 
@@ -293,7 +292,6 @@ Medium – specialized requirements benefit from intelligent matching. Consortiu
 | No below-threshold tracking | Medium | Nobody | Bulk of SME-relevant opportunities |
 | No win probability scoring | Medium | IntelliProcure (partial) | Research-focused only |
 | Poor French/Italian coverage | Medium | Nobody | DTAD German-only |
-| No BIM-to-procurement workflow | Medium | smino (partial) | 18% BIM adoption gap |
 | No ERP integration | Medium | hystrix (healthcare only) | Bexio, Abacus unconnected |
 | No AI document preparation | Medium | Nobody | Compliance automation missing |
 
@@ -387,7 +385,7 @@ Medium – specialized requirements benefit from intelligent matching. Consortiu
 - PwC Digital Procurement Survey 2024
 - BFH research projects
 - CRB (crb.ch)
-- Company websites: Olmero, Devisio, smino, Tender Service
+- Company websites: Olmero, Devisio, Tender Service
 
 ---
 
