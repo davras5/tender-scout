@@ -671,10 +671,12 @@
       box-shadow: var(--shadow-lg);
     }
 
-    /* Reset transition for hover after scroll animation completes */
+    /* Override scroll animation transform on hover */
     .stagger-children .solution-card.is-visible:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
       transition: all var(--duration-normal) var(--ease-out);
-      transition-delay: 0ms;
+      transition-delay: 0ms !important;
     }
 
     .solution-number {
