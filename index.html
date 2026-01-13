@@ -1,122 +1,71 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de-CH">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Intelligent tender matching for Swiss SMEs. Find public contracts from SIMAP, TED, and EU portals matched to your business profile.">
-  <title>Tender Scout – Public Procurement for SMEs</title>
+  <meta name="description" content="Intelligentes Ausschreibungs-Matching für Schweizer KMU. Finden Sie öffentliche Aufträge von SIMAP, TED und EU-Portalen, die zu Ihrem Unternehmensprofil passen.">
+  <title>Tender Scout – Öffentliche Ausschreibungen für KMU</title>
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <style>
     /* ========== Reset ========== */
-    *, *::before, *::after {
-      box-sizing: border-box;
-    }
-
-    * {
-      margin: 0;
-    }
-
-    html {
-      -webkit-text-size-adjust: 100%;
-      scroll-behavior: smooth;
-    }
-
-    body {
-      line-height: 1.6;
-      -webkit-font-smoothing: antialiased;
-    }
-
-    img, picture, video, canvas, svg {
-      display: block;
-      max-width: 100%;
-    }
-
-    input, button, textarea, select {
-      font: inherit;
-    }
-
-    p, h1, h2, h3, h4, h5, h6 {
-      overflow-wrap: break-word;
-    }
-
-    a {
-      color: inherit;
-      text-decoration: none;
-    }
-
-    button {
-      background: none;
-      border: none;
-      cursor: pointer;
-    }
-
-    ul, ol {
-      list-style: none;
-      padding: 0;
-    }
+    *, *::before, *::after { box-sizing: border-box; }
+    * { margin: 0; }
+    html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+    body { line-height: 1.6; -webkit-font-smoothing: antialiased; }
+    img, picture, video, canvas, svg { display: block; max-width: 100%; }
+    input, button, textarea, select { font: inherit; }
+    p, h1, h2, h3, h4, h5, h6 { overflow-wrap: break-word; }
+    a { color: inherit; text-decoration: none; }
+    button { background: none; border: none; cursor: pointer; }
+    ul, ol { list-style: none; padding: 0; }
 
     /* ========== Design Tokens ========== */
     :root {
-      /* Background layers */
+      /* Background */
       --color-bg-base: #ffffff;
       --color-bg-raised: #f8fafc;
       --color-bg-muted: #f1f5f9;
-      --color-bg-overlay: rgba(15, 23, 42, 0.5);
+      --color-bg-subtle: #fafbfc;
 
       /* Borders */
       --color-border: #e2e8f0;
       --color-border-strong: #cbd5e1;
+      --color-border-subtle: #f1f5f9;
 
       /* Text */
       --color-text-primary: #0f172a;
       --color-text-secondary: #475569;
       --color-text-muted: #64748b;
-      --color-text-disabled: #94a3b8;
       --color-text-inverse: #ffffff;
 
       /* Brand */
       --color-accent: #2563eb;
       --color-accent-hover: #1d4ed8;
-      --color-accent-active: #1e40af;
       --color-accent-subtle: #dbeafe;
+      --color-accent-glow: rgba(37, 99, 235, 0.15);
 
       /* Status */
-      --color-status-open: #16a34a;
-      --color-status-open-bg: #dcfce7;
-      --color-status-closing: #ea580c;
-      --color-status-closing-bg: #ffedd5;
-
-      /* Feedback */
       --color-success: #16a34a;
+      --color-success-bg: #dcfce7;
       --color-warning: #ea580c;
-      --color-error: #dc2626;
-      --color-info: #2563eb;
+      --color-warning-bg: #ffedd5;
 
       /* Typography */
       --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-
-      --text-xs: 0.6875rem;
-      --text-sm: 0.8125rem;
-      --text-base: 0.9375rem;
-      --text-md: 1rem;
+      --text-xs: 0.75rem;
+      --text-sm: 0.875rem;
+      --text-base: 1rem;
       --text-lg: 1.125rem;
-      --text-xl: 1.375rem;
-      --text-2xl: 1.75rem;
-      --text-3xl: 2.25rem;
-      --text-4xl: 3rem;
-
-      --leading-tight: 1.25;
-      --leading-snug: 1.4;
-      --leading-normal: 1.6;
-
-      --weight-normal: 400;
-      --weight-medium: 500;
-      --weight-semibold: 600;
+      --text-xl: 1.25rem;
+      --text-2xl: 1.5rem;
+      --text-3xl: 2rem;
+      --text-4xl: 2.5rem;
+      --text-5xl: 3.5rem;
 
       /* Spacing */
       --space-1: 0.25rem;
@@ -130,77 +79,66 @@
       --space-12: 3rem;
       --space-16: 4rem;
       --space-20: 5rem;
+      --space-24: 6rem;
 
       /* Layout */
-      --container-max: 1280px;
-      --header-height: 64px;
+      --container-max: 1200px;
+      --header-height: 72px;
 
       /* Borders */
-      --radius-sm: 4px;
-      --radius-md: 6px;
-      --radius-lg: 8px;
-      --radius-xl: 12px;
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-xl: 16px;
+      --radius-2xl: 24px;
       --radius-full: 9999px;
 
-      --border-width: 1px;
-
       /* Shadows */
-      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07);
-      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+      --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.08);
+      --shadow-xl: 0 24px 48px rgba(0, 0, 0, 0.12);
+      --shadow-glow: 0 0 40px var(--color-accent-glow);
 
       /* Transitions */
-      --duration-fast: 100ms;
-      --duration-normal: 200ms;
-      --duration-slow: 300ms;
-
-      --ease-out: cubic-bezier(0, 0, 0.2, 1);
-      --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+      --duration-fast: 150ms;
+      --duration-normal: 250ms;
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
     /* ========== Dark Mode ========== */
     [data-theme="dark"] {
-      --color-bg-base: #0f172a;
-      --color-bg-raised: #1e293b;
-      --color-bg-muted: #334155;
-      --color-bg-overlay: rgba(0, 0, 0, 0.6);
-
-      --color-border: #334155;
-      --color-border-strong: #475569;
-
-      --color-text-primary: #f8fafc;
-      --color-text-secondary: #cbd5e1;
-      --color-text-muted: #94a3b8;
-      --color-text-disabled: #64748b;
-
+      --color-bg-base: #0a0f1a;
+      --color-bg-raised: #131b2e;
+      --color-bg-muted: #1e293b;
+      --color-bg-subtle: #0f172a;
+      --color-border: #1e293b;
+      --color-border-strong: #334155;
+      --color-border-subtle: #1e293b;
+      --color-text-primary: #f1f5f9;
+      --color-text-secondary: #94a3b8;
+      --color-text-muted: #64748b;
       --color-accent: #3b82f6;
       --color-accent-hover: #60a5fa;
       --color-accent-subtle: #1e3a5f;
+      --color-accent-glow: rgba(59, 130, 246, 0.2);
+      --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+      --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.4);
     }
 
-    /* ========== Base Typography ========== */
+    /* ========== Base ========== */
     body {
       font-family: var(--font-sans);
       font-size: var(--text-base);
-      font-weight: var(--weight-normal);
       color: var(--color-text-primary);
       background-color: var(--color-bg-base);
     }
 
     h1, h2, h3, h4 {
-      font-weight: var(--weight-semibold);
-      line-height: var(--leading-tight);
-      color: var(--color-text-primary);
-    }
-
-    h1 { font-size: var(--text-2xl); }
-    h2 { font-size: var(--text-xl); }
-    h3 { font-size: var(--text-lg); }
-    h4 { font-size: var(--text-md); }
-
-    @media (min-width: 768px) {
-      h1 { font-size: var(--text-3xl); }
-      h2 { font-size: var(--text-2xl); }
+      font-weight: 600;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
     }
 
     /* ========== Layout ========== */
@@ -208,35 +146,23 @@
       width: 100%;
       max-width: var(--container-max);
       margin: 0 auto;
-      padding: 0 var(--space-4);
+      padding: 0 var(--space-5);
     }
 
     @media (min-width: 768px) {
-      .container {
-        padding: 0 var(--space-6);
-      }
-    }
-
-    @media (min-width: 1024px) {
-      .container {
-        padding: 0 var(--space-10);
-      }
+      .container { padding: 0 var(--space-8); }
     }
 
     section {
-      padding: var(--space-12) 0;
+      padding: var(--space-16) 0;
     }
 
     @media (min-width: 768px) {
-      section {
-        padding: var(--space-16) 0;
-      }
+      section { padding: var(--space-20) 0; }
     }
 
     @media (min-width: 1024px) {
-      section {
-        padding: var(--space-20) 0;
-      }
+      section { padding: var(--space-24) 0; }
     }
 
     /* ========== Header ========== */
@@ -246,9 +172,16 @@
       left: 0;
       right: 0;
       height: var(--header-height);
-      background: var(--color-bg-base);
-      border-bottom: var(--border-width) solid var(--color-border);
-      z-index: 200;
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--color-border-subtle);
+      z-index: 100;
+      transition: background var(--duration-normal) var(--ease-out);
+    }
+
+    [data-theme="dark"] .header {
+      background: rgba(10, 15, 26, 0.8);
     }
 
     .header-inner {
@@ -261,53 +194,55 @@
     .logo {
       display: flex;
       align-items: center;
-      gap: var(--space-2);
+      gap: var(--space-3);
       font-size: var(--text-lg);
-      font-weight: var(--weight-semibold);
-      color: var(--color-text-primary);
+      font-weight: 700;
+      letter-spacing: -0.02em;
     }
 
     .logo-icon {
-      width: 32px;
-      height: 32px;
-      background: var(--color-accent);
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--color-accent) 0%, #1d4ed8 100%);
       border-radius: var(--radius-md);
       display: flex;
       align-items: center;
       justify-content: center;
       color: white;
+      box-shadow: var(--shadow-md), 0 0 20px var(--color-accent-glow);
     }
 
     .nav-desktop {
       display: none;
       align-items: center;
-      gap: var(--space-6);
+      gap: var(--space-1);
     }
 
     @media (min-width: 768px) {
-      .nav-desktop {
-        display: flex;
-      }
+      .nav-desktop { display: flex; }
     }
 
     .nav-link {
+      padding: var(--space-2) var(--space-4);
       font-size: var(--text-sm);
-      font-weight: var(--weight-medium);
+      font-weight: 500;
       color: var(--color-text-secondary);
-      transition: color var(--duration-fast) var(--ease-out);
+      border-radius: var(--radius-md);
+      transition: all var(--duration-fast) var(--ease-out);
     }
 
     .nav-link:hover {
       color: var(--color-text-primary);
+      background: var(--color-bg-muted);
     }
 
     .header-actions {
       display: flex;
       align-items: center;
-      gap: var(--space-3);
+      gap: var(--space-2);
     }
 
-    .btn-theme {
+    .btn-icon {
       width: 40px;
       height: 40px;
       display: flex;
@@ -315,26 +250,16 @@
       justify-content: center;
       border-radius: var(--radius-md);
       color: var(--color-text-secondary);
-      transition: background-color var(--duration-fast) var(--ease-out);
+      transition: all var(--duration-fast) var(--ease-out);
     }
 
-    .btn-theme:hover {
-      background-color: var(--color-bg-muted);
-    }
-
-    .btn-mobile-menu {
-      width: 40px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .btn-icon:hover {
       color: var(--color-text-primary);
+      background: var(--color-bg-muted);
     }
 
     @media (min-width: 768px) {
-      .btn-mobile-menu {
-        display: none;
-      }
+      .btn-mobile-menu { display: none; }
     }
 
     /* ========== Mobile Menu ========== */
@@ -348,24 +273,20 @@
       padding: var(--space-6);
       display: none;
       flex-direction: column;
-      gap: var(--space-4);
-      z-index: 199;
+      gap: var(--space-2);
+      z-index: 99;
     }
 
-    .mobile-menu.is-open {
-      display: flex;
-    }
+    .mobile-menu.is-open { display: flex; }
 
     .mobile-menu .nav-link {
       font-size: var(--text-lg);
-      padding: var(--space-3) 0;
-      border-bottom: var(--border-width) solid var(--color-border);
+      padding: var(--space-4);
+      border-radius: var(--radius-lg);
     }
 
     @media (min-width: 768px) {
-      .mobile-menu {
-        display: none !important;
-      }
+      .mobile-menu { display: none !important; }
     }
 
     /* ========== Buttons ========== */
@@ -374,17 +295,12 @@
       align-items: center;
       justify-content: center;
       gap: var(--space-2);
-      height: 44px;
-      padding: 0 var(--space-5);
+      height: 48px;
+      padding: 0 var(--space-6);
       font-size: var(--text-sm);
-      font-weight: var(--weight-medium);
-      line-height: 1;
-      white-space: nowrap;
-      border-radius: var(--radius-md);
-      transition:
-        background-color var(--duration-fast) var(--ease-out),
-        border-color var(--duration-fast) var(--ease-out),
-        transform var(--duration-fast) var(--ease-out);
+      font-weight: 600;
+      border-radius: var(--radius-lg);
+      transition: all var(--duration-fast) var(--ease-out);
     }
 
     .btn:focus-visible {
@@ -392,44 +308,59 @@
       outline-offset: 2px;
     }
 
-    .btn:active {
-      transform: scale(0.98);
-    }
-
     .btn-primary {
-      background-color: var(--color-accent);
-      color: var(--color-text-inverse);
+      background: linear-gradient(135deg, var(--color-accent) 0%, #1d4ed8 100%);
+      color: white;
+      box-shadow: var(--shadow-md), 0 0 20px var(--color-accent-glow);
     }
 
     .btn-primary:hover {
-      background-color: var(--color-accent-hover);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg), 0 0 30px var(--color-accent-glow);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
     }
 
     .btn-secondary {
-      background-color: var(--color-bg-muted);
+      background: var(--color-bg-base);
       color: var(--color-text-primary);
-      border: var(--border-width) solid var(--color-border);
+      border: 1px solid var(--color-border);
+      box-shadow: var(--shadow-sm);
     }
 
     .btn-secondary:hover {
-      background-color: var(--color-border);
+      background: var(--color-bg-muted);
+      border-color: var(--color-border-strong);
     }
 
     .btn-lg {
-      height: 52px;
+      height: 56px;
       padding: 0 var(--space-8);
       font-size: var(--text-base);
+      border-radius: var(--radius-xl);
+    }
+
+    .btn-sm {
+      height: 40px;
+      padding: 0 var(--space-4);
     }
 
     /* ========== Hero ========== */
     .hero {
       padding-top: calc(var(--header-height) + var(--space-12));
-      background: linear-gradient(180deg, var(--color-bg-muted) 0%, var(--color-bg-base) 100%);
+      padding-bottom: var(--space-16);
+      background:
+        radial-gradient(ellipse 80% 50% at 50% -20%, var(--color-accent-glow) 0%, transparent 50%),
+        var(--color-bg-base);
+      overflow: hidden;
     }
 
     @media (min-width: 768px) {
       .hero {
-        padding-top: calc(var(--header-height) + var(--space-16));
+        padding-top: calc(var(--header-height) + var(--space-20));
+        padding-bottom: var(--space-24);
       }
     }
 
@@ -447,36 +378,55 @@
       background: var(--color-accent-subtle);
       color: var(--color-accent);
       font-size: var(--text-sm);
-      font-weight: var(--weight-medium);
+      font-weight: 600;
       border-radius: var(--radius-full);
       margin-bottom: var(--space-6);
+      border: 1px solid transparent;
+      transition: all var(--duration-normal) var(--ease-out);
+    }
+
+    .hero-badge:hover {
+      border-color: var(--color-accent);
+      box-shadow: var(--shadow-glow);
     }
 
     .hero-title {
       font-size: var(--text-3xl);
-      line-height: 1.15;
-      margin-bottom: var(--space-5);
+      font-weight: 700;
+      line-height: 1.1;
+      margin-bottom: var(--space-6);
+      letter-spacing: -0.03em;
     }
 
     @media (min-width: 768px) {
-      .hero-title {
-        font-size: var(--text-4xl);
-      }
+      .hero-title { font-size: var(--text-5xl); }
+    }
+
+    .hero-title .accent {
+      background: linear-gradient(135deg, var(--color-accent) 0%, #7c3aed 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
 
     .hero-subtitle {
       font-size: var(--text-lg);
       color: var(--color-text-secondary);
-      margin-bottom: var(--space-8);
-      max-width: 600px;
+      margin-bottom: var(--space-10);
+      max-width: 560px;
       margin-left: auto;
       margin-right: auto;
+      line-height: 1.7;
+    }
+
+    @media (min-width: 768px) {
+      .hero-subtitle { font-size: var(--text-xl); }
     }
 
     .hero-actions {
       display: flex;
       flex-direction: column;
-      gap: var(--space-3);
+      gap: var(--space-4);
       align-items: center;
     }
 
@@ -487,19 +437,35 @@
       }
     }
 
-    .hero-stats {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: var(--space-4);
-      margin-top: var(--space-12);
-      padding-top: var(--space-8);
-      border-top: var(--border-width) solid var(--color-border);
+    .hero-note {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      margin-top: var(--space-4);
+      font-size: var(--text-sm);
+      color: var(--color-text-muted);
     }
 
-    @media (min-width: 640px) {
-      .hero-stats {
-        grid-template-columns: repeat(4, 1fr);
-      }
+    .hero-note svg {
+      color: var(--color-success);
+    }
+
+    /* ========== Stats ========== */
+    .stats {
+      padding: var(--space-12) 0;
+      background: var(--color-bg-subtle);
+      border-top: 1px solid var(--color-border-subtle);
+      border-bottom: 1px solid var(--color-border-subtle);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--space-6);
+    }
+
+    @media (min-width: 768px) {
+      .stats-grid { grid-template-columns: repeat(4, 1fr); }
     }
 
     .stat {
@@ -508,9 +474,13 @@
 
     .stat-value {
       font-size: var(--text-2xl);
-      font-weight: var(--weight-semibold);
-      color: var(--color-accent);
-      font-variant-numeric: tabular-nums;
+      font-weight: 700;
+      color: var(--color-text-primary);
+      letter-spacing: -0.02em;
+    }
+
+    @media (min-width: 768px) {
+      .stat-value { font-size: var(--text-3xl); }
     }
 
     .stat-label {
@@ -519,32 +489,41 @@
       margin-top: var(--space-1);
     }
 
-    /* ========== Problem Section ========== */
-    .problem {
-      background: var(--color-bg-base);
-    }
-
+    /* ========== Section Styles ========== */
     .section-header {
       text-align: center;
-      max-width: 600px;
-      margin: 0 auto var(--space-10);
+      max-width: 640px;
+      margin: 0 auto var(--space-12);
     }
 
     .section-label {
+      display: inline-block;
       font-size: var(--text-sm);
-      font-weight: var(--weight-medium);
+      font-weight: 600;
       color: var(--color-accent);
+      margin-bottom: var(--space-4);
       text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: var(--space-3);
+      letter-spacing: 0.1em;
     }
 
     .section-title {
+      font-size: var(--text-2xl);
       margin-bottom: var(--space-4);
     }
 
+    @media (min-width: 768px) {
+      .section-title { font-size: var(--text-3xl); }
+    }
+
     .section-desc {
+      font-size: var(--text-lg);
       color: var(--color-text-secondary);
+      line-height: 1.7;
+    }
+
+    /* ========== Problem Section ========== */
+    .problem {
+      background: var(--color-bg-base);
     }
 
     .problem-grid {
@@ -554,84 +533,103 @@
     }
 
     @media (min-width: 768px) {
-      .problem-grid {
-        grid-template-columns: repeat(3, 1fr);
-      }
+      .problem-grid { grid-template-columns: repeat(3, 1fr); }
     }
 
     .problem-card {
-      padding: var(--space-6);
+      padding: var(--space-8);
       background: var(--color-bg-raised);
-      border: var(--border-width) solid var(--color-border);
-      border-radius: var(--radius-lg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-xl);
+      transition: all var(--duration-normal) var(--ease-out);
+    }
+
+    .problem-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
+      border-color: var(--color-border-strong);
     }
 
     .problem-icon {
-      width: 48px;
-      height: 48px;
-      background: var(--color-status-closing-bg);
-      color: var(--color-status-closing);
-      border-radius: var(--radius-md);
+      width: 56px;
+      height: 56px;
+      background: var(--color-warning-bg);
+      color: var(--color-warning);
+      border-radius: var(--radius-lg);
       display: flex;
       align-items: center;
       justify-content: center;
-      margin-bottom: var(--space-4);
+      margin-bottom: var(--space-5);
     }
 
     .problem-card h3 {
-      margin-bottom: var(--space-2);
+      font-size: var(--text-lg);
+      margin-bottom: var(--space-3);
     }
 
     .problem-card p {
-      font-size: var(--text-sm);
+      font-size: var(--text-base);
       color: var(--color-text-secondary);
+      line-height: 1.7;
     }
 
     /* ========== Solution Section ========== */
     .solution {
-      background: var(--color-bg-muted);
+      background: var(--color-bg-subtle);
     }
 
     .solution-grid {
       display: grid;
       grid-template-columns: 1fr;
-      gap: var(--space-6);
+      gap: var(--space-8);
+      position: relative;
     }
 
     @media (min-width: 768px) {
       .solution-grid {
         grid-template-columns: repeat(3, 1fr);
+        gap: var(--space-6);
       }
     }
 
     .solution-card {
-      padding: var(--space-6);
+      padding: var(--space-8);
       background: var(--color-bg-base);
-      border: var(--border-width) solid var(--color-border);
-      border-radius: var(--radius-lg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-xl);
       text-align: center;
+      position: relative;
+      transition: all var(--duration-normal) var(--ease-out);
+    }
+
+    .solution-card:hover {
+      border-color: var(--color-accent);
+      box-shadow: var(--shadow-lg), var(--shadow-glow);
     }
 
     .solution-number {
-      width: 40px;
-      height: 40px;
-      background: var(--color-accent);
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, var(--color-accent) 0%, #1d4ed8 100%);
       color: white;
       border-radius: var(--radius-full);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-weight: var(--weight-semibold);
-      margin: 0 auto var(--space-4);
+      font-size: var(--text-lg);
+      font-weight: 700;
+      margin: 0 auto var(--space-5);
+      box-shadow: var(--shadow-md);
     }
 
     .solution-card h3 {
-      margin-bottom: var(--space-2);
+      font-size: var(--text-xl);
+      margin-bottom: var(--space-3);
     }
 
     .solution-card p {
-      font-size: var(--text-sm);
       color: var(--color-text-secondary);
+      line-height: 1.7;
     }
 
     /* ========== Features Section ========== */
@@ -646,34 +644,32 @@
     }
 
     @media (min-width: 640px) {
-      .features-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
+      .features-grid { grid-template-columns: repeat(2, 1fr); }
     }
 
     @media (min-width: 1024px) {
-      .features-grid {
-        grid-template-columns: repeat(3, 1fr);
-      }
+      .features-grid { grid-template-columns: repeat(3, 1fr); }
     }
 
     .feature-card {
-      padding: var(--space-5);
-      border: var(--border-width) solid var(--color-border);
-      border-radius: var(--radius-lg);
-      transition: border-color var(--duration-fast) var(--ease-out);
+      padding: var(--space-6);
+      background: var(--color-bg-base);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-xl);
+      transition: all var(--duration-normal) var(--ease-out);
     }
 
     .feature-card:hover {
       border-color: var(--color-accent);
+      background: var(--color-bg-raised);
     }
 
     .feature-icon {
-      width: 40px;
-      height: 40px;
+      width: 48px;
+      height: 48px;
       background: var(--color-accent-subtle);
       color: var(--color-accent);
-      border-radius: var(--radius-md);
+      border-radius: var(--radius-lg);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -681,67 +677,71 @@
     }
 
     .feature-card h3 {
-      font-size: var(--text-base);
+      font-size: var(--text-lg);
       margin-bottom: var(--space-2);
     }
 
     .feature-card p {
-      font-size: var(--text-sm);
+      font-size: var(--text-base);
       color: var(--color-text-secondary);
+      line-height: 1.6;
     }
 
     /* ========== Market Section ========== */
     .market {
-      background: var(--color-bg-muted);
+      background: var(--color-bg-subtle);
     }
 
     .market-grid {
       display: grid;
       grid-template-columns: 1fr;
-      gap: var(--space-4);
+      gap: var(--space-5);
     }
 
     @media (min-width: 640px) {
-      .market-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
+      .market-grid { grid-template-columns: repeat(2, 1fr); }
     }
 
     @media (min-width: 1024px) {
-      .market-grid {
-        grid-template-columns: repeat(4, 1fr);
-      }
+      .market-grid { grid-template-columns: repeat(4, 1fr); }
     }
 
     .market-card {
-      padding: var(--space-5);
+      padding: var(--space-6);
       background: var(--color-bg-base);
-      border: var(--border-width) solid var(--color-border);
-      border-radius: var(--radius-lg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-xl);
+      transition: all var(--duration-normal) var(--ease-out);
+    }
+
+    .market-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
     }
 
     .market-badge {
       display: inline-block;
-      padding: var(--space-1) var(--space-2);
+      padding: var(--space-1) var(--space-3);
       font-size: var(--text-xs);
-      font-weight: var(--weight-medium);
+      font-weight: 600;
       text-transform: uppercase;
-      border-radius: var(--radius-sm);
-      margin-bottom: var(--space-3);
+      letter-spacing: 0.05em;
+      border-radius: var(--radius-full);
+      margin-bottom: var(--space-4);
     }
 
     .market-badge.high {
-      background: var(--color-status-open-bg);
-      color: var(--color-status-open);
+      background: var(--color-success-bg);
+      color: var(--color-success);
     }
 
     .market-badge.medium {
-      background: var(--color-status-closing-bg);
-      color: var(--color-status-closing);
+      background: var(--color-warning-bg);
+      color: var(--color-warning);
     }
 
     .market-card h3 {
-      font-size: var(--text-base);
+      font-size: var(--text-lg);
       margin-bottom: var(--space-2);
     }
 
@@ -759,89 +759,102 @@
     .pricing-grid {
       display: grid;
       grid-template-columns: 1fr;
-      gap: var(--space-6);
-      max-width: 900px;
+      gap: var(--space-8);
+      max-width: 880px;
       margin: 0 auto;
     }
 
     @media (min-width: 768px) {
-      .pricing-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
+      .pricing-grid { grid-template-columns: repeat(2, 1fr); }
     }
 
     .pricing-card {
-      padding: var(--space-6);
+      padding: var(--space-8);
       background: var(--color-bg-raised);
-      border: var(--border-width) solid var(--color-border);
-      border-radius: var(--radius-lg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-2xl);
+      transition: all var(--duration-normal) var(--ease-out);
+    }
+
+    .pricing-card:hover {
+      box-shadow: var(--shadow-lg);
     }
 
     .pricing-card.featured {
-      border-color: var(--color-accent);
+      border: 2px solid var(--color-accent);
+      background: var(--color-bg-base);
       position: relative;
+      box-shadow: var(--shadow-glow);
     }
 
     .pricing-card.featured::before {
-      content: "Most Popular";
+      content: "Beliebteste Wahl";
       position: absolute;
       top: 0;
       left: 50%;
       transform: translate(-50%, -50%);
-      padding: var(--space-1) var(--space-3);
-      background: var(--color-accent);
+      padding: var(--space-2) var(--space-4);
+      background: linear-gradient(135deg, var(--color-accent) 0%, #1d4ed8 100%);
       color: white;
       font-size: var(--text-xs);
-      font-weight: var(--weight-medium);
+      font-weight: 600;
       border-radius: var(--radius-full);
+      white-space: nowrap;
+    }
+
+    .pricing-header {
+      margin-bottom: var(--space-6);
+      padding-bottom: var(--space-6);
+      border-bottom: 1px solid var(--color-border);
     }
 
     .pricing-name {
-      font-size: var(--text-lg);
-      font-weight: var(--weight-semibold);
+      font-size: var(--text-xl);
+      font-weight: 700;
       margin-bottom: var(--space-2);
     }
 
     .pricing-desc {
-      font-size: var(--text-sm);
+      font-size: var(--text-base);
       color: var(--color-text-muted);
-      margin-bottom: var(--space-4);
     }
 
     .pricing-price {
       display: flex;
       align-items: baseline;
       gap: var(--space-1);
-      margin-bottom: var(--space-6);
+      margin-top: var(--space-4);
     }
 
     .pricing-amount {
-      font-size: var(--text-3xl);
-      font-weight: var(--weight-semibold);
+      font-size: var(--text-4xl);
+      font-weight: 700;
+      letter-spacing: -0.02em;
     }
 
     .pricing-period {
-      font-size: var(--text-sm);
+      font-size: var(--text-base);
       color: var(--color-text-muted);
     }
 
     .pricing-features {
       display: flex;
       flex-direction: column;
-      gap: var(--space-3);
-      margin-bottom: var(--space-6);
+      gap: var(--space-4);
+      margin-bottom: var(--space-8);
     }
 
     .pricing-feature {
       display: flex;
-      align-items: center;
-      gap: var(--space-2);
-      font-size: var(--text-sm);
+      align-items: flex-start;
+      gap: var(--space-3);
+      font-size: var(--text-base);
     }
 
     .pricing-feature svg {
-      color: var(--color-status-open);
+      color: var(--color-success);
       flex-shrink: 0;
+      margin-top: 2px;
     }
 
     .pricing-card .btn {
@@ -850,22 +863,38 @@
 
     /* ========== CTA Section ========== */
     .cta {
-      background: var(--color-accent);
+      background: linear-gradient(135deg, var(--color-accent) 0%, #1d4ed8 50%, #7c3aed 100%);
       color: white;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
     }
 
     .cta-content {
+      position: relative;
       text-align: center;
       max-width: 600px;
       margin: 0 auto;
     }
 
     .cta h2 {
+      font-size: var(--text-2xl);
       color: white;
       margin-bottom: var(--space-4);
     }
 
+    @media (min-width: 768px) {
+      .cta h2 { font-size: var(--text-3xl); }
+    }
+
     .cta p {
+      font-size: var(--text-lg);
       opacity: 0.9;
       margin-bottom: var(--space-8);
     }
@@ -873,33 +902,33 @@
     .cta .btn {
       background: white;
       color: var(--color-accent);
+      box-shadow: var(--shadow-lg);
     }
 
     .cta .btn:hover {
-      background: var(--color-bg-muted);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-xl);
     }
 
     /* ========== Footer ========== */
     .footer {
       background: var(--color-bg-raised);
-      border-top: var(--border-width) solid var(--color-border);
-      padding: var(--space-10) 0;
+      border-top: 1px solid var(--color-border);
+      padding: var(--space-12) 0 var(--space-8);
     }
 
     .footer-grid {
       display: grid;
       grid-template-columns: 1fr;
-      gap: var(--space-8);
+      gap: var(--space-10);
     }
 
     @media (min-width: 640px) {
-      .footer-grid {
-        grid-template-columns: 2fr 1fr 1fr;
-      }
+      .footer-grid { grid-template-columns: 2fr 1fr 1fr; }
     }
 
     .footer-brand {
-      max-width: 300px;
+      max-width: 320px;
     }
 
     .footer-brand .logo {
@@ -907,24 +936,26 @@
     }
 
     .footer-brand p {
-      font-size: var(--text-sm);
       color: var(--color-text-muted);
+      line-height: 1.7;
     }
 
     .footer-section h4 {
       font-size: var(--text-sm);
-      font-weight: var(--weight-semibold);
+      font-weight: 600;
       margin-bottom: var(--space-4);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--color-text-muted);
     }
 
     .footer-links {
       display: flex;
       flex-direction: column;
-      gap: var(--space-2);
+      gap: var(--space-3);
     }
 
     .footer-links a {
-      font-size: var(--text-sm);
       color: var(--color-text-secondary);
       transition: color var(--duration-fast) var(--ease-out);
     }
@@ -934,21 +965,19 @@
     }
 
     .footer-bottom {
-      margin-top: var(--space-8);
+      margin-top: var(--space-10);
       padding-top: var(--space-6);
-      border-top: var(--border-width) solid var(--color-border);
+      border-top: 1px solid var(--color-border);
       display: flex;
       flex-direction: column;
       gap: var(--space-4);
       align-items: center;
-      text-align: center;
     }
 
     @media (min-width: 640px) {
       .footer-bottom {
         flex-direction: row;
         justify-content: space-between;
-        text-align: left;
       }
     }
 
@@ -959,7 +988,7 @@
 
     .footer-legal {
       display: flex;
-      gap: var(--space-4);
+      gap: var(--space-6);
     }
 
     .footer-legal a {
@@ -988,7 +1017,6 @@
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
         animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
       }
     }
@@ -1003,41 +1031,34 @@
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
             <polyline points="14,2 14,8 20,8"/>
-            <path d="M12 18v-6"/>
-            <path d="M9 15l3 3 3-3"/>
+            <path d="m9 15 3 3 3-3"/>
+            <path d="M12 12v6"/>
           </svg>
         </span>
         Tender Scout
       </a>
 
       <nav class="nav-desktop">
-        <a href="#problem" class="nav-link">The Problem</a>
-        <a href="#solution" class="nav-link">Solution</a>
-        <a href="#features" class="nav-link">Features</a>
-        <a href="#pricing" class="nav-link">Pricing</a>
+        <a href="#problem" class="nav-link">Das Problem</a>
+        <a href="#solution" class="nav-link">Lösung</a>
+        <a href="#features" class="nav-link">Funktionen</a>
+        <a href="#pricing" class="nav-link">Preise</a>
       </nav>
 
       <div class="header-actions">
-        <button class="btn-theme" id="theme-toggle" aria-label="Toggle dark mode">
+        <button class="btn-icon" id="theme-toggle" aria-label="Farbschema wechseln">
           <svg class="icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="4"/>
-            <path d="M12 2v2"/>
-            <path d="M12 20v2"/>
-            <path d="m4.93 4.93 1.41 1.41"/>
-            <path d="m17.66 17.66 1.41 1.41"/>
-            <path d="M2 12h2"/>
-            <path d="M20 12h2"/>
-            <path d="m6.34 17.66-1.41 1.41"/>
-            <path d="m19.07 4.93-1.41 1.41"/>
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
           </svg>
           <svg class="icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
             <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
           </svg>
         </button>
-        <button class="btn btn-primary" style="display: none;">
-          Get Started
-        </button>
-        <button class="btn-mobile-menu" id="mobile-menu-toggle" aria-label="Toggle menu">
+        <a href="#pricing" class="btn btn-primary btn-sm" style="display: none;">
+          Jetzt starten
+        </a>
+        <button class="btn-icon btn-mobile-menu" id="mobile-menu-toggle" aria-label="Menü öffnen">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="3" y1="6" x2="21" y2="6"/>
             <line x1="3" y1="12" x2="21" y2="12"/>
@@ -1050,10 +1071,10 @@
 
   <!-- Mobile Menu -->
   <nav class="mobile-menu" id="mobile-menu">
-    <a href="#problem" class="nav-link">The Problem</a>
-    <a href="#solution" class="nav-link">Solution</a>
-    <a href="#features" class="nav-link">Features</a>
-    <a href="#pricing" class="nav-link">Pricing</a>
+    <a href="#problem" class="nav-link">Das Problem</a>
+    <a href="#solution" class="nav-link">Lösung</a>
+    <a href="#features" class="nav-link">Funktionen</a>
+    <a href="#pricing" class="nav-link">Preise</a>
   </nav>
 
   <main>
@@ -1065,35 +1086,53 @@
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
             </svg>
-            Intelligent Tender Matching
+            Intelligentes Ausschreibungs-Matching
           </span>
-          <h1 class="hero-title">Win public contracts.<br>Without the busywork.</h1>
+          <h1 class="hero-title">
+            Öffentliche Aufträge gewinnen.<br>
+            <span class="accent">Ohne den Aufwand.</span>
+          </h1>
           <p class="hero-subtitle">
-            We aggregate tenders from SIMAP, TED, and EU portals and match them to your business profile.
-            Save 10+ hours per week on tender discovery.
+            Wir aggregieren Ausschreibungen von SIMAP, TED und EU-Portalen und matchen sie mit Ihrem Firmenprofil. Sparen Sie über 10 Stunden pro Woche.
           </p>
           <div class="hero-actions">
-            <a href="#pricing" class="btn btn-primary btn-lg">Start Free Trial</a>
-            <a href="#solution" class="btn btn-secondary btn-lg">See How It Works</a>
+            <a href="#pricing" class="btn btn-primary btn-lg">
+              Kostenlos starten
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
+            </a>
+            <a href="#solution" class="btn btn-secondary btn-lg">So funktioniert's</a>
           </div>
+          <p class="hero-note">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20,6 9,17 4,12"/>
+            </svg>
+            Keine Kreditkarte erforderlich
+          </p>
         </div>
+      </div>
+    </section>
 
-        <div class="hero-stats">
+    <!-- Stats -->
+    <section class="stats">
+      <div class="container">
+        <div class="stats-grid">
           <div class="stat">
-            <div class="stat-value">CHF 40B</div>
-            <div class="stat-label">Swiss procurement market</div>
+            <div class="stat-value">CHF 40 Mrd.</div>
+            <div class="stat-label">Schweizer Beschaffungsmarkt</div>
           </div>
           <div class="stat">
-            <div class="stat-value">50,000+</div>
-            <div class="stat-label">SIMAP vendors</div>
+            <div class="stat-value">50'000+</div>
+            <div class="stat-label">SIMAP-Anbieter</div>
           </div>
           <div class="stat">
-            <div class="stat-value">10+ hrs</div>
-            <div class="stat-label">Saved per week</div>
+            <div class="stat-value">10+ Std.</div>
+            <div class="stat-label">Zeitersparnis pro Woche</div>
           </div>
           <div class="stat">
             <div class="stat-value">3</div>
-            <div class="stat-label">Languages supported</div>
+            <div class="stat-label">Landessprachen</div>
           </div>
         </div>
       </div>
@@ -1103,11 +1142,10 @@
     <section class="problem" id="problem">
       <div class="container">
         <div class="section-header">
-          <div class="section-label">The Problem</div>
-          <h2 class="section-title">Public tenders are broken for SMEs</h2>
+          <span class="section-label">Das Problem</span>
+          <h2 class="section-title">Öffentliche Ausschreibungen sind nicht KMU-freundlich</h2>
           <p class="section-desc">
-            SMEs miss out on CHF billions in public contracts every year. Not because they can't deliver,
-            but because finding opportunities is a full-time job.
+            KMU verpassen jährlich Aufträge in Milliardenhöhe. Nicht weil sie nicht liefern können, sondern weil die Suche ein Vollzeitjob ist.
           </p>
         </div>
 
@@ -1120,8 +1158,8 @@
                 <line x1="12" y1="17" x2="12" y2="21"/>
               </svg>
             </div>
-            <h3>Fragmented discovery</h3>
-            <p>SIMAP, TED, cantonal portals each with different interfaces. Finding relevant tenders means checking dozens of sites daily.</p>
+            <h3>Fragmentierte Suche</h3>
+            <p>SIMAP, TED, kantonale Portale alle mit unterschiedlichen Oberflächen. Relevante Ausschreibungen zu finden bedeutet täglich dutzende Seiten zu durchsuchen.</p>
           </div>
 
           <div class="problem-card">
@@ -1131,8 +1169,8 @@
                 <polyline points="12,6 12,12 16,14"/>
               </svg>
             </div>
-            <h3>Manual monitoring</h3>
-            <p>No intelligent alerts. No matching. Just endless scrolling through hundreds of irrelevant postings hoping to spot the right one.</p>
+            <h3>Manuelles Monitoring</h3>
+            <p>Keine intelligenten Benachrichtigungen. Kein Matching. Nur endloses Scrollen durch hunderte irrelevanter Einträge in der Hoffnung, den richtigen zu finden.</p>
           </div>
 
           <div class="problem-card">
@@ -1144,8 +1182,8 @@
                 <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
               </svg>
             </div>
-            <h3>Incumbents win</h3>
-            <p>Large firms have dedicated procurement teams. SMEs don't. The same contractors keep winning while new entrants never see opportunities.</p>
+            <h3>Grosse gewinnen</h3>
+            <p>Grosse Firmen haben eigene Beschaffungsteams. KMU nicht. Dieselben Auftragnehmer gewinnen immer wieder während Neueinsteigende die Chancen nie sehen.</p>
           </div>
         </div>
       </div>
@@ -1155,31 +1193,30 @@
     <section class="solution" id="solution">
       <div class="container">
         <div class="section-header">
-          <div class="section-label">Our Solution</div>
-          <h2 class="section-title">Simple as 1-2-3</h2>
+          <span class="section-label">Unsere Lösung</span>
+          <h2 class="section-title">Einfach wie 1-2-3</h2>
           <p class="section-desc">
-            Create your profile, get matched tenders, win contracts.
-            We handle the discovery so you can focus on bidding.
+            Profil erstellen, passende Ausschreibungen erhalten, Aufträge gewinnen. Wir übernehmen die Suche Sie konzentrieren sich aufs Angebot.
           </p>
         </div>
 
         <div class="solution-grid">
           <div class="solution-card">
             <div class="solution-number">1</div>
-            <h3>Create your profile</h3>
-            <p>Tell us about your business: CPV codes, regions you serve, contract sizes you can handle. Takes 5 minutes.</p>
+            <h3>Profil erstellen</h3>
+            <p>Erzählen Sie uns von Ihrem Unternehmen: CPV-Codes, Regionen die Sie bedienen, Auftragsvolumen das Sie stemmen können. Dauert 5 Minuten.</p>
           </div>
 
           <div class="solution-card">
             <div class="solution-number">2</div>
-            <h3>Get matched tenders</h3>
-            <p>Our algorithms scan SIMAP, TED, and EU portals daily. You get notified only about opportunities that fit your profile.</p>
+            <h3>Passende Ausschreibungen erhalten</h3>
+            <p>Unsere Algorithmen durchsuchen täglich SIMAP, TED und EU-Portale. Sie werden nur über Möglichkeiten informiert, die zu Ihrem Profil passen.</p>
           </div>
 
           <div class="solution-card">
             <div class="solution-number">3</div>
-            <h3>Win contracts</h3>
-            <p>Review matches, track deadlines, and submit bids with confidence. Your first contract could be days away.</p>
+            <h3>Aufträge gewinnen</h3>
+            <p>Matches prüfen, Fristen verfolgen und Angebote mit Zuversicht einreichen. Ihr erster Auftrag könnte nur Tage entfernt sein.</p>
           </div>
         </div>
       </div>
@@ -1189,77 +1226,77 @@
     <section class="features" id="features">
       <div class="container">
         <div class="section-header">
-          <div class="section-label">Features</div>
-          <h2 class="section-title">Built for SMEs</h2>
+          <span class="section-label">Funktionen</span>
+          <h2 class="section-title">Entwickelt für KMU</h2>
           <p class="section-desc">
-            Everything you need to find and win public contracts, nothing you don't.
+            Alles was Sie brauchen um öffentliche Aufträge zu finden und zu gewinnen. Nichts was Sie nicht brauchen.
           </p>
         </div>
 
         <div class="features-grid">
           <div class="feature-card">
             <div class="feature-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
               </svg>
             </div>
-            <h3>Smart matching</h3>
-            <p>CPV codes, regions, contract values automatically matched to your profile.</p>
+            <h3>Intelligentes Matching</h3>
+            <p>CPV-Codes, Regionen und Auftragswerte werden automatisch mit Ihrem Profil abgeglichen.</p>
           </div>
 
           <div class="feature-card">
             <div class="feature-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
                 <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
               </svg>
             </div>
-            <h3>Real-time alerts</h3>
-            <p>Get notified via email or push when new matching tenders are published.</p>
+            <h3>Echtzeit-Benachrichtigungen</h3>
+            <p>Werden Sie per E-Mail oder Push benachrichtigt wenn neue passende Ausschreibungen publiziert werden.</p>
           </div>
 
           <div class="feature-card">
             <div class="feature-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
                 <line x1="16" y1="2" x2="16" y2="6"/>
                 <line x1="8" y1="2" x2="8" y2="6"/>
                 <line x1="3" y1="10" x2="21" y2="10"/>
               </svg>
             </div>
-            <h3>Deadline tracking</h3>
-            <p>Never miss a submission deadline with smart reminders and calendar sync.</p>
+            <h3>Fristen-Tracking</h3>
+            <p>Verpassen Sie nie eine Einreichungsfrist mit intelligenten Erinnerungen und Kalender-Sync.</p>
           </div>
 
           <div class="feature-card">
             <div class="feature-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
               </svg>
             </div>
-            <h3>DE/FR/IT support</h3>
-            <p>All three Swiss national languages supported across the entire platform.</p>
+            <h3>DE/FR/IT Unterstützung</h3>
+            <p>Alle drei Schweizer Landessprachen werden über die gesamte Plattform unterstützt.</p>
           </div>
 
           <div class="feature-card">
             <div class="feature-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
                 <line x1="12" y1="18" x2="12.01" y2="18"/>
               </svg>
             </div>
-            <h3>Mobile-first</h3>
-            <p>Check tenders on the go. Designed for business owners, not desk workers.</p>
+            <h3>Mobile-First</h3>
+            <p>Ausschreibungen unterwegs prüfen. Entwickelt für Unternehmer, nicht für Schreibtischarbeiter.</p>
           </div>
 
           <div class="feature-card">
             <div class="feature-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
               </svg>
             </div>
-            <h3>Saved searches</h3>
-            <p>Create multiple search profiles for different service lines or regions.</p>
+            <h3>Gespeicherte Suchen</h3>
+            <p>Erstellen Sie mehrere Suchprofile für verschiedene Geschäftsbereiche oder Regionen.</p>
           </div>
         </div>
       </div>
@@ -1269,36 +1306,36 @@
     <section class="market" id="market">
       <div class="container">
         <div class="section-header">
-          <div class="section-label">Market Opportunities</div>
-          <h2 class="section-title">Where SMEs can win</h2>
+          <span class="section-label">Marktchancen</span>
+          <h2 class="section-title">Wo KMU gewinnen können</h2>
           <p class="section-desc">
-            Not all sectors are equal. We focus on verticals where SMEs have the best chance to compete.
+            Nicht alle Sektoren sind gleich. Wir fokussieren auf Branchen wo KMU die besten Chancen haben.
           </p>
         </div>
 
         <div class="market-grid">
           <div class="market-card">
-            <span class="market-badge high">High opportunity</span>
-            <h3>Healthcare</h3>
-            <p class="market-volume">CHF 3-4 billion/year</p>
+            <span class="market-badge high">Hohe Chance</span>
+            <h3>Gesundheitswesen</h3>
+            <p class="market-volume">CHF 3-4 Mrd./Jahr</p>
           </div>
 
           <div class="market-card">
-            <span class="market-badge high">High opportunity</span>
-            <h3>Environment</h3>
-            <p class="market-volume">CHF 1-2 billion/year</p>
+            <span class="market-badge high">Hohe Chance</span>
+            <h3>Umwelt</h3>
+            <p class="market-volume">CHF 1-2 Mrd./Jahr</p>
           </div>
 
           <div class="market-card">
-            <span class="market-badge medium">Medium opportunity</span>
-            <h3>Professional Services</h3>
-            <p class="market-volume">CHF 2-3 billion/year</p>
+            <span class="market-badge medium">Mittlere Chance</span>
+            <h3>Dienstleistungen</h3>
+            <p class="market-volume">CHF 2-3 Mrd./Jahr</p>
           </div>
 
           <div class="market-card">
-            <span class="market-badge medium">Medium opportunity</span>
-            <h3>IT Services</h3>
-            <p class="market-volume">CHF 10-12 billion/year</p>
+            <span class="market-badge medium">Mittlere Chance</span>
+            <h3>IT-Dienstleistungen</h3>
+            <p class="market-volume">CHF 10-12 Mrd./Jahr</p>
           </div>
         </div>
       </div>
@@ -1308,96 +1345,100 @@
     <section class="pricing" id="pricing">
       <div class="container">
         <div class="section-header">
-          <div class="section-label">Pricing</div>
-          <h2 class="section-title">Start free, scale when ready</h2>
+          <span class="section-label">Preise</span>
+          <h2 class="section-title">Kostenlos starten, wachsen wenn bereit</h2>
           <p class="section-desc">
-            No credit card required. Upgrade when you're winning contracts.
+            Keine Kreditkarte erforderlich. Upgraden Sie wenn Sie Aufträge gewinnen.
           </p>
         </div>
 
         <div class="pricing-grid">
           <div class="pricing-card">
-            <div class="pricing-name">Free</div>
-            <div class="pricing-desc">For businesses just getting started</div>
-            <div class="pricing-price">
-              <span class="pricing-amount">CHF 0</span>
-              <span class="pricing-period">/ month</span>
+            <div class="pricing-header">
+              <div class="pricing-name">Free</div>
+              <div class="pricing-desc">Für Unternehmen die gerade anfangen</div>
+              <div class="pricing-price">
+                <span class="pricing-amount">CHF 0</span>
+                <span class="pricing-period">/ Monat</span>
+              </div>
             </div>
             <div class="pricing-features">
               <div class="pricing-feature">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="20,6 9,17 4,12"/>
                 </svg>
-                <span>5 tender alerts per week</span>
+                <span>5 Ausschreibungs-Alerts pro Woche</span>
               </div>
               <div class="pricing-feature">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="20,6 9,17 4,12"/>
                 </svg>
-                <span>1 search profile</span>
+                <span>1 Suchprofil</span>
               </div>
               <div class="pricing-feature">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="20,6 9,17 4,12"/>
                 </svg>
-                <span>Email notifications</span>
+                <span>E-Mail-Benachrichtigungen</span>
               </div>
               <div class="pricing-feature">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="20,6 9,17 4,12"/>
                 </svg>
-                <span>Basic matching</span>
+                <span>Basis-Matching</span>
               </div>
             </div>
-            <button class="btn btn-secondary">Get Started</button>
+            <button class="btn btn-secondary">Kostenlos starten</button>
           </div>
 
           <div class="pricing-card featured">
-            <div class="pricing-name">Pro</div>
-            <div class="pricing-desc">For serious bidders</div>
-            <div class="pricing-price">
-              <span class="pricing-amount">CHF 49</span>
-              <span class="pricing-period">/ month</span>
+            <div class="pricing-header">
+              <div class="pricing-name">Pro</div>
+              <div class="pricing-desc">Für ambitionierte Anbieter</div>
+              <div class="pricing-price">
+                <span class="pricing-amount">CHF 49</span>
+                <span class="pricing-period">/ Monat</span>
+              </div>
             </div>
             <div class="pricing-features">
               <div class="pricing-feature">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="20,6 9,17 4,12"/>
                 </svg>
-                <span>Unlimited tender alerts</span>
+                <span>Unbegrenzte Ausschreibungs-Alerts</span>
               </div>
               <div class="pricing-feature">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="20,6 9,17 4,12"/>
                 </svg>
-                <span>10 search profiles</span>
+                <span>10 Suchprofile</span>
               </div>
               <div class="pricing-feature">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="20,6 9,17 4,12"/>
                 </svg>
-                <span>Real-time push notifications</span>
+                <span>Echtzeit Push-Benachrichtigungen</span>
               </div>
               <div class="pricing-feature">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="20,6 9,17 4,12"/>
                 </svg>
-                <span>Advanced AI matching</span>
+                <span>Erweitertes KI-Matching</span>
               </div>
               <div class="pricing-feature">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="20,6 9,17 4,12"/>
                 </svg>
-                <span>Calendar sync</span>
+                <span>Kalender-Synchronisation</span>
               </div>
               <div class="pricing-feature">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="20,6 9,17 4,12"/>
                 </svg>
-                <span>Priority support</span>
+                <span>Prioritäts-Support</span>
               </div>
             </div>
-            <button class="btn btn-primary">Start Free Trial</button>
+            <button class="btn btn-primary">14 Tage kostenlos testen</button>
           </div>
         </div>
       </div>
@@ -1407,12 +1448,16 @@
     <section class="cta">
       <div class="container">
         <div class="cta-content">
-          <h2>Ready to win your first public contract?</h2>
+          <h2>Bereit Ihren ersten öffentlichen Auftrag zu gewinnen?</h2>
           <p>
-            Join thousands of Swiss SMEs who save 10+ hours per week on tender discovery.
-            Start your free trial today.
+            Schliessen Sie sich tausenden Schweizer KMU an die über 10 Stunden pro Woche bei der Ausschreibungssuche sparen.
           </p>
-          <a href="#pricing" class="btn btn-lg">Get Started Free</a>
+          <a href="#pricing" class="btn btn-lg">
+            Jetzt kostenlos starten
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </a>
         </div>
       </div>
     </section>
@@ -1428,41 +1473,41 @@
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
                 <polyline points="14,2 14,8 20,8"/>
-                <path d="M12 18v-6"/>
-                <path d="M9 15l3 3 3-3"/>
+                <path d="m9 15 3 3 3-3"/>
+                <path d="M12 12v6"/>
               </svg>
             </span>
             Tender Scout
           </a>
-          <p>Democratizing access to public procurement for small businesses across Europe.</p>
+          <p>Wir demokratisieren den Zugang zu öffentlichen Aufträgen für kleine Unternehmen in der Schweiz und Europa.</p>
         </div>
 
         <div class="footer-section">
-          <h4>Product</h4>
+          <h4>Produkt</h4>
           <div class="footer-links">
-            <a href="#features">Features</a>
-            <a href="#pricing">Pricing</a>
+            <a href="#features">Funktionen</a>
+            <a href="#pricing">Preise</a>
             <a href="#">Roadmap</a>
             <a href="#">API</a>
           </div>
         </div>
 
         <div class="footer-section">
-          <h4>Resources</h4>
+          <h4>Ressourcen</h4>
           <div class="footer-links">
-            <a href="#">Documentation</a>
+            <a href="#">Dokumentation</a>
             <a href="#">Blog</a>
             <a href="#">Support</a>
-            <a href="#">Contact</a>
+            <a href="#">Kontakt</a>
           </div>
         </div>
       </div>
 
       <div class="footer-bottom">
-        <span class="footer-copy">2025 Tender Scout. Built in Switzerland.</span>
+        <span class="footer-copy">2025 Tender Scout. Made in Switzerland.</span>
         <div class="footer-legal">
-          <a href="#">Privacy</a>
-          <a href="#">Terms</a>
+          <a href="#">Datenschutz</a>
+          <a href="#">AGB</a>
           <a href="#">Impressum</a>
         </div>
       </div>
@@ -1478,32 +1523,21 @@
     function setTheme(theme) {
       document.documentElement.setAttribute('data-theme', theme);
       localStorage.setItem('theme', theme);
-
-      if (theme === 'dark') {
-        iconSun.style.display = 'none';
-        iconMoon.style.display = 'block';
-      } else {
-        iconSun.style.display = 'block';
-        iconMoon.style.display = 'none';
-      }
+      iconSun.style.display = theme === 'dark' ? 'none' : 'block';
+      iconMoon.style.display = theme === 'dark' ? 'block' : 'none';
     }
 
-    // Check for saved theme or system preference
     const savedTheme = localStorage.getItem('theme');
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-    if (savedTheme) {
-      setTheme(savedTheme);
-    } else if (prefersDark) {
-      setTheme('dark');
-    }
+    if (savedTheme) setTheme(savedTheme);
+    else if (prefersDark) setTheme('dark');
 
     themeToggle.addEventListener('click', () => {
-      const currentTheme = document.documentElement.getAttribute('data-theme');
-      setTheme(currentTheme === 'dark' ? 'light' : 'dark');
+      const current = document.documentElement.getAttribute('data-theme');
+      setTheme(current === 'dark' ? 'light' : 'dark');
     });
 
-    // Mobile menu toggle
+    // Mobile menu
     const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
     const mobileMenu = document.getElementById('mobile-menu');
 
@@ -1511,27 +1545,21 @@
       mobileMenu.classList.toggle('is-open');
     });
 
-    // Close mobile menu when clicking a link
     mobileMenu.querySelectorAll('.nav-link').forEach(link => {
-      link.addEventListener('click', () => {
-        mobileMenu.classList.remove('is-open');
-      });
+      link.addEventListener('click', () => mobileMenu.classList.remove('is-open'));
     });
 
-    // Smooth scroll for anchor links
+    // Smooth scroll
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
       anchor.addEventListener('click', function(e) {
         const href = this.getAttribute('href');
         if (href === '#') return;
-
         e.preventDefault();
         const target = document.querySelector(href);
         if (target) {
           const headerHeight = document.querySelector('.header').offsetHeight;
-          const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - headerHeight;
-
           window.scrollTo({
-            top: targetPosition,
+            top: target.getBoundingClientRect().top + window.pageYOffset - headerHeight,
             behavior: 'smooth'
           });
         }
