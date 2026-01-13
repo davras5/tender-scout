@@ -25,12 +25,18 @@
   /* Brand / Accent */
   --color-accent: #2563eb;
   --color-accent-hover: #1d4ed8;
-  --color-accent-dark: #1d4ed8;
-  --color-accent-subtle: #dbeafe;
-  --color-accent-glow: rgba(37, 99, 235, 0.15);
+  --color-accent-dark: #1e40af;
+  --color-accent-subtle: #eff6ff;
+  --color-accent-glow: rgba(37, 99, 235, 0.12);
 
-  /* Secondary accent (purple) */
-  --color-accent-secondary: #7c3aed;
+  /* Secondary accent (violet/purple) */
+  --color-accent-secondary: #8b5cf6;
+  --color-accent-tertiary: #06b6d4;
+
+  /* Gradient colors */
+  --gradient-hero: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-secondary) 50%, var(--color-accent-tertiary) 100%);
+  --gradient-accent: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-dark) 100%);
+  --gradient-glass: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
 
   /* Status */
   --color-success: #16a34a;
@@ -136,13 +142,15 @@
 
   /* ========== Shadows ========== */
 
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.12);
-  --shadow-xl: 0 24px 48px rgba(0, 0, 0, 0.16);
-  --shadow-glow: 0 0 40px var(--color-accent-glow);
-  --shadow-glow-sm: 0 0 20px var(--color-accent-glow);
-  --shadow-glow-lg: 0 0 30px var(--color-accent-glow);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 4px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.04), 0 10px 20px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.05), 0 20px 40px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.06), 0 40px 60px rgba(0, 0, 0, 0.12);
+  --shadow-glow: 0 0 50px var(--color-accent-glow);
+  --shadow-glow-sm: 0 0 25px var(--color-accent-glow);
+  --shadow-glow-lg: 0 0 60px rgba(37, 99, 235, 0.25);
+  --shadow-card: 0 0 0 1px rgba(0, 0, 0, 0.03), 0 2px 4px rgba(0, 0, 0, 0.04), 0 12px 24px rgba(0, 0, 0, 0.06);
+  --shadow-card-hover: 0 0 0 1px rgba(37, 99, 235, 0.1), 0 4px 8px rgba(0, 0, 0, 0.06), 0 20px 40px rgba(0, 0, 0, 0.1);
 
   /* ========== Transitions ========== */
 
@@ -201,10 +209,14 @@
   --color-accent: #3b82f6;
   --color-accent-hover: #60a5fa;
   --color-accent-dark: #2563eb;
-  --color-accent-subtle: #1e3a5f;
-  --color-accent-glow: rgba(59, 130, 246, 0.2);
+  --color-accent-subtle: rgba(59, 130, 246, 0.15);
+  --color-accent-glow: rgba(59, 130, 246, 0.25);
+  --color-accent-secondary: #a78bfa;
+  --color-accent-tertiary: #22d3ee;
 
   /* Shadows (darker for dark mode) */
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.2), 0 10px 20px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.2), 0 20px 40px rgba(0, 0, 0, 0.3);
+  --shadow-card: 0 0 0 1px rgba(255, 255, 255, 0.05), 0 2px 4px rgba(0, 0, 0, 0.2), 0 12px 24px rgba(0, 0, 0, 0.25);
+  --shadow-card-hover: 0 0 0 1px rgba(59, 130, 246, 0.2), 0 4px 8px rgba(0, 0, 0, 0.25), 0 20px 40px rgba(0, 0, 0, 0.35);
 }
