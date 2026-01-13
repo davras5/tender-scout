@@ -44,9 +44,6 @@
 |----------|-------|-------|-------------------|
 | **Olmero** | Construction | Freemium | Market leader, 20+ yrs, CHF 5B volume, 2,500+ architects, acquired by Byggfakta (2020, ~€15M) |
 | **Devisio** | Construction | Free for bidders | Challenger since 2021, 1,800 tenders, 610 projects, NPK "Offer-Edi" editor |
-| **smino** | Construction collaboration | SaaS | CHF 3.2M Series A, acquired BIMSPOT, 15,000+ users, AI assistant "Athena" |
-| **buildup.ch** | Product database | Freemium | Construction product information |
-| **ORBIS ConstructionHUB** | Project management | Enterprise | Microsoft Dynamics-based, AI object discovery |
 | **Baublatt Infomanager** | Tender information | Subscription | Construction news and tender alerts |
 
 ### Ecosystem Requirements
