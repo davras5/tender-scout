@@ -328,21 +328,6 @@
       border-radius: var(--radius-xl);
     }
 
-    .btn-lg.btn-primary {
-      background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-dark) 50%, var(--color-accent-secondary) 100%);
-      background-size: 200% 200%;
-      animation: gradientShift 8s ease infinite;
-    }
-
-    .btn-lg.btn-secondary {
-      background: linear-gradient(135deg, var(--color-bg-base) 0%, var(--color-bg-raised) 50%, var(--color-bg-base) 100%);
-      background-size: 200% 200%;
-      animation: gradientShift 8s ease infinite;
-    }
-
-    .btn-lg:hover {
-      box-shadow: var(--shadow-glow-sm), var(--shadow-md);
-    }
 
     .btn-sm {
       height: var(--size-btn-sm);
@@ -681,8 +666,7 @@
       box-shadow: var(--shadow-card);
     }
 
-    .solution-card:hover,
-    .solution-card.is-visible:hover {
+    .solution-card:hover {
       transform: translateY(-4px);
       box-shadow: var(--shadow-lg);
     }
@@ -1201,6 +1185,12 @@
     .stagger-children .animate-on-scroll:nth-child(1) { transition-delay: 0ms; }
     .stagger-children .animate-on-scroll:nth-child(2) { transition-delay: 300ms; }
     .stagger-children .animate-on-scroll:nth-child(3) { transition-delay: 600ms; }
+
+    /* Slower animation for CTA section */
+    .cta .animate-on-scroll {
+      transition: opacity 1200ms var(--ease-out),
+                  transform 1200ms var(--ease-out);
+    }
 
     /* ========== Utilities ========== */
     .sr-only {
