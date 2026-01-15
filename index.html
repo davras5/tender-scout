@@ -904,7 +904,8 @@
 
     .pricing-card .btn {
       width: 100%;
-      pointer-events: none;
+      position: relative;
+      z-index: 1;
     }
 
     .pricing-card:not(.is-selected) .btn-primary {
@@ -1315,7 +1316,7 @@
             Wir aggregieren Ausschreibungen von SIMAP, TED und EU-Portalen und matchen sie mit Ihrem Firmenprofil. Sparen Sie über 10 Stunden pro Woche.
           </p>
           <div class="hero-actions">
-            <a href="#pricing" class="btn btn-primary btn-lg">
+            <a href="app.html" class="btn btn-primary btn-lg">
               Kostenlos starten
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M5 12h14M12 5l7 7-7 7"/>
@@ -1608,7 +1609,7 @@
                 <span>Basis-Matching</span>
               </div>
             </div>
-            <button class="btn btn-primary">Kostenlos starten</button>
+            <a href="app.html" class="btn btn-primary">Kostenlos starten</a>
           </div>
 
           <div class="pricing-card is-selected" data-plan="pro">
@@ -1659,7 +1660,7 @@
                 <span>Prioritäts-Support</span>
               </div>
             </div>
-            <button class="btn btn-primary">14 Tage kostenlos testen</button>
+            <a href="app.html" class="btn btn-primary">14 Tage kostenlos testen</a>
           </div>
         </div>
       </div>
@@ -1673,7 +1674,7 @@
           <p>
             Schliessen Sie sich tausenden Schweizer KMU an die über 10 Stunden pro Woche bei der Ausschreibungssuche sparen.
           </p>
-          <a href="#pricing" class="btn btn-lg">
+          <a href="app.html" class="btn btn-lg">
             Jetzt kostenlos starten
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M5 12h14M12 5l7 7-7 7"/>

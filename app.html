@@ -1,0 +1,3671 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Tender Scout - Erstellen Sie Ihr Firmenprofil und finden Sie passende Ausschreibungen">
+    <title>Profil erstellen | Tender Scout</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/tokens.css">
+    <style>
+        /* Base Reset & Typography */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            font-size: var(--text-base);
+            line-height: var(--leading-normal);
+            color: var(--color-text-primary);
+            background-color: var(--color-bg-raised);
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--header-height);
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(var(--blur-lg)) saturate(180%);
+            -webkit-backdrop-filter: blur(var(--blur-lg)) saturate(180%);
+            border-bottom: var(--border-width) solid var(--color-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 var(--space-6);
+            z-index: var(--z-dropdown);
+        }
+
+        [data-theme="dark"] .header {
+            background: rgba(10, 15, 26, 0.85);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            text-decoration: none;
+            color: var(--color-text-primary);
+            font-weight: var(--weight-semibold);
+            font-size: var(--text-lg);
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--color-accent), var(--color-accent-secondary));
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+        }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: var(--space-2);
+            border-radius: var(--radius-md);
+            color: var(--color-text-secondary);
+            transition: all var(--duration-fast) var(--ease-out);
+        }
+
+        .theme-toggle:hover {
+            background: var(--color-bg-muted);
+            color: var(--color-text-primary);
+        }
+
+        /* Main Container */
+        .main {
+            padding-top: calc(var(--header-height) + var(--space-10));
+            padding-bottom: var(--space-16);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 640px;
+            margin: 0 auto;
+            padding: 0 var(--space-5);
+        }
+
+        /* Progress Stepper */
+        .stepper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: var(--space-1);
+            margin-bottom: var(--space-8);
+        }
+
+        .stepper-step {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .stepper-dot {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: var(--text-sm);
+            font-weight: var(--weight-semibold);
+            transition: all var(--duration-normal) var(--ease-out);
+        }
+
+        .stepper-dot.completed {
+            background: var(--color-success);
+            color: white;
+            box-shadow: 0 2px 8px rgba(22, 163, 74, 0.3);
+        }
+
+        .stepper-dot.active {
+            background: var(--color-accent);
+            color: white;
+            box-shadow: 0 2px 12px rgba(37, 99, 235, 0.4);
+            transform: scale(1.05);
+        }
+
+        .stepper-dot.pending {
+            background: var(--color-bg-muted);
+            color: var(--color-text-muted);
+            border: 2px solid var(--color-border);
+        }
+
+        .stepper-label {
+            font-size: var(--text-sm);
+            font-weight: var(--weight-medium);
+            color: var(--color-text-muted);
+            display: none;
+            transition: color var(--duration-fast) var(--ease-out);
+        }
+
+        .stepper-step:has(.stepper-dot.active) .stepper-label {
+            color: var(--color-accent);
+        }
+
+        .stepper-step:has(.stepper-dot.completed) .stepper-label {
+            color: var(--color-text-secondary);
+        }
+
+        @media (min-width: 640px) {
+            .stepper-label {
+                display: block;
+            }
+        }
+
+        .stepper-line {
+            width: 48px;
+            height: 3px;
+            background: var(--color-border);
+            border-radius: var(--radius-full);
+            transition: background var(--duration-normal) var(--ease-out);
+        }
+
+        .stepper-line.completed {
+            background: var(--color-success);
+        }
+
+        /* Card Container */
+        .card {
+            background: var(--color-bg-base);
+            border-radius: var(--radius-xl);
+            border: var(--border-width) solid var(--color-border-subtle);
+            padding: var(--space-8);
+            box-shadow: var(--shadow-card);
+            transition: box-shadow var(--duration-normal) var(--ease-out);
+        }
+
+        .card-title {
+            font-size: var(--text-2xl);
+            font-weight: var(--weight-bold);
+            color: var(--color-text-primary);
+            text-align: center;
+            margin-bottom: var(--space-3);
+            letter-spacing: var(--tracking-tight);
+            line-height: var(--leading-tight);
+        }
+
+        .card-subtitle {
+            font-size: var(--text-base);
+            color: var(--color-text-muted);
+            text-align: center;
+            margin-bottom: var(--space-8);
+            line-height: var(--leading-normal);
+            max-width: 440px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Search Input */
+        .search-container {
+            position: relative;
+            margin-bottom: var(--space-5);
+        }
+
+        .search-input {
+            width: 100%;
+            height: 52px;
+            padding: 0 var(--space-4) 0 var(--space-12);
+            font-size: var(--text-base);
+            border: var(--border-width) solid var(--color-border);
+            border-radius: var(--radius-lg);
+            background: var(--color-bg-base);
+            color: var(--color-text-primary);
+            transition: all var(--duration-fast) var(--ease-out);
+        }
+
+        .search-input:hover {
+            border-color: var(--color-border-strong);
+            background: var(--color-bg-subtle);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--color-accent);
+            box-shadow: 0 0 0 3px var(--color-accent-subtle);
+            background: var(--color-bg-base);
+        }
+
+        .search-input::placeholder {
+            color: var(--color-text-muted);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: var(--space-4);
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--color-text-muted);
+            pointer-events: none;
+            transition: color var(--duration-fast) var(--ease-out);
+        }
+
+        .search-container:focus-within .search-icon {
+            color: var(--color-accent);
+        }
+
+        .search-hint {
+            font-size: var(--text-sm);
+            color: var(--color-text-muted);
+            text-align: center;
+            margin-bottom: var(--space-6);
+        }
+
+        /* Search Results */
+        .search-results {
+            border: var(--border-width) solid var(--color-border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            margin-bottom: var(--space-6);
+            display: none;
+            background: var(--color-bg-base);
+        }
+
+        .search-results.visible {
+            display: block;
+            animation: slideDown var(--duration-normal) var(--ease-out);
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .search-result-item {
+            padding: var(--space-4);
+            border-bottom: var(--border-width) solid var(--color-border);
+            cursor: pointer;
+            transition: background var(--duration-fast) var(--ease-out);
+            display: flex;
+            align-items: flex-start;
+            gap: var(--space-3);
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .search-result-item:hover {
+            background: var(--color-bg-raised);
+        }
+
+        .search-result-item.selected {
+            background: var(--color-accent-subtle);
+        }
+
+        .result-radio {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--color-border-strong);
+            border-radius: 50%;
+            flex-shrink: 0;
+            margin-top: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--duration-fast) var(--ease-out);
+        }
+
+        .search-result-item.selected .result-radio {
+            border-color: var(--color-accent);
+            background: var(--color-accent);
+        }
+
+        .search-result-item.selected .result-radio::after {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+        }
+
+        .result-info {
+            flex: 1;
+        }
+
+        .result-name {
+            font-weight: var(--weight-medium);
+            color: var(--color-text-primary);
+            margin-bottom: var(--space-1);
+        }
+
+        .result-meta {
+            font-size: var(--text-sm);
+            color: var(--color-text-secondary);
+        }
+
+        /* Manual Entry Link */
+        .manual-link {
+            text-align: center;
+            margin-top: var(--space-4);
+        }
+
+        .manual-link a {
+            color: var(--color-accent);
+            text-decoration: none;
+            font-size: var(--text-sm);
+            transition: color var(--duration-fast) var(--ease-out);
+        }
+
+        .manual-link a:hover {
+            text-decoration: underline;
+        }
+
+        /* Form Inputs */
+        .form-group {
+            margin-bottom: var(--space-6);
+        }
+
+        .form-label {
+            display: block;
+            font-size: var(--text-sm);
+            font-weight: var(--weight-medium);
+            color: var(--color-text-primary);
+            margin-bottom: var(--space-2);
+        }
+
+        .form-label .required {
+            color: var(--color-error);
+            margin-left: 2px;
+        }
+
+        .form-input {
+            width: 100%;
+            height: 46px;
+            padding: 0 var(--space-4);
+            font-size: var(--text-base);
+            border: var(--border-width) solid var(--color-border);
+            border-radius: var(--radius-lg);
+            background: var(--color-bg-base);
+            color: var(--color-text-primary);
+            transition: all var(--duration-fast) var(--ease-out);
+        }
+
+        .form-input:hover {
+            border-color: var(--color-border-strong);
+            background: var(--color-bg-subtle);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--color-accent);
+            box-shadow: 0 0 0 3px var(--color-accent-subtle);
+            background: var(--color-bg-base);
+        }
+
+        /* Size Selector */
+        .size-selector {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-3);
+        }
+
+        @media (min-width: 640px) {
+            .size-selector {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        .size-option {
+            padding: var(--space-4) var(--space-3);
+            border: var(--border-width) solid var(--color-border);
+            border-radius: var(--radius-lg);
+            text-align: center;
+            cursor: pointer;
+            transition: all var(--duration-fast) var(--ease-out);
+            font-size: var(--text-sm);
+            font-weight: var(--weight-medium);
+            color: var(--color-text-secondary);
+            background: var(--color-bg-base);
+        }
+
+        .size-option:hover {
+            border-color: var(--color-accent);
+            transform: translateY(-1px);
+        }
+
+        .size-option.selected {
+            border-color: var(--color-accent);
+            background: var(--color-accent-subtle);
+            color: var(--color-accent);
+            box-shadow: 0 0 0 3px var(--color-accent-subtle);
+        }
+
+        /* Industry Cards */
+        .industry-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-4);
+            margin-bottom: var(--space-6);
+        }
+
+        @media (min-width: 640px) {
+            .industry-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .industry-card {
+            padding: var(--space-5);
+            border: var(--border-width) solid var(--color-border);
+            border-radius: var(--radius-lg);
+            text-align: center;
+            cursor: pointer;
+            transition: all var(--duration-fast) var(--ease-out);
+            background: var(--color-bg-base);
+        }
+
+        .industry-card:hover {
+            border-color: var(--color-accent);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+        }
+
+        .industry-card.selected {
+            border-color: var(--color-accent);
+            background: var(--color-accent-subtle);
+            box-shadow: 0 0 0 3px var(--color-accent-subtle), 0 2px 8px rgba(37, 99, 235, 0.1);
+        }
+
+        .industry-icon {
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto var(--space-3);
+            background: var(--color-bg-raised);
+            border-radius: var(--radius-md);
+            color: var(--color-text-secondary);
+            transition: all var(--duration-fast) var(--ease-out);
+        }
+
+        .industry-card:hover .industry-icon {
+            background: var(--color-accent-subtle);
+            color: var(--color-accent);
+        }
+
+        .industry-card.selected .industry-icon {
+            background: var(--color-accent);
+            color: white;
+        }
+
+        .industry-name {
+            font-size: var(--text-sm);
+            font-weight: var(--weight-medium);
+            color: var(--color-text-primary);
+        }
+
+        /* Company Info Bar */
+        .company-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--space-4) var(--space-5);
+            background: var(--color-bg-subtle);
+            border: var(--border-width) solid var(--color-border-subtle);
+            border-radius: var(--radius-xl);
+            margin-bottom: var(--space-8);
+        }
+
+        .company-bar-info {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+        }
+
+        .company-bar-icon {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, var(--color-accent), var(--color-accent-dark));
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+        }
+
+        .company-bar-name {
+            font-weight: var(--weight-semibold);
+            color: var(--color-text-primary);
+            font-size: var(--text-base);
+        }
+
+        .company-bar-uid {
+            font-size: var(--text-sm);
+            color: var(--color-text-muted);
+            font-family: var(--font-mono);
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: var(--space-2);
+            margin-bottom: var(--space-6);
+            border-bottom: 2px solid var(--color-border-subtle);
+            padding-bottom: 0;
+        }
+
+        .tab {
+            padding: var(--space-3) var(--space-5);
+            font-size: var(--text-sm);
+            font-weight: var(--weight-medium);
+            color: var(--color-text-muted);
+            background: none;
+            border: none;
+            cursor: pointer;
+            position: relative;
+            transition: all var(--duration-fast) var(--ease-out);
+            border-radius: var(--radius-md) var(--radius-md) 0 0;
+        }
+
+        .tab:hover {
+            color: var(--color-text-primary);
+            background: var(--color-bg-raised);
+        }
+
+        .tab.active {
+            color: var(--color-accent);
+            font-weight: var(--weight-semibold);
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--color-accent);
+            border-radius: var(--radius-full);
+        }
+
+        /* Code Tree */
+        .code-tree {
+            border: var(--border-width) solid var(--color-border);
+            border-radius: var(--radius-lg);
+            max-height: 400px;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .code-category {
+            border-bottom: var(--border-width) solid var(--color-border-subtle);
+        }
+
+        .code-category:last-child {
+            border-bottom: none;
+        }
+
+        .code-category-header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-4);
+            cursor: pointer;
+            transition: all var(--duration-fast) var(--ease-out);
+        }
+
+        .code-category-header:hover {
+            background: var(--color-bg-raised);
+        }
+
+        .code-category.expanded .code-category-header {
+            background: var(--color-bg-subtle);
+        }
+
+        .code-toggle {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-text-muted);
+            transition: all var(--duration-fast) var(--ease-out);
+        }
+
+        .code-category.expanded .code-toggle {
+            transform: rotate(90deg);
+            color: var(--color-accent);
+        }
+
+        .code-category-name {
+            flex: 1;
+            font-weight: var(--weight-medium);
+            color: var(--color-text-primary);
+            font-size: var(--text-sm);
+        }
+
+        .code-category-code {
+            font-size: var(--text-xs);
+            color: var(--color-text-muted);
+            font-family: var(--font-mono);
+            padding: 2px 6px;
+            background: var(--color-bg-muted);
+            border-radius: var(--radius-sm);
+        }
+
+        .code-category-count {
+            display: none;
+            min-width: 22px;
+            height: 22px;
+            padding: 0 7px;
+            background: var(--color-accent);
+            color: white;
+            border-radius: var(--radius-full);
+            font-size: var(--text-xs);
+            font-weight: var(--weight-semibold);
+            text-align: center;
+            line-height: 22px;
+        }
+
+        .code-category-count.visible {
+            display: inline-block;
+        }
+
+        .code-items {
+            display: none;
+            padding-left: var(--space-6);
+            background: var(--color-bg-raised);
+            border-top: var(--border-width) solid var(--color-border-subtle);
+        }
+
+        .code-category.expanded .code-items {
+            display: block;
+        }
+
+        .code-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-3) var(--space-4);
+            cursor: pointer;
+            transition: all var(--duration-fast) var(--ease-out);
+            border-left: 2px solid transparent;
+            margin-left: var(--space-2);
+        }
+
+        .code-item:hover {
+            background: var(--color-bg-muted);
+            border-left-color: var(--color-border-strong);
+        }
+
+        .code-item.selected {
+            border-left-color: var(--color-accent);
+            background: var(--color-accent-subtle);
+        }
+
+        .code-checkbox {
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--color-border-strong);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--duration-fast) var(--ease-out);
+            flex-shrink: 0;
+        }
+
+        .code-item:hover .code-checkbox {
+            border-color: var(--color-accent);
+        }
+
+        .code-item.selected .code-checkbox {
+            background: var(--color-accent);
+            border-color: var(--color-accent);
+            box-shadow: 0 1px 3px rgba(37, 99, 235, 0.3);
+        }
+
+        .code-item.selected .code-checkbox svg {
+            display: block;
+        }
+
+        .code-checkbox svg {
+            display: none;
+            width: 12px;
+            height: 12px;
+            color: white;
+        }
+
+        .code-item-name {
+            flex: 1;
+            font-size: var(--text-sm);
+            color: var(--color-text-primary);
+        }
+
+        .code-item-code {
+            font-size: var(--text-xs);
+            color: var(--color-text-muted);
+            font-family: var(--font-mono);
+        }
+
+        /* Selected Tags */
+        .selected-section {
+            margin-top: var(--space-6);
+        }
+
+        .selected-label {
+            font-size: var(--text-sm);
+            color: var(--color-text-secondary);
+            margin-bottom: var(--space-3);
+        }
+
+        .selected-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-2);
+        }
+
+        .selected-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-2) var(--space-3);
+            background: var(--color-accent-subtle);
+            color: var(--color-accent);
+            border-radius: var(--radius-full);
+            font-size: var(--text-sm);
+        }
+
+        .selected-tag button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--color-accent);
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .selected-tag button:hover {
+            color: var(--color-accent-dark);
+        }
+
+        /* Confirmation */
+        .success-icon {
+            width: 72px;
+            height: 72px;
+            background: linear-gradient(135deg, var(--color-success), #15803d);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto var(--space-6);
+            color: white;
+            box-shadow: 0 4px 16px rgba(22, 163, 74, 0.3);
+            animation: successPop 0.5s var(--ease-spring);
+        }
+
+        @keyframes successPop {
+            0% { transform: scale(0); opacity: 0; }
+            60% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .profile-summary {
+            background: var(--color-bg-subtle);
+            border: var(--border-width) solid var(--color-border-subtle);
+            border-radius: var(--radius-xl);
+            padding: var(--space-6);
+            margin-bottom: var(--space-6);
+        }
+
+        .profile-summary-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--space-5);
+            padding-bottom: var(--space-4);
+            border-bottom: var(--border-width) solid var(--color-border-subtle);
+        }
+
+        .profile-summary-title {
+            font-weight: var(--weight-semibold);
+            color: var(--color-text-primary);
+        }
+
+        .profile-summary-uid {
+            font-size: var(--text-sm);
+            color: var(--color-text-secondary);
+        }
+
+        .profile-summary-edit {
+            font-size: var(--text-sm);
+            color: var(--color-accent);
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: var(--space-1);
+        }
+
+        .profile-summary-edit:hover {
+            text-decoration: underline;
+        }
+
+        .profile-summary-row {
+            display: flex;
+            align-items: flex-start;
+            padding: var(--space-3) 0;
+            border-top: var(--border-width) solid var(--color-border);
+        }
+
+        .profile-summary-label {
+            width: 120px;
+            font-size: var(--text-sm);
+            color: var(--color-text-secondary);
+            flex-shrink: 0;
+        }
+
+        .profile-summary-value {
+            font-size: var(--text-sm);
+            color: var(--color-text-primary);
+        }
+
+        /* Navigation Buttons */
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: var(--space-8);
+            gap: var(--space-4);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-2);
+            height: var(--size-btn-md);
+            padding: 0 var(--space-6);
+            font-size: var(--text-sm);
+            font-weight: var(--weight-semibold);
+            border-radius: var(--radius-lg);
+            cursor: pointer;
+            transition: all var(--duration-fast) var(--ease-out);
+            text-decoration: none;
+            position: relative;
+        }
+
+        .btn:focus-visible {
+            outline: var(--border-width-2) solid var(--color-accent);
+            outline-offset: var(--border-width-2);
+        }
+
+        .btn-primary {
+            background: var(--color-accent);
+            color: var(--color-text-inverse);
+            border: none;
+            box-shadow: 0 1px 3px rgba(37, 99, 235, 0.2), 0 4px 12px rgba(37, 99, 235, 0.15);
+        }
+
+        .btn-primary:hover {
+            background: var(--color-accent-hover);
+            box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25), 0 8px 20px rgba(37, 99, 235, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 2px rgba(37, 99, 235, 0.2);
+        }
+
+        .btn-primary:disabled {
+            background: var(--color-bg-muted);
+            color: var(--color-text-muted);
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: var(--color-bg-base);
+            color: var(--color-text-primary);
+            border: var(--border-width) solid var(--color-border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--color-bg-subtle);
+            border-color: var(--color-border-strong);
+        }
+
+        .btn-secondary:active {
+            background: var(--color-bg-muted);
+        }
+
+        .btn-ghost {
+            background: none;
+            color: var(--color-text-secondary);
+            border: none;
+        }
+
+        .btn-ghost:hover {
+            background: var(--color-bg-muted);
+            color: var(--color-text-primary);
+        }
+
+        .btn-large {
+            height: var(--size-btn-lg);
+            padding: 0 var(--space-8);
+            font-size: var(--text-base);
+            border-radius: var(--radius-xl);
+        }
+
+        /* Step visibility */
+        .step {
+            display: none;
+        }
+
+        .step.active {
+            display: block;
+            animation: fadeIn var(--duration-normal) var(--ease-out);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Dashboard Preview */
+        .dashboard-preview {
+            margin-top: var(--space-10);
+            padding-top: var(--space-8);
+            border-top: var(--border-width) solid var(--color-border-subtle);
+        }
+
+        .dashboard-title {
+            font-size: var(--text-xs);
+            font-weight: var(--weight-semibold);
+            color: var(--color-text-muted);
+            margin-bottom: var(--space-4);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .dashboard-title::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: var(--color-accent);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .tender-card {
+            background: var(--color-bg-base);
+            border: var(--border-width) solid var(--color-border-subtle);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            margin-bottom: var(--space-3);
+            transition: all var(--duration-fast) var(--ease-out);
+        }
+
+        .tender-card:hover {
+            border-color: var(--color-border);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .tender-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--space-2);
+        }
+
+        .tender-match {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-1);
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius-full);
+            font-size: var(--text-xs);
+            font-weight: var(--weight-medium);
+        }
+
+        .tender-match::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .tender-match.high {
+            background: var(--color-success-bg);
+            color: var(--color-success);
+        }
+
+        .tender-match.medium {
+            background: var(--color-warning-bg);
+            color: var(--color-warning);
+        }
+
+        .tender-source {
+            font-size: var(--text-xs);
+            color: var(--color-text-muted);
+            padding: var(--space-1) var(--space-2);
+            background: var(--color-bg-base);
+            border-radius: var(--radius-sm);
+        }
+
+        .tender-title {
+            font-weight: var(--weight-medium);
+            color: var(--color-text-primary);
+            margin-bottom: var(--space-1);
+        }
+
+        .tender-meta {
+            font-size: var(--text-sm);
+            color: var(--color-text-muted);
+            margin-bottom: var(--space-2);
+        }
+
+        .tender-codes {
+            font-size: var(--text-xs);
+            color: var(--color-text-muted);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 640px) {
+            .card {
+                padding: var(--space-6);
+                border-radius: var(--radius-xl);
+            }
+
+            .card-title {
+                font-size: var(--text-xl);
+            }
+
+            .nav-buttons {
+                flex-direction: column-reverse;
+            }
+
+            .nav-buttons .btn {
+                width: 100%;
+            }
+
+            .stepper-line {
+                width: 20px;
+            }
+        }
+
+        /* Loading state */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-8);
+            color: var(--color-text-muted);
+        }
+
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--color-border);
+            border-top-color: var(--color-accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: var(--space-3);
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: var(--space-8);
+            color: var(--color-text-muted);
+        }
+
+        /* Test Presets */
+        .test-presets {
+            margin-bottom: var(--space-6);
+            padding: var(--space-4);
+            background: var(--color-bg-raised);
+            border-radius: var(--radius-lg);
+            border: 1px dashed var(--color-border);
+        }
+
+        .test-presets-label {
+            font-size: var(--text-xs);
+            font-weight: var(--weight-semibold);
+            color: var(--color-accent);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: var(--space-3);
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .test-presets-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: var(--space-3);
+        }
+
+        @media (min-width: 640px) {
+            .test-presets-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .test-preset-card {
+            padding: var(--space-3);
+            background: var(--color-bg-base);
+            border: var(--border-width) solid var(--color-border);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all var(--duration-fast) var(--ease-out);
+        }
+
+        .test-preset-card:hover {
+            border-color: var(--color-accent);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .test-preset-card.selected {
+            border-color: var(--color-accent);
+            background: var(--color-accent-subtle);
+        }
+
+        .test-preset-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: var(--space-1);
+            color: var(--color-text-secondary);
+        }
+
+        .test-preset-card.selected .test-preset-icon {
+            color: var(--color-accent);
+        }
+
+        .test-preset-name {
+            font-size: var(--text-sm);
+            font-weight: var(--weight-medium);
+            color: var(--color-text-primary);
+            margin-bottom: var(--space-1);
+        }
+
+        .test-preset-meta {
+            font-size: var(--text-xs);
+            color: var(--color-text-muted);
+        }
+
+        .test-preset-badge {
+            display: inline-block;
+            font-size: var(--text-xs);
+            padding: 2px 8px;
+            background: var(--color-accent-subtle);
+            color: var(--color-accent);
+            border-radius: var(--radius-sm);
+            margin-top: var(--space-2);
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: var(--space-4) 0;
+            color: var(--color-text-muted);
+            font-size: var(--text-sm);
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: var(--border-width) solid var(--color-border);
+        }
+
+        .divider span {
+            padding: 0 var(--space-3);
+        }
+
+        /* ========== Hybrid Layout Step 3 ========== */
+
+        /* Keywords Section */
+        .keywords-section {
+            margin-bottom: var(--space-6);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            margin-bottom: var(--space-4);
+        }
+
+        .section-header svg {
+            color: var(--color-accent);
+        }
+
+        .section-title {
+            font-size: var(--text-lg);
+            font-weight: var(--weight-semibold);
+            color: var(--color-text-primary);
+        }
+
+        .section-subtitle {
+            font-size: var(--text-sm);
+            color: var(--color-text-muted);
+            margin-left: auto;
+        }
+
+        /* Tag Input Component */
+        .tag-input-container {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-2) var(--space-3);
+            min-height: 48px;
+            border: var(--border-width) solid var(--color-border);
+            border-radius: var(--radius-lg);
+            background: var(--color-bg-base);
+            cursor: text;
+            transition: all var(--duration-fast) var(--ease-out);
+        }
+
+        .tag-input-container:focus-within {
+            border-color: var(--color-accent);
+            box-shadow: 0 0 0 3px var(--color-accent-subtle);
+        }
+
+        .keyword-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-1);
+            padding: var(--space-1) var(--space-2);
+            padding-right: var(--space-1);
+            background: var(--color-accent-subtle);
+            border: var(--border-width) solid var(--color-accent);
+            border-radius: var(--radius-full);
+            font-size: var(--text-sm);
+            color: var(--color-accent);
+            white-space: nowrap;
+        }
+
+        .keyword-tag-text {
+            max-width: 180px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .keyword-tag-remove {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            padding: 0;
+            border: none;
+            background: none;
+            color: var(--color-accent);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all var(--duration-fast) var(--ease-out);
+        }
+
+        .keyword-tag-remove:hover {
+            background: var(--color-accent);
+            color: white;
+        }
+
+        .tag-input {
+            flex: 1;
+            min-width: 150px;
+            padding: var(--space-1) 0;
+            border: none;
+            background: transparent;
+            font-size: var(--text-sm);
+            font-family: var(--font-sans);
+            color: var(--color-text-primary);
+            outline: none;
+        }
+
+        .tag-input::placeholder {
+            color: var(--color-text-muted);
+        }
+
+        /* Exclusion Tags */
+        .exclusions-section .section-header svg {
+            color: var(--color-error);
+        }
+
+        .exclusion-input .keyword-tag {
+            background: var(--color-error-bg);
+            border-color: var(--color-error);
+            color: var(--color-error);
+        }
+
+        .exclusion-input .keyword-tag-remove:hover {
+            background: var(--color-error);
+            color: white;
+        }
+
+        /* Region Selector */
+        .region-section {
+            margin-top: var(--space-8);
+            padding-top: var(--space-6);
+            border-top: var(--border-width) solid var(--color-border-subtle);
+        }
+
+        .region-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--space-4);
+        }
+
+        .region-title {
+            font-size: var(--text-lg);
+            font-weight: var(--weight-semibold);
+            color: var(--color-text-primary);
+            margin: 0;
+        }
+
+        .region-toggle-all {
+            padding: var(--space-2) var(--space-3);
+            border: var(--border-width) solid var(--color-border);
+            border-radius: var(--radius-md);
+            background: var(--color-bg-base);
+            font-size: var(--text-sm);
+            font-weight: var(--weight-medium);
+            color: var(--color-text-secondary);
+            cursor: pointer;
+            transition: all var(--duration-fast) var(--ease-out);
+        }
+
+        .region-toggle-all:hover {
+            border-color: var(--color-accent);
+            color: var(--color-accent);
+        }
+
+        .canton-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: var(--space-2);
+        }
+
+        .canton-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-2) var(--space-3);
+            border: var(--border-width) solid var(--color-border);
+            border-radius: var(--radius-md);
+            background: var(--color-bg-base);
+            font-size: var(--text-sm);
+            font-weight: var(--weight-medium);
+            color: var(--color-text-primary);
+            cursor: pointer;
+            transition: all var(--duration-fast) var(--ease-out);
+        }
+
+        .canton-btn:hover {
+            border-color: var(--color-border-strong);
+            background: var(--color-bg-subtle);
+        }
+
+        .canton-btn.selected {
+            border-color: var(--color-accent);
+            background: var(--color-accent-subtle);
+            color: var(--color-accent);
+        }
+
+        .canton-btn .canton-code {
+            font-weight: var(--weight-semibold);
+            margin-right: var(--space-1);
+        }
+
+        /* Vertical Code Sections */
+        .code-section {
+            margin-bottom: var(--space-4);
+        }
+
+        .code-section-header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-3) var(--space-4);
+            background: var(--color-bg-subtle);
+            border: 1px solid var(--color-border-subtle);
+            border-radius: var(--radius-lg);
+            cursor: pointer;
+            transition: all var(--duration-fast) var(--ease-out);
+        }
+
+        .code-section-header:hover {
+            border-color: var(--color-border);
+        }
+
+        .code-section.expanded .code-section-header {
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+            border-bottom-color: transparent;
+        }
+
+        .code-section-icon {
+            color: var(--color-text-muted);
+        }
+
+        .code-section-title {
+            flex: 1;
+            font-weight: var(--weight-medium);
+            font-size: var(--text-sm);
+            color: var(--color-text-primary);
+        }
+
+        .code-section-count {
+            background: var(--color-accent);
+            color: var(--color-text-inverse);
+            padding: 2px 8px;
+            border-radius: var(--radius-full);
+            font-size: var(--text-xs);
+            font-weight: var(--weight-semibold);
+        }
+
+        .code-section-count:empty {
+            display: none;
+        }
+
+        .code-section-toggle {
+            color: var(--color-text-muted);
+            transition: transform var(--duration-fast) var(--ease-out);
+        }
+
+        .code-section.expanded .code-section-toggle {
+            transform: rotate(180deg);
+        }
+
+        .code-section-content {
+            display: none;
+            border: 1px solid var(--color-border-subtle);
+            border-top: none;
+            border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+            overflow: hidden;
+        }
+
+        .code-section.expanded .code-section-content {
+            display: block;
+        }
+
+        /* Filter Toggle */
+        .filter-toggle {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            margin: var(--space-3);
+            margin-top: var(--space-2);
+            padding: var(--space-2) var(--space-3);
+            background: var(--color-bg-base);
+            border-radius: var(--radius-md);
+            font-size: var(--text-sm);
+        }
+
+        .filter-toggle-label {
+            color: var(--color-text-muted);
+            white-space: nowrap;
+        }
+
+        .filter-toggle-buttons {
+            display: flex;
+            gap: 2px;
+            background: var(--color-bg-subtle);
+            border-radius: var(--radius-sm);
+            padding: 2px;
+        }
+
+        .filter-toggle-btn {
+            padding: var(--space-1) var(--space-3);
+            font-size: var(--text-sm);
+            border: none;
+            background: none;
+            color: var(--color-text-muted);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all var(--duration-fast) var(--ease-out);
+            white-space: nowrap;
+        }
+
+        .filter-toggle-btn:hover {
+            color: var(--color-text-primary);
+        }
+
+        .filter-toggle-btn.active {
+            background: var(--color-accent);
+            color: var(--color-text-inverse);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .code-section .code-tree {
+            border: none;
+            border-radius: 0;
+            max-height: 300px;
+        }
+
+        /* Selection Summary (per section) */
+        .selection-summary {
+            display: none;
+            padding: var(--space-3) var(--space-4);
+            background: var(--color-bg-base);
+            border-top: 1px solid var(--color-border-subtle);
+        }
+
+        .selection-summary.visible {
+            display: block;
+        }
+
+        .selection-summary-title {
+            font-size: var(--text-xs);
+            font-weight: var(--weight-medium);
+            color: var(--color-text-muted);
+            margin-bottom: var(--space-2);
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .selection-summary-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-2);
+        }
+
+        /* Unified tag style for CPV/NPK (matches keyword-tag) */
+        .selection-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-1);
+            padding: var(--space-1) var(--space-2);
+            padding-right: var(--space-1);
+            background: var(--color-accent-subtle);
+            border: 1px solid var(--color-accent);
+            border-radius: var(--radius-full);
+            font-size: var(--text-sm);
+            color: var(--color-accent);
+            white-space: nowrap;
+        }
+
+        .selection-tag-label {
+            max-width: 180px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .selection-tag button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            padding: 0;
+            border: none;
+            background: none;
+            color: var(--color-text-muted);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all var(--duration-fast) var(--ease-out);
+        }
+
+        .selection-tag button:hover {
+            background: var(--color-accent);
+            color: var(--color-text-inverse);
+        }
+
+        /* Hide old selected-section in new layout */
+        .code-section .selected-section {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <a href="index.html" class="logo">
+            <div class="logo-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <line x1="10" y1="9" x2="8" y2="9"></line>
+                </svg>
+            </div>
+            <span>Tender Scout</span>
+        </a>
+        <div class="header-actions">
+            <button class="theme-toggle" id="themeToggle" aria-label="Theme wechseln">
+                <svg class="sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+                <svg class="moon-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="container">
+            <!-- Progress Stepper -->
+            <div class="stepper">
+                <div class="stepper-step">
+                    <div class="stepper-dot active" data-step="1">1</div>
+                    <span class="stepper-label">Firma</span>
+                </div>
+                <div class="stepper-line"></div>
+                <div class="stepper-step">
+                    <div class="stepper-dot pending" data-step="2">2</div>
+                    <span class="stepper-label">Branche</span>
+                </div>
+                <div class="stepper-line"></div>
+                <div class="stepper-step">
+                    <div class="stepper-dot pending" data-step="3">3</div>
+                    <span class="stepper-label">Interessen</span>
+                </div>
+                <div class="stepper-line"></div>
+                <div class="stepper-step">
+                    <div class="stepper-dot pending" data-step="4">4</div>
+                    <span class="stepper-label">Fertig</span>
+                </div>
+            </div>
+
+            <!-- Step 1: Company Search -->
+            <div class="step active" id="step1">
+                <div class="card">
+                    <h1 class="card-title">Willkommen bei Tender Scout</h1>
+                    <p class="card-subtitle">Finden Sie Ihre Firma im Handelsregister</p>
+
+                    <!-- Test Presets -->
+                    <div class="test-presets" id="testPresets">
+                        <div class="test-presets-label">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+                            </svg>
+                            Testdaten (Demo-Modus)
+                        </div>
+                        <div class="test-presets-grid" id="testPresetsGrid">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+
+                    <div class="divider"><span>oder Firma suchen</span></div>
+
+                    <div class="search-container">
+                        <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        <input type="text" class="search-input" id="companySearch" placeholder="Firmenname oder UID eingeben...">
+                    </div>
+                    <p class="search-hint">Beispiele: "Berger" oder "CHE-109.234.567"</p>
+
+                    <div class="search-results" id="searchResults">
+                        <!-- Results populated by JS -->
+                    </div>
+
+                    <div class="manual-link">
+                        <a href="#" id="manualEntryLink">Firma nicht gefunden? Manuell eingeben &rarr;</a>
+                    </div>
+
+                    <div class="nav-buttons">
+                        <a href="index.html" class="btn btn-ghost">&larr; Zurück zur Startseite</a>
+                        <button class="btn btn-primary" id="step1Next" disabled>Weiter &rarr;</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 1b: Manual Entry -->
+            <div class="step" id="step1b">
+                <div class="card">
+                    <h1 class="card-title">Firmendaten manuell eingeben</h1>
+                    <p class="card-subtitle">Geben Sie Ihre Unternehmensinformationen ein</p>
+
+                    <div class="form-group">
+                        <label class="form-label">Firmenname <span class="required">*</span></label>
+                        <input type="text" class="form-input" id="manualCompanyName" placeholder="z.B. Muster GmbH">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Standort</label>
+                        <input type="text" class="form-input" id="manualLocation" placeholder="PLZ, Ort">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Unternehmensgrösse</label>
+                        <div class="size-selector">
+                            <div class="size-option" data-size="1-10">1-10 MA</div>
+                            <div class="size-option" data-size="11-50">11-50 MA</div>
+                            <div class="size-option" data-size="51-250">51-250 MA</div>
+                            <div class="size-option" data-size="250+">250+ MA</div>
+                        </div>
+                    </div>
+
+                    <div class="nav-buttons">
+                        <button class="btn btn-secondary" id="step1bBack">&larr; Zurück</button>
+                        <button class="btn btn-primary" id="step1bNext" disabled>Weiter &rarr;</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Industry Selection -->
+            <div class="step" id="step2">
+                <div class="card">
+                    <div class="company-bar" id="companyBar">
+                        <div class="company-bar-info">
+                            <div class="company-bar-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="company-bar-name" id="selectedCompanyName">Müller Bau AG</div>
+                                <div class="company-bar-uid" id="selectedCompanyUid">CHE-111.222.333</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h1 class="card-title">In welchen Bereichen ist Ihre Firma tätig?</h1>
+                    <p class="card-subtitle">Mehrfachauswahl möglich</p>
+
+                    <div class="industry-grid">
+                        <div class="industry-card" data-industry="construction">
+                            <div class="industry-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M2 20h20"/><path d="M5 20V8l7-4 7 4v12"/><path d="M9 20v-4h6v4"/><path d="M9 12h6"/>
+                                </svg>
+                            </div>
+                            <div class="industry-name">Bau & Infrastruktur</div>
+                        </div>
+                        <div class="industry-card" data-industry="it">
+                            <div class="industry-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/><path d="m7 8 3 3-3 3"/><path d="M14 14h3"/>
+                                </svg>
+                            </div>
+                            <div class="industry-name">IT & Technologie</div>
+                        </div>
+                        <div class="industry-card" data-industry="health">
+                            <div class="industry-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+                                </svg>
+                            </div>
+                            <div class="industry-name">Gesundheit & Soziales</div>
+                        </div>
+                        <div class="industry-card" data-industry="consulting">
+                            <div class="industry-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="2" y="4" width="20" height="16" rx="2"/><path d="M10 4v4"/><path d="M2 8h20"/><path d="M6 12h4"/><path d="M6 16h8"/>
+                                </svg>
+                            </div>
+                            <div class="industry-name">Beratung & Services</div>
+                        </div>
+                        <div class="industry-card" data-industry="environment">
+                            <div class="industry-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
+                                </svg>
+                            </div>
+                            <div class="industry-name">Umwelt & Energie</div>
+                        </div>
+                        <div class="industry-card" data-industry="transport">
+                            <div class="industry-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18h6a1 1 0 0 0 1-1v-3.28a1 1 0 0 0-.684-.948l-3.923-1.308A1 1 0 0 1 17 11.28V6a1 1 0 0 0-1-1h-2"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/>
+                                </svg>
+                            </div>
+                            <div class="industry-name">Transport & Logistik</div>
+                        </div>
+                        <div class="industry-card" data-industry="education">
+                            <div class="industry-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2v-5"/>
+                                </svg>
+                            </div>
+                            <div class="industry-name">Bildung & Forschung</div>
+                        </div>
+                        <div class="industry-card" data-industry="supplies">
+                            <div class="industry-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>
+                                </svg>
+                            </div>
+                            <div class="industry-name">Waren & Lieferungen</div>
+                        </div>
+                        <div class="industry-card" data-industry="other">
+                            <div class="industry-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>
+                                </svg>
+                            </div>
+                            <div class="industry-name">Andere Branchen</div>
+                        </div>
+                    </div>
+
+                    <!-- Region Selection -->
+                    <div class="region-section">
+                        <div class="region-header">
+                            <h2 class="region-title">In welchen Regionen sind Sie tätig?</h2>
+                            <button type="button" class="region-toggle-all" id="regionToggleAll">Alle auswählen</button>
+                        </div>
+                        <div class="canton-grid" id="cantonGrid">
+                            <!-- Cantons populated by JS -->
+                        </div>
+                    </div>
+
+                    <div class="nav-buttons">
+                        <button class="btn btn-secondary" id="step2Back">&larr; Zurück</button>
+                        <button class="btn btn-primary" id="step2Next" disabled>Weiter &rarr;</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Keywords, CPV & NPK Selection -->
+            <div class="step" id="step3">
+                <div class="card">
+                    <h1 class="card-title">Definieren Sie Ihr Profil</h1>
+                    <p class="card-subtitle">Keywords und Codes helfen uns, passende Ausschreibungen zu finden</p>
+
+                    <!-- Keywords Section -->
+                    <div class="keywords-section">
+                        <div class="section-header">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                                <line x1="7" y1="7" x2="7.01" y2="7"></line>
+                            </svg>
+                            <span class="section-title">Keywords / Kompetenzen</span>
+                        </div>
+                        <div class="tag-input-container" id="tagInputContainer">
+                            <!-- Tags will be inserted here by JS -->
+                            <input type="text" class="tag-input" id="keywordsInput" placeholder="Keyword eingeben...">
+                        </div>
+                    </div>
+
+                    <!-- Exclusions Section -->
+                    <div class="keywords-section exclusions-section">
+                        <div class="section-header">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+                            </svg>
+                            <span class="section-title">Ausschlusskriterien</span>
+                        </div>
+                        <div class="tag-input-container exclusion-input" id="exclusionInputContainer">
+                            <!-- Tags will be inserted here by JS -->
+                            <input type="text" class="tag-input" id="exclusionsInput" placeholder="Begriff zum Ausschliessen eingeben...">
+                        </div>
+                    </div>
+
+                    <!-- CPV Codes Section -->
+                    <div class="code-section" id="cpvSection">
+                        <div class="code-section-header">
+                            <svg class="code-section-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="2" y1="12" x2="22" y2="12"></line>
+                                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                            </svg>
+                            <span class="code-section-title">CPV-Codes (EU Beschaffung)</span>
+                            <span class="code-section-count" id="cpvSectionCount"></span>
+                            <svg class="code-section-toggle" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </div>
+                        <div class="code-section-content">
+                            <div class="search-container" style="margin: var(--space-3); margin-bottom: 0;">
+                                <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                </svg>
+                                <input type="text" class="search-input" id="cpvSearch" placeholder="CPV-Code oder Beschreibung suchen...">
+                            </div>
+                            <div class="filter-toggle">
+                                <span class="filter-toggle-label">Anzeigen:</span>
+                                <div class="filter-toggle-buttons">
+                                    <button class="filter-toggle-btn active" data-filter="recommended" id="cpvFilterRecommended">Empfohlen</button>
+                                    <button class="filter-toggle-btn" data-filter="all" id="cpvFilterAll">Alle anzeigen</button>
+                                </div>
+                            </div>
+                            <div class="code-tree" id="cpvTree">
+                                <!-- CPV categories populated by JS -->
+                            </div>
+                        </div>
+                        <!-- CPV Selection Summary -->
+                        <div class="selection-summary" id="cpvSelectionSummary">
+                            <div class="selection-summary-title">Empfehlung / Ihre Auswahl</div>
+                            <div class="selection-summary-items" id="cpvSelectionItems">
+                                <!-- Items populated by JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- NPK Codes Section (only for construction) -->
+                    <div class="code-section" id="npkSection" style="display: none;">
+                        <div class="code-section-header">
+                            <svg class="code-section-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                            </svg>
+                            <span class="code-section-title">NPK-Kapitel (Schweizer Bau)</span>
+                            <span class="code-section-count" id="npkSectionCount"></span>
+                            <svg class="code-section-toggle" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </div>
+                        <div class="code-section-content">
+                            <div class="search-container" style="margin: var(--space-3); margin-bottom: 0;">
+                                <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                </svg>
+                                <input type="text" class="search-input" id="npkSearch" placeholder="NPK-Kapitel suchen...">
+                            </div>
+                            <div class="filter-toggle">
+                                <span class="filter-toggle-label">Anzeigen:</span>
+                                <div class="filter-toggle-buttons">
+                                    <button class="filter-toggle-btn active" data-filter="recommended" id="npkFilterRecommended">Empfohlen</button>
+                                    <button class="filter-toggle-btn" data-filter="all" id="npkFilterAll">Alle anzeigen</button>
+                                </div>
+                            </div>
+                            <div class="code-tree" id="npkTree">
+                                <!-- NPK chapters populated by JS -->
+                            </div>
+                        </div>
+                        <!-- NPK Selection Summary -->
+                        <div class="selection-summary" id="npkSelectionSummary">
+                            <div class="selection-summary-title">Empfehlung / Ihre Auswahl</div>
+                            <div class="selection-summary-items" id="npkSelectionItems">
+                                <!-- Items populated by JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="nav-buttons">
+                        <button class="btn btn-secondary" id="step3Back">&larr; Zurück</button>
+                        <button class="btn btn-primary" id="step3Next" disabled>Weiter &rarr;</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4: Confirmation -->
+            <div class="step" id="step4">
+                <div class="card">
+                    <div class="success-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </div>
+
+                    <h1 class="card-title">Ihr Profil ist bereit!</h1>
+                    <p class="card-subtitle">Wir werden Sie benachrichtigen, sobald passende Ausschreibungen verfügbar sind.</p>
+
+                    <div class="profile-summary">
+                        <div class="profile-summary-header">
+                            <div>
+                                <div class="profile-summary-title" id="summaryCompanyName">Müller Bau AG</div>
+                                <div class="profile-summary-uid" id="summaryCompanyUid">CHE-111.222.333 · Zürich</div>
+                            </div>
+                            <button class="profile-summary-edit" id="editProfile">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                </svg>
+                                Bearbeiten
+                            </button>
+                        </div>
+                        <div class="profile-summary-row">
+                            <div class="profile-summary-label">Branchen:</div>
+                            <div class="profile-summary-value" id="summaryIndustries">Bau & Infrastruktur</div>
+                        </div>
+                        <div class="profile-summary-row" id="summaryKeywordsRow" style="display: none;">
+                            <div class="profile-summary-label">Keywords:</div>
+                            <div class="profile-summary-value" id="summaryKeywords">-</div>
+                        </div>
+                        <div class="profile-summary-row">
+                            <div class="profile-summary-label">CPV-Codes:</div>
+                            <div class="profile-summary-value" id="summaryCpv">45000000 (Bauarbeiten)</div>
+                        </div>
+                        <div class="profile-summary-row" id="summaryNpkRow" style="display: none;">
+                            <div class="profile-summary-label">NPK-Kapitel:</div>
+                            <div class="profile-summary-value" id="summaryNpk">-</div>
+                        </div>
+                    </div>
+
+                    <div style="text-align: center; margin-bottom: var(--space-6);">
+                        <button class="btn btn-secondary btn-large" style="width: 100%;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                            </svg>
+                            E-Mail Benachrichtigungen aktivieren
+                        </button>
+                    </div>
+
+                    <!-- Dashboard Preview -->
+                    <div class="dashboard-preview">
+                        <h2 class="dashboard-title">Vorschau: Passende Ausschreibungen</h2>
+
+                        <div class="tender-card">
+                            <div class="tender-header">
+                                <span class="tender-match high">98% Match</span>
+                                <span class="tender-source">SIMAP</span>
+                            </div>
+                            <div class="tender-title">Sanierung Schulhaus Musterstadt</div>
+                            <div class="tender-meta">Stadt Zürich · CHF 2.5 Mio · Frist: 15.02.2026</div>
+                            <div class="tender-codes">NPK: 211, 215, 221 · CPV: 45000000</div>
+                        </div>
+
+                        <div class="tender-card">
+                            <div class="tender-header">
+                                <span class="tender-match medium">85% Match</span>
+                                <span class="tender-source">SIMAP</span>
+                            </div>
+                            <div class="tender-title">Neubau Verwaltungsgebäude Kanton Bern</div>
+                            <div class="tender-meta">Kanton Bern · CHF 8.2 Mio · Frist: 28.02.2026</div>
+                            <div class="tender-codes">NPK: 215, 221, 241 · CPV: 45210000</div>
+                        </div>
+                    </div>
+
+                    <div class="nav-buttons" style="justify-content: center;">
+                        <button class="btn btn-primary btn-large" id="goToDashboard">
+                            Zum Dashboard &rarr;
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // =====================================================
+        // TEST DATA - Loaded from JSON
+        // =====================================================
+
+        let testCompanies = [];
+
+        // Industry icons for test presets (SVG)
+        const industryIcons = {
+            construction: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20h20"/><path d="M5 20V8l7-4 7 4v12"/><path d="M9 20v-4h6v4"/><path d="M9 12h6"/></svg>',
+            it: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/><path d="m7 8 3 3-3 3"/><path d="M14 14h3"/></svg>',
+            health: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>',
+            consulting: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M10 4v4"/><path d="M2 8h20"/><path d="M6 12h4"/><path d="M6 16h8"/></svg>',
+            environment: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>',
+            transport: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18h6a1 1 0 0 0 1-1v-3.28a1 1 0 0 0-.684-.948l-3.923-1.308A1 1 0 0 1 17 11.28V6a1 1 0 0 0-1-1h-2"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg>',
+            education: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2v-5"/></svg>',
+            supplies: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>',
+            other: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>'
+        };
+
+        // Load test companies from JSON
+        async function loadTestCompanies() {
+            try {
+                const response = await fetch('data/test_companies.json');
+                const data = await response.json();
+                testCompanies = data.testCompanies;
+                renderTestPresets();
+            } catch (error) {
+                console.error('Could not load test companies:', error);
+                // Hide test presets section if loading fails
+                document.getElementById('testPresets').style.display = 'none';
+            }
+        }
+
+        // Render test preset cards
+        function renderTestPresets() {
+            const grid = document.getElementById('testPresetsGrid');
+            if (!grid || testCompanies.length === 0) return;
+
+            grid.innerHTML = testCompanies.map(company => {
+                const primaryIndustry = company.suggestedIndustries[0] || 'other';
+                const icon = industryIcons[primaryIndustry] || industryIcons.other;
+                const industryLabel = industryNames[primaryIndustry] || 'Unternehmen';
+
+                return `
+                    <div class="test-preset-card" data-company-id="${company.id}">
+                        <div class="test-preset-icon">${icon}</div>
+                        <div class="test-preset-name">${company.name}</div>
+                        <div class="test-preset-meta">${company.location} · ${company.employeeCount} MA</div>
+                        <div class="test-preset-badge">${industryLabel}</div>
+                    </div>
+                `;
+            }).join('');
+
+            // Add click handlers
+            grid.querySelectorAll('.test-preset-card').forEach(card => {
+                card.addEventListener('click', () => selectTestPreset(card.dataset.companyId));
+            });
+        }
+
+        // Select a test preset company
+        function selectTestPreset(companyId) {
+            const company = testCompanies.find(c => c.id === companyId);
+            if (!company) return;
+
+            // Update visual selection
+            document.querySelectorAll('.test-preset-card').forEach(card => {
+                card.classList.toggle('selected', card.dataset.companyId === companyId);
+            });
+
+            // Clear search results selection
+            document.querySelectorAll('.search-result-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+
+            // Set company in state
+            state.company = {
+                name: company.name,
+                uid: company.uid,
+                location: company.location,
+                type: company.legalForm,
+                isTestData: true,
+                testCompanyId: companyId
+            };
+
+            // Store suggested data for later steps
+            state.suggestedIndustries = company.suggestedIndustries || [];
+            state.suggestedRegions = company.suggestedRegions || [];
+            state.suggestedCpv = company.suggestedCpv || [];
+            state.suggestedNpk = company.suggestedNpk || [];
+            state.suggestedKeywords = company.suggestedKeywords || [];
+            state.suggestedExclusions = company.suggestedExclusions || [];
+
+            state.manualEntry = false;
+            document.getElementById('step1Next').disabled = false;
+        }
+
+        // Fallback mock companies for search (will be replaced by Zefix API)
+        const mockCompanies = [];
+
+        // CPV Data with industry mappings and all divisions
+        const cpvIndustryMappings = {
+            construction: ['45', '44', '71'],
+            it: ['72', '48', '30', '32'],
+            health: ['85', '33'],
+            consulting: ['79', '73'],
+            environment: ['90', '09'],
+            transport: ['60', '63', '34'],
+            education: ['80', '22'],
+            supplies: ['30', '39', '18', '15'],
+            other: ['50', '98', '92'],
+        };
+
+        // All CPV divisions (complete list)
+        const cpvAllDivisions = [
+            { code: '03000000', name: 'Landwirtschaftliche Erzeugnisse', children: [
+                { code: '03100000', name: 'Landwirtschaftliche Erzeugnisse und Gartenbau' },
+                { code: '03200000', name: 'Getreide, Kartoffeln, Gemüse, Früchte' },
+                { code: '03300000', name: 'Erzeugnisse der Tierhaltung' },
+            ]},
+            { code: '09000000', name: 'Erdöl, Brennstoffe, Elektrizität', children: [
+                { code: '09100000', name: 'Brennstoffe' },
+                { code: '09200000', name: 'Erdöl, Kohle und Ölprodukte' },
+                { code: '09300000', name: 'Elektrizität, Heizung, Solar- und Kernenergie' },
+                { code: '09310000', name: 'Elektrizität' },
+                { code: '09330000', name: 'Solarenergie' },
+            ]},
+            { code: '14000000', name: 'Bergbau, Basismetalle', children: [
+                { code: '14200000', name: 'Sand und Ton' },
+                { code: '14300000', name: 'Chemische Mineralien und Düngemittel' },
+                { code: '14600000', name: 'Metallerze und Legierungen' },
+                { code: '14700000', name: 'Basismetalle' },
+            ]},
+            { code: '15000000', name: 'Nahrungsmittel, Getränke, Tabak', children: [
+                { code: '15100000', name: 'Tierische Produkte, Fleisch' },
+                { code: '15200000', name: 'Fisch und Fischerzeugnisse' },
+                { code: '15300000', name: 'Obst, Gemüse und Erzeugnisse' },
+                { code: '15500000', name: 'Milchprodukte' },
+                { code: '15800000', name: 'Verschiedene Nahrungsmittel' },
+                { code: '15900000', name: 'Getränke, Tabak' },
+            ]},
+            { code: '18000000', name: 'Kleidung, Schuhe, Reiseartikel', children: [
+                { code: '18100000', name: 'Berufskleidung, Arbeitskleidung' },
+                { code: '18200000', name: 'Oberbekleidung' },
+                { code: '18400000', name: 'Spezialkleidung und Zubehör' },
+                { code: '18800000', name: 'Schuhe' },
+            ]},
+            { code: '22000000', name: 'Druckereierzeugnisse', children: [
+                { code: '22100000', name: 'Gedruckte Bücher, Broschüren' },
+                { code: '22200000', name: 'Zeitungen, Zeitschriften' },
+                { code: '22800000', name: 'Register, Geschäftsbücher' },
+            ]},
+            { code: '30000000', name: 'Büromaschinen, EDV-Anlagen', children: [
+                { code: '30100000', name: 'Büromaschinen, Büromaterialien' },
+                { code: '30190000', name: 'Bürobedarf und Zubehör' },
+                { code: '30200000', name: 'Computeranlagen und Zubehör' },
+                { code: '30210000', name: 'Datenverarbeitungsgeräte (Hardware)' },
+                { code: '30230000', name: 'Computer' },
+            ]},
+            { code: '32000000', name: 'Rundfunk- und Fernmeldegeräte', children: [
+                { code: '32200000', name: 'Übertragungsgeräte für Funktelegrafie' },
+                { code: '32300000', name: 'Fernsehempfänger, Videogeräte' },
+                { code: '32400000', name: 'Netzwerke' },
+                { code: '32500000', name: 'Fernmeldegeräte und Zubehör' },
+            ]},
+            { code: '33000000', name: 'Medizinische Ausrüstungen', children: [
+                { code: '33100000', name: 'Medizinische Geräte' },
+                { code: '33140000', name: 'Medizinische Verbrauchsartikel' },
+                { code: '33150000', name: 'Radiologische Geräte' },
+                { code: '33160000', name: 'Operationstechnik' },
+                { code: '33190000', name: 'Verschiedene medizinische Geräte' },
+            ]},
+            { code: '34000000', name: 'Transportmittel und Zubehör', children: [
+                { code: '34100000', name: 'Kraftfahrzeuge' },
+                { code: '34200000', name: 'Karosserien, Anhänger' },
+                { code: '34300000', name: 'Teile und Zubehör für Fahrzeuge' },
+                { code: '34400000', name: 'Motorräder, Fahrräder' },
+                { code: '34600000', name: 'Lokomotiven und rollendes Material' },
+            ]},
+            { code: '35000000', name: 'Sicherheits- und Verteidigungsausrüstung', children: [
+                { code: '35100000', name: 'Notfall- und Sicherheitsausrüstung' },
+                { code: '35200000', name: 'Polizeiausrüstung' },
+                { code: '35300000', name: 'Waffen, Munition und Zubehör' },
+            ]},
+            { code: '37000000', name: 'Musikinstrumente, Sport, Spielwaren', children: [
+                { code: '37300000', name: 'Musikinstrumente und Teile' },
+                { code: '37400000', name: 'Sportgeräte und -ausrüstung' },
+                { code: '37500000', name: 'Spiele und Spielwaren' },
+            ]},
+            { code: '38000000', name: 'Laborgeräte, optische Geräte', children: [
+                { code: '38300000', name: 'Messinstrumente' },
+                { code: '38400000', name: 'Instrumente zur Kontrolle physikalischer Eigenschaften' },
+                { code: '38500000', name: 'Prüf- und Kontrollgeräte' },
+            ]},
+            { code: '39000000', name: 'Möbel, Einrichtungsgegenstände', children: [
+                { code: '39100000', name: 'Möbel' },
+                { code: '39200000', name: 'Ausstattung' },
+                { code: '39300000', name: 'Diverse Ausrüstung' },
+                { code: '39500000', name: 'Textilwaren' },
+                { code: '39700000', name: 'Haushaltsgeräte' },
+            ]},
+            { code: '42000000', name: 'Industriemaschinen', children: [
+                { code: '42100000', name: 'Krafterzeugungsmaschinen und Motoren' },
+                { code: '42400000', name: 'Hebezeuge und Fördereinrichtungen' },
+                { code: '42500000', name: 'Kühl- und Lüftungsanlagen' },
+                { code: '42900000', name: 'Verschiedene Mehrzweck- und Spezialmaschinen' },
+            ]},
+            { code: '44000000', name: 'Baukonstruktionen und Baustoffe', children: [
+                { code: '44100000', name: 'Baumaterialien und Zubehör' },
+                { code: '44200000', name: 'Bauprodukte' },
+                { code: '44300000', name: 'Kabel, Draht und Zubehör' },
+                { code: '44400000', name: 'Verschiedene Waren und Zubehör' },
+                { code: '44500000', name: 'Werkzeuge, Schlösser, Schlüssel' },
+            ]},
+            { code: '45000000', name: 'Bauarbeiten', children: [
+                { code: '45100000', name: 'Baureifmachung' },
+                { code: '45200000', name: 'Komplett- oder Teilbauleistungen' },
+                { code: '45210000', name: 'Hochbauarbeiten' },
+                { code: '45220000', name: 'Ingenieur- und Hochbauarbeiten' },
+                { code: '45230000', name: 'Bauarbeiten für Rohrleitungen' },
+                { code: '45300000', name: 'Bauinstallationsarbeiten' },
+                { code: '45310000', name: 'Elektroinstallationsarbeiten' },
+                { code: '45320000', name: 'Dämmarbeiten' },
+                { code: '45330000', name: 'Klempner- und Sanitärinstallationen' },
+                { code: '45340000', name: 'Installation von Zäunen, Geländern' },
+                { code: '45400000', name: 'Baufertigstellung' },
+                { code: '45410000', name: 'Putzarbeiten' },
+                { code: '45420000', name: 'Bautischlerarbeiten' },
+                { code: '45430000', name: 'Bodenbelag- und Wandverkleidungsarbeiten' },
+                { code: '45440000', name: 'Anstricharbeiten und Verglasungsarbeiten' },
+                { code: '45450000', name: 'Sonstige Baufertigstellungsarbeiten' },
+                { code: '45500000', name: 'Vermietung von Baumaschinen' },
+            ]},
+            { code: '48000000', name: 'Softwarepaket und Informationssysteme', children: [
+                { code: '48100000', name: 'Branchenspezifisches Softwarepaket' },
+                { code: '48200000', name: 'Softwarepaket für Vernetzung, Internet' },
+                { code: '48300000', name: 'Softwarepaket für Dokumentenerstellung' },
+                { code: '48400000', name: 'Softwarepaket für Geschäftstransaktionen' },
+                { code: '48600000', name: 'Datenbank- und Betriebssoftwarepaket' },
+                { code: '48700000', name: 'Softwarepaket-Dienstprogramme' },
+                { code: '48800000', name: 'Informationssysteme und Server' },
+            ]},
+            { code: '50000000', name: 'Reparatur- und Wartungsdienste', children: [
+                { code: '50100000', name: 'Reparatur, Wartung von Fahrzeugen' },
+                { code: '50200000', name: 'Reparatur, Wartung von Luftfahrzeugen' },
+                { code: '50300000', name: 'Reparatur, Wartung von IT-Ausrüstungen' },
+                { code: '50400000', name: 'Reparatur, Wartung von medizinischen Geräten' },
+                { code: '50500000', name: 'Reparatur, Wartung von Pumpen und Ventilen' },
+                { code: '50700000', name: 'Reparatur und Wartung von Gebäudeeinrichtungen' },
+                { code: '50800000', name: 'Diverse Reparatur- und Wartungsdienste' },
+            ]},
+            { code: '51000000', name: 'Installation (ausser Software)', children: [
+                { code: '51100000', name: 'Installation von elektrischen und mechanischen Anlagen' },
+                { code: '51200000', name: 'Installation von Messgeräten' },
+                { code: '51500000', name: 'Installation von Maschinen und Ausrüstungen' },
+            ]},
+            { code: '55000000', name: 'Dienstleistungen des Hotel- und Gaststättengewerbes', children: [
+                { code: '55100000', name: 'Hoteldienstleistungen' },
+                { code: '55300000', name: 'Restaurant- und Bewirtungsdienste' },
+                { code: '55500000', name: 'Kantinen- und Verpflegungsdienste' },
+            ]},
+            { code: '60000000', name: 'Verkehrsdienstleistungen', children: [
+                { code: '60100000', name: 'Strassentransport' },
+                { code: '60200000', name: 'Schienentransport' },
+                { code: '60400000', name: 'Luftverkehr' },
+                { code: '60600000', name: 'Schifffahrt' },
+            ]},
+            { code: '63000000', name: 'Unterstützende Verkehrsdienstleistungen', children: [
+                { code: '63100000', name: 'Frachtumschlag und -lagerung' },
+                { code: '63500000', name: 'Reisebüro- und ähnliche Dienste' },
+                { code: '63700000', name: 'Unterstützungsdienste für den Landverkehr' },
+            ]},
+            { code: '64000000', name: 'Post- und Fernmeldedienste', children: [
+                { code: '64100000', name: 'Post- und Kurierdienste' },
+                { code: '64200000', name: 'Fernmeldedienste' },
+            ]},
+            { code: '65000000', name: 'Versorgungsunternehmen', children: [
+                { code: '65100000', name: 'Wasserversorgung und zugehörige Dienste' },
+                { code: '65200000', name: 'Gasversorgung und zugehörige Dienste' },
+                { code: '65300000', name: 'Stromversorgung und zugehörige Dienste' },
+                { code: '65400000', name: 'Andere Energiequellen und -verteilung' },
+            ]},
+            { code: '66000000', name: 'Finanz- und Versicherungsdienstleistungen', children: [
+                { code: '66100000', name: 'Bank- und Investmentdienstleistungen' },
+                { code: '66500000', name: 'Versicherungen und Altersversorgung' },
+            ]},
+            { code: '70000000', name: 'Immobiliendienste', children: [
+                { code: '70100000', name: 'Immobiliendienste für eigene Immobilien' },
+                { code: '70200000', name: 'Vermietung oder Leasing von Immobilien' },
+                { code: '70300000', name: 'Immobilienmakler- und -verwaltungsdienste' },
+            ]},
+            { code: '71000000', name: 'Architektur-, Konstruktions-, Ingenieur- und Prüfdienste', children: [
+                { code: '71200000', name: 'Dienstleistungen von Architekturbüros' },
+                { code: '71300000', name: 'Dienstleistungen von Ingenieurbüros' },
+                { code: '71400000', name: 'Stadtplanung und Landschaftsgestaltung' },
+                { code: '71500000', name: 'Dienstleistungen im Bauwesen' },
+                { code: '71600000', name: 'Technische Tests, Analysen' },
+            ]},
+            { code: '72000000', name: 'IT-Dienstleistungen', children: [
+                { code: '72100000', name: 'Hardware-Beratung' },
+                { code: '72200000', name: 'Softwareprogrammierung und -beratung' },
+                { code: '72300000', name: 'Datendienste' },
+                { code: '72400000', name: 'Internetdienste' },
+                { code: '72500000', name: 'Computerdienste' },
+                { code: '72600000', name: 'Computerunterstützung und -beratung' },
+                { code: '72700000', name: 'Computernetzdienste' },
+                { code: '72800000', name: 'Computerrevision und -prüfung' },
+                { code: '72900000', name: 'Computer-Backup und -Umstellung' },
+            ]},
+            { code: '73000000', name: 'Forschung und Entwicklung', children: [
+                { code: '73100000', name: 'Forschung und experimentelle Entwicklung' },
+                { code: '73200000', name: 'Beratung im Bereich Forschung und Entwicklung' },
+                { code: '73300000', name: 'Planung und Ausführung von Forschung' },
+            ]},
+            { code: '75000000', name: 'Dienstleistungen der öffentlichen Verwaltung', children: [
+                { code: '75100000', name: 'Verwaltungsdienste' },
+                { code: '75200000', name: 'Kommunale Dienstleistungen' },
+            ]},
+            { code: '76000000', name: 'Dienstleistungen in der Erdöl- und Erdgasindustrie', children: [
+                { code: '76100000', name: 'Dienstleistungen für die Erdgasindustrie' },
+                { code: '76300000', name: 'Bohrdienste' },
+                { code: '76400000', name: 'Ausrüstungspositionierungsdienste' },
+            ]},
+            { code: '77000000', name: 'Dienstleistungen in Landwirtschaft, Forstwirtschaft', children: [
+                { code: '77100000', name: 'Dienstleistungen im Bereich Landwirtschaft' },
+                { code: '77200000', name: 'Dienstleistungen in der Forstwirtschaft' },
+                { code: '77300000', name: 'Gartenbaudienste' },
+                { code: '77400000', name: 'Zoologische Dienste' },
+            ]},
+            { code: '79000000', name: 'Dienstleistungen für Unternehmen', children: [
+                { code: '79100000', name: 'Rechtsberatung' },
+                { code: '79200000', name: 'Rechnungslegung, Buchprüfung, Steuerwesen' },
+                { code: '79300000', name: 'Markt- und Wirtschaftsforschung, Umfragen' },
+                { code: '79400000', name: 'Unternehmens- und Managementberatung' },
+                { code: '79500000', name: 'Sekretariatsarbeiten, Büroservice' },
+                { code: '79600000', name: 'Personalvermittlung' },
+                { code: '79700000', name: 'Ermittlungs- und Sicherheitsdienste' },
+                { code: '79800000', name: 'Druckerei- und damit verbundene Dienste' },
+                { code: '79900000', name: 'Verschiedene Unternehmens- und Managementdienste' },
+            ]},
+            { code: '80000000', name: 'Allgemeine und berufliche Bildung', children: [
+                { code: '80100000', name: 'Grundschulunterricht' },
+                { code: '80200000', name: 'Sekundarschulunterricht' },
+                { code: '80300000', name: 'Hochschulbildung' },
+                { code: '80400000', name: 'Erwachsenenbildung und sonstiger Unterricht' },
+                { code: '80500000', name: 'Ausbildungsdienste' },
+                { code: '80600000', name: 'Ausbildung in Verteidigungs- und Sicherheit' },
+            ]},
+            { code: '85000000', name: 'Gesundheits- und Sozialwesen', children: [
+                { code: '85100000', name: 'Dienstleistungen des Gesundheitswesens' },
+                { code: '85110000', name: 'Dienstleistungen von Krankenhäusern' },
+                { code: '85120000', name: 'Ärztliche Praxis und zugehörige Dienste' },
+                { code: '85140000', name: 'Diverse Dienstleistungen im Gesundheitswesen' },
+                { code: '85300000', name: 'Dienstleistungen des Sozialwesens' },
+                { code: '85310000', name: 'Sozialfürsorge' },
+                { code: '85320000', name: 'Soziale Beratungsdienste' },
+            ]},
+            { code: '90000000', name: 'Abwasser- und Abfallbeseitigung, Umwelt', children: [
+                { code: '90400000', name: 'Abwasserbeseitigung' },
+                { code: '90500000', name: 'Dienstleistungen im Zusammenhang mit Siedlungsabfällen' },
+                { code: '90600000', name: 'Reinigung und Sanierung des städtischen Bereichs' },
+                { code: '90700000', name: 'Umweltdienste' },
+                { code: '90710000', name: 'Umweltmanagement' },
+                { code: '90720000', name: 'Umweltschutz' },
+            ]},
+            { code: '92000000', name: 'Freizeit-, Kultur- und Sportdienste', children: [
+                { code: '92100000', name: 'Film- und Videofilmdienstleistungen' },
+                { code: '92300000', name: 'Unterhaltungsdienstleistungen' },
+                { code: '92500000', name: 'Dienstleistungen von Bibliotheken' },
+                { code: '92600000', name: 'Sportdienste' },
+            ]},
+            { code: '98000000', name: 'Sonstige gemeinschaftliche Dienste', children: [
+                { code: '98100000', name: 'Mitgliederorganisationen' },
+                { code: '98300000', name: 'Diverse Dienstleistungen' },
+                { code: '98390000', name: 'Sonstige Dienste' },
+            ]},
+        ];
+
+        // Legacy format for backward compatibility (recommended by industry)
+        const cpvData = {
+            construction: cpvAllDivisions.filter(d => ['45', '44', '71'].some(prefix => d.code.startsWith(prefix))),
+            it: cpvAllDivisions.filter(d => ['72', '48', '30', '32'].some(prefix => d.code.startsWith(prefix))),
+            health: cpvAllDivisions.filter(d => ['85', '33'].some(prefix => d.code.startsWith(prefix))),
+            consulting: cpvAllDivisions.filter(d => ['79', '73'].some(prefix => d.code.startsWith(prefix))),
+            environment: cpvAllDivisions.filter(d => ['90', '09'].some(prefix => d.code.startsWith(prefix))),
+            transport: cpvAllDivisions.filter(d => ['60', '63', '34'].some(prefix => d.code.startsWith(prefix))),
+            education: cpvAllDivisions.filter(d => ['80', '22'].some(prefix => d.code.startsWith(prefix))),
+            supplies: cpvAllDivisions.filter(d => ['30', '39', '18', '15'].some(prefix => d.code.startsWith(prefix))),
+            other: cpvAllDivisions.filter(d => ['50', '98', '92'].some(prefix => d.code.startsWith(prefix))),
+        };
+
+        // All NPK chapters (complete list)
+        const npkAllChapters = [
+            { code: '100', name: 'Baustelleneinrichtung', children: [
+                { code: '102', name: 'Baustelleneinrichtung allgemein' },
+                { code: '104', name: 'Gerüste' },
+                { code: '106', name: 'Provisorien' },
+                { code: '108', name: 'Baustellensicherheit' },
+            ]},
+            { code: '200', name: 'Baumeisterarbeiten', children: [
+                { code: '211', name: 'Abbrucharbeiten' },
+                { code: '212', name: 'Aushub- und Erdarbeiten' },
+                { code: '215', name: 'Maurerarbeiten' },
+                { code: '218', name: 'Verputzarbeiten' },
+                { code: '221', name: 'Betonarbeiten' },
+                { code: '222', name: 'Stahlbetonarbeiten' },
+                { code: '224', name: 'Bewehrungsarbeiten' },
+                { code: '241', name: 'Montagebau in Beton' },
+                { code: '261', name: 'Spezialtiefbau' },
+            ]},
+            { code: '300', name: 'Fenster, Aussentüren, Tore', children: [
+                { code: '311', name: 'Holzfenster' },
+                { code: '321', name: 'Metallfenster' },
+                { code: '331', name: 'Kunststofffenster' },
+                { code: '341', name: 'Holz-Metall-Fenster' },
+                { code: '351', name: 'Aussentüren' },
+                { code: '361', name: 'Industrietore' },
+                { code: '371', name: 'Sonnenschutz' },
+            ]},
+            { code: '400', name: 'Dach, Dichtung, Dämmung', children: [
+                { code: '411', name: 'Steildacharbeiten' },
+                { code: '421', name: 'Flachdacharbeiten' },
+                { code: '431', name: 'Dachbegrünung' },
+                { code: '441', name: 'Spenglerarbeiten' },
+                { code: '451', name: 'Abdichtungen' },
+                { code: '461', name: 'Wärmedämmung' },
+            ]},
+            { code: '500', name: 'Fassadenbau', children: [
+                { code: '511', name: 'Aussenwärmedämmung' },
+                { code: '521', name: 'Vorgehängte Fassaden' },
+                { code: '531', name: 'Metallfassaden' },
+                { code: '541', name: 'Glasfassaden' },
+                { code: '551', name: 'Holzfassaden' },
+            ]},
+            { code: '600', name: 'Ausbau', children: [
+                { code: '611', name: 'Gipserarbeiten' },
+                { code: '621', name: 'Schreinerarbeiten' },
+                { code: '631', name: 'Innentüren' },
+                { code: '641', name: 'Bodenbeläge' },
+                { code: '651', name: 'Plattenarbeiten' },
+                { code: '661', name: 'Malerarbeiten' },
+                { code: '671', name: 'Tapezierarbeiten' },
+                { code: '681', name: 'Trockenbau' },
+            ]},
+            { code: '700', name: 'Gebäudetechnik', children: [
+                { code: '711', name: 'Sanitäranlagen' },
+                { code: '721', name: 'Heizungsanlagen' },
+                { code: '731', name: 'Wärmepumpen' },
+                { code: '741', name: 'Lüftungsanlagen' },
+                { code: '751', name: 'Klimaanlagen' },
+                { code: '761', name: 'Elektroanlagen' },
+                { code: '771', name: 'Gebäudeautomation' },
+                { code: '781', name: 'Aufzugsanlagen' },
+            ]},
+            { code: '800', name: 'Umgebung', children: [
+                { code: '811', name: 'Gärtnerarbeiten' },
+                { code: '821', name: 'Belagsarbeiten' },
+                { code: '831', name: 'Einfriedungen' },
+                { code: '841', name: 'Entwässerung' },
+                { code: '851', name: 'Spielplatzanlagen' },
+            ]},
+            { code: '900', name: 'Sonderbereiche', children: [
+                { code: '911', name: 'Schwimmbadtechnik' },
+                { code: '921', name: 'Küchentechnik' },
+                { code: '931', name: 'Labortechnik' },
+                { code: '941', name: 'Brandschutz' },
+                { code: '951', name: 'Sicherheitstechnik' },
+            ]},
+        ];
+
+        // Backward compatible reference
+        const npkData = npkAllChapters;
+
+        const industryNames = {
+            construction: 'Bau & Infrastruktur',
+            it: 'IT & Technologie',
+            health: 'Gesundheit & Soziales',
+            consulting: 'Beratung & Services',
+            environment: 'Umwelt & Energie',
+            transport: 'Transport & Logistik',
+            education: 'Bildung & Forschung',
+            supplies: 'Waren & Lieferungen',
+            other: 'Andere Branchen',
+        };
+
+        // Swiss Cantons
+        const swissCantons = [
+            { code: 'AG', name: 'Aargau' },
+            { code: 'AI', name: 'Appenzell Innerrhoden' },
+            { code: 'AR', name: 'Appenzell Ausserrhoden' },
+            { code: 'BE', name: 'Bern' },
+            { code: 'BL', name: 'Basel-Landschaft' },
+            { code: 'BS', name: 'Basel-Stadt' },
+            { code: 'FR', name: 'Freiburg' },
+            { code: 'GE', name: 'Genf' },
+            { code: 'GL', name: 'Glarus' },
+            { code: 'GR', name: 'Graubünden' },
+            { code: 'JU', name: 'Jura' },
+            { code: 'LU', name: 'Luzern' },
+            { code: 'NE', name: 'Neuenburg' },
+            { code: 'NW', name: 'Nidwalden' },
+            { code: 'OW', name: 'Obwalden' },
+            { code: 'SG', name: 'St. Gallen' },
+            { code: 'SH', name: 'Schaffhausen' },
+            { code: 'SO', name: 'Solothurn' },
+            { code: 'SZ', name: 'Schwyz' },
+            { code: 'TG', name: 'Thurgau' },
+            { code: 'TI', name: 'Tessin' },
+            { code: 'UR', name: 'Uri' },
+            { code: 'VD', name: 'Waadt' },
+            { code: 'VS', name: 'Wallis' },
+            { code: 'ZG', name: 'Zug' },
+            { code: 'ZH', name: 'Zürich' },
+        ];
+
+        // =====================================================
+        // STATE
+        // =====================================================
+
+        const state = {
+            currentStep: 1,
+            company: null,
+            manualEntry: false,
+            selectedIndustries: [],
+            selectedRegions: [], // array of canton codes (all 26 = all of Switzerland)
+            selectedCpv: [],
+            selectedNpk: [],
+            selectedKeywords: [],
+            selectedExclusions: [],
+            // Suggestions from test data
+            suggestedIndustries: [],
+            suggestedRegions: [],
+            suggestedCpv: [],
+            suggestedNpk: [],
+            suggestedKeywords: [],
+            suggestedExclusions: [],
+            // Filter toggle state (false = show recommended, true = show all)
+            showAllCpv: false,
+            showAllNpk: false,
+        };
+
+        // Keyword suggestions per industry
+        const keywordSuggestions = {
+            construction: ['BIM', 'Holzbau', 'Minergie', 'SNBS', 'Generalunternehmer', 'Sanierung', 'Hochbau', 'Tiefbau', 'Stahlbau'],
+            it: ['SAP', 'CRM', 'ERP', 'Cloud', 'Analytics', 'Microsoft 365', 'DevOps', 'Cybersecurity', 'KI/AI', 'Machine Learning'],
+            health: ['eHealth', 'Spitex', 'Pflege', 'Telemedizin', 'Medizintechnik', 'Labor', 'Pharma'],
+            consulting: ['Lean', 'Agile', 'Prozessoptimierung', 'Digitalisierung', 'Change Management', 'Strategie', 'Projektleitung'],
+            environment: ['Photovoltaik', 'Windenergie', 'Recycling', 'Abwasser', 'Umweltverträglichkeit', 'CO2-Reduktion'],
+            transport: ['Logistik', 'Spedition', 'Last Mile', 'Fuhrpark', 'ÖV', 'E-Mobilität'],
+            education: ['E-Learning', 'LMS', 'Weiterbildung', 'Didaktik', 'MINT', 'Hochschule'],
+            supplies: ['Büromaterial', 'Möblierung', 'Beschaffung', 'Lagerhaltung', 'Just-in-Time'],
+            other: ['ISO-Zertifizierung', 'Qualitätsmanagement', 'Compliance', 'Nachhaltigkeit'],
+        };
+
+        // =====================================================
+        // DOM ELEMENTS
+        // =====================================================
+
+        const elements = {
+            steps: document.querySelectorAll('.step'),
+            stepperDots: document.querySelectorAll('.stepper-dot'),
+            stepperLines: document.querySelectorAll('.stepper-line'),
+            companySearch: document.getElementById('companySearch'),
+            searchResults: document.getElementById('searchResults'),
+            manualEntryLink: document.getElementById('manualEntryLink'),
+            manualCompanyName: document.getElementById('manualCompanyName'),
+            manualLocation: document.getElementById('manualLocation'),
+            sizeOptions: document.querySelectorAll('.size-option'),
+            industryCards: document.querySelectorAll('.industry-card'),
+            // New Step 3 elements
+            tagInputContainer: document.getElementById('tagInputContainer'),
+            keywordsInput: document.getElementById('keywordsInput'),
+            exclusionInputContainer: document.getElementById('exclusionInputContainer'),
+            exclusionsInput: document.getElementById('exclusionsInput'),
+            cpvSection: document.getElementById('cpvSection'),
+            npkSection: document.getElementById('npkSection'),
+            cpvTree: document.getElementById('cpvTree'),
+            npkTree: document.getElementById('npkTree'),
+            cpvSearch: document.getElementById('cpvSearch'),
+            npkSearch: document.getElementById('npkSearch'),
+            cpvSectionCount: document.getElementById('cpvSectionCount'),
+            npkSectionCount: document.getElementById('npkSectionCount'),
+            cpvSelectionSummary: document.getElementById('cpvSelectionSummary'),
+            cpvSelectionItems: document.getElementById('cpvSelectionItems'),
+            npkSelectionSummary: document.getElementById('npkSelectionSummary'),
+            npkSelectionItems: document.getElementById('npkSelectionItems'),
+            // Filter toggle buttons
+            cpvFilterRecommended: document.getElementById('cpvFilterRecommended'),
+            cpvFilterAll: document.getElementById('cpvFilterAll'),
+            npkFilterRecommended: document.getElementById('npkFilterRecommended'),
+            npkFilterAll: document.getElementById('npkFilterAll'),
+            themeToggle: document.getElementById('themeToggle'),
+            // Region selection elements
+            regionToggleAll: document.getElementById('regionToggleAll'),
+            cantonGrid: document.getElementById('cantonGrid'),
+        };
+
+        // =====================================================
+        // THEME TOGGLE
+        // =====================================================
+
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const sunIcon = elements.themeToggle.querySelector('.sun-icon');
+            const moonIcon = elements.themeToggle.querySelector('.moon-icon');
+            if (theme === 'dark') {
+                sunIcon.style.display = 'none';
+                moonIcon.style.display = 'block';
+            } else {
+                sunIcon.style.display = 'block';
+                moonIcon.style.display = 'none';
+            }
+        }
+
+        elements.themeToggle.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        });
+
+        // =====================================================
+        // STEP NAVIGATION
+        // =====================================================
+
+        function goToStep(step) {
+            state.currentStep = step;
+
+            // Update step visibility
+            elements.steps.forEach(s => s.classList.remove('active'));
+            const stepId = step === 1.5 ? 'step1b' : `step${step}`;
+            document.getElementById(stepId).classList.add('active');
+
+            // Update stepper dots
+            elements.stepperDots.forEach((dot, index) => {
+                const dotStep = index + 1;
+                dot.classList.remove('completed', 'active', 'pending');
+                if (dotStep < Math.ceil(step)) {
+                    dot.classList.add('completed');
+                    dot.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+                } else if (dotStep === Math.ceil(step)) {
+                    dot.classList.add('active');
+                    dot.textContent = dotStep;
+                } else {
+                    dot.classList.add('pending');
+                    dot.textContent = dotStep;
+                }
+            });
+
+            // Update stepper lines
+            elements.stepperLines.forEach((line, index) => {
+                line.classList.toggle('completed', index < Math.ceil(step) - 1);
+            });
+
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // =====================================================
+        // STEP 1: COMPANY SEARCH
+        // =====================================================
+
+        let searchTimeout;
+        elements.companySearch.addEventListener('input', (e) => {
+            const query = e.target.value.trim().toLowerCase();
+            clearTimeout(searchTimeout);
+
+            if (query.length < 2) {
+                elements.searchResults.classList.remove('visible');
+                return;
+            }
+
+            searchTimeout = setTimeout(() => {
+                // Search in test companies
+                const results = testCompanies.filter(c =>
+                    c.name.toLowerCase().includes(query) ||
+                    c.uid.toLowerCase().includes(query) ||
+                    c.location.toLowerCase().includes(query)
+                );
+
+                if (results.length > 0) {
+                    elements.searchResults.innerHTML = results.map(c => `
+                        <div class="search-result-item" data-company-id="${c.id}">
+                            <div class="result-radio"></div>
+                            <div class="result-info">
+                                <div class="result-name">${c.name}</div>
+                                <div class="result-meta">${c.uid} · ${c.location} · ${c.legalForm}</div>
+                            </div>
+                        </div>
+                    `).join('');
+                    elements.searchResults.classList.add('visible');
+
+                    // Add click handlers
+                    elements.searchResults.querySelectorAll('.search-result-item').forEach(item => {
+                        item.addEventListener('click', () => {
+                            selectTestPreset(item.dataset.companyId);
+                            // Update search result UI
+                            elements.searchResults.querySelectorAll('.search-result-item').forEach(i => {
+                                i.classList.toggle('selected', i.dataset.companyId === item.dataset.companyId);
+                            });
+                        });
+                    });
+                } else {
+                    elements.searchResults.innerHTML = '<div class="empty-state">Keine Firmen gefunden. Zefix-API wird bald integriert.</div>';
+                    elements.searchResults.classList.add('visible');
+                }
+            }, 300);
+        });
+
+        elements.manualEntryLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            goToStep(1.5);
+        });
+
+        document.getElementById('step1Next').addEventListener('click', () => {
+            updateCompanyBar();
+            // Apply suggested data from test data
+            applyIndustrySuggestions();
+            applyRegionSuggestions();
+            goToStep(2);
+        });
+
+        // Apply industry suggestions from test data
+        function applyIndustrySuggestions() {
+            if (state.suggestedIndustries.length > 0) {
+                // Reset selections
+                state.selectedIndustries = [...state.suggestedIndustries];
+                elements.industryCards.forEach(card => {
+                    const industry = card.dataset.industry;
+                    const isSelected = state.suggestedIndustries.includes(industry);
+                    card.classList.toggle('selected', isSelected);
+                });
+                document.getElementById('step2Next').disabled = false;
+            }
+        }
+
+        // Apply region suggestions from test data
+        function applyRegionSuggestions() {
+            if (state.suggestedRegions.length > 0) {
+                // Check if suggestion is "all of Switzerland"
+                if (state.suggestedRegions.includes('all')) {
+                    // Select all cantons
+                    selectAllCantons();
+                } else {
+                    // Select only the suggested cantons
+                    state.suggestedRegions.forEach(regionCode => {
+                        const btn = elements.cantonGrid.querySelector(`.canton-btn[data-canton="${regionCode}"]`);
+                        if (btn && !btn.classList.contains('selected')) {
+                            btn.classList.add('selected');
+                            if (!state.selectedRegions.includes(regionCode)) {
+                                state.selectedRegions.push(regionCode);
+                            }
+                        }
+                    });
+                    updateRegionToggleButton();
+                }
+            }
+        }
+
+        // =====================================================
+        // STEP 1B: MANUAL ENTRY
+        // =====================================================
+
+        elements.manualCompanyName.addEventListener('input', updateManualEntryButton);
+
+        elements.sizeOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                elements.sizeOptions.forEach(o => o.classList.remove('selected'));
+                option.classList.add('selected');
+                state.companySize = option.dataset.size;
+                updateManualEntryButton();
+            });
+        });
+
+        function updateManualEntryButton() {
+            const hasName = elements.manualCompanyName.value.trim().length > 0;
+            document.getElementById('step1bNext').disabled = !hasName;
+        }
+
+        document.getElementById('step1bBack').addEventListener('click', () => goToStep(1));
+
+        document.getElementById('step1bNext').addEventListener('click', () => {
+            state.company = {
+                name: elements.manualCompanyName.value.trim(),
+                uid: 'Manuell',
+                location: elements.manualLocation.value.trim() || 'Schweiz',
+                type: 'Unternehmen',
+            };
+            state.manualEntry = true;
+            updateCompanyBar();
+            goToStep(2);
+        });
+
+        function updateCompanyBar() {
+            document.getElementById('selectedCompanyName').textContent = state.company.name;
+            document.getElementById('selectedCompanyUid').textContent = state.company.uid === 'Manuell'
+                ? state.company.location
+                : `${state.company.uid} · ${state.company.location}`;
+        }
+
+        // =====================================================
+        // STEP 2: INDUSTRY SELECTION
+        // =====================================================
+
+        elements.industryCards.forEach(card => {
+            card.addEventListener('click', () => {
+                const industry = card.dataset.industry;
+                card.classList.toggle('selected');
+
+                if (card.classList.contains('selected')) {
+                    state.selectedIndustries.push(industry);
+                } else {
+                    state.selectedIndustries = state.selectedIndustries.filter(i => i !== industry);
+                }
+
+                document.getElementById('step2Next').disabled = state.selectedIndustries.length === 0;
+            });
+        });
+
+        document.getElementById('step2Back').addEventListener('click', () => {
+            goToStep(state.manualEntry ? 1.5 : 1);
+        });
+
+        document.getElementById('step2Next').addEventListener('click', () => {
+            // Show NPK section if construction is selected
+            const hasConstruction = state.selectedIndustries.includes('construction');
+            elements.npkSection.style.display = hasConstruction ? 'block' : 'none';
+
+            // Build CPV tree based on selected industries
+            buildCpvTree();
+            if (hasConstruction) {
+                buildNpkTree();
+            }
+
+            // Apply suggested data from test data
+            applyStep3Suggestions();
+
+            // Initialize section toggles
+            initializeSectionToggles();
+
+            goToStep(3);
+        });
+
+        // =====================================================
+        // REGION SELECTION
+        // =====================================================
+
+        // Build canton grid
+        function buildCantonGrid() {
+            elements.cantonGrid.innerHTML = swissCantons.map(canton => `
+                <button type="button" class="canton-btn" data-canton="${canton.code}">
+                    <span class="canton-code">${canton.code}</span>
+                    ${canton.name}
+                </button>
+            `).join('');
+
+            // Add click handlers
+            elements.cantonGrid.querySelectorAll('.canton-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const cantonCode = btn.dataset.canton;
+                    btn.classList.toggle('selected');
+
+                    if (btn.classList.contains('selected')) {
+                        if (!state.selectedRegions.includes(cantonCode)) {
+                            state.selectedRegions.push(cantonCode);
+                        }
+                    } else {
+                        state.selectedRegions = state.selectedRegions.filter(r => r !== cantonCode);
+                    }
+                    updateRegionToggleButton();
+                });
+            });
+        }
+
+        // Select all cantons
+        function selectAllCantons() {
+            state.selectedRegions = swissCantons.map(c => c.code);
+            elements.cantonGrid.querySelectorAll('.canton-btn').forEach(btn => {
+                btn.classList.add('selected');
+            });
+            updateRegionToggleButton();
+        }
+
+        // Deselect all cantons
+        function deselectAllCantons() {
+            state.selectedRegions = [];
+            elements.cantonGrid.querySelectorAll('.canton-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            updateRegionToggleButton();
+        }
+
+        // Update toggle button text based on selection state
+        function updateRegionToggleButton() {
+            const allSelected = state.selectedRegions.length === swissCantons.length;
+            elements.regionToggleAll.textContent = allSelected ? 'Alle abwählen' : 'Alle auswählen';
+        }
+
+        // Initialize canton grid on load
+        buildCantonGrid();
+
+        // Toggle all button click handler
+        elements.regionToggleAll.addEventListener('click', () => {
+            const allSelected = state.selectedRegions.length === swissCantons.length;
+            if (allSelected) {
+                deselectAllCantons();
+            } else {
+                selectAllCantons();
+            }
+        });
+
+        // Render keyword tags inside the tag input container
+        function renderKeywordTags() {
+            // Remove existing tags (keep the input)
+            const existingTags = elements.tagInputContainer.querySelectorAll('.keyword-tag');
+            existingTags.forEach(tag => tag.remove());
+
+            // Insert tags before the input
+            state.selectedKeywords.forEach(kw => {
+                const tag = document.createElement('div');
+                tag.className = 'keyword-tag';
+                tag.innerHTML = `
+                    <span class="keyword-tag-text">${kw}</span>
+                    <button class="keyword-tag-remove" data-keyword="${kw}" aria-label="Entfernen">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                `;
+                elements.tagInputContainer.insertBefore(tag, elements.keywordsInput);
+            });
+
+            // Add click handlers for remove buttons
+            elements.tagInputContainer.querySelectorAll('.keyword-tag-remove').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    removeKeyword(btn.dataset.keyword);
+                });
+            });
+
+            updateStep3Button();
+        }
+
+        // Remove keyword
+        function removeKeyword(keyword) {
+            const index = state.selectedKeywords.indexOf(keyword);
+            if (index > -1) {
+                state.selectedKeywords.splice(index, 1);
+                renderKeywordTags();
+            }
+        }
+
+        // Add keyword from input
+        function addKeywordFromInput() {
+            const value = elements.keywordsInput.value.trim();
+            if (value && !state.selectedKeywords.includes(value)) {
+                state.selectedKeywords.push(value);
+                elements.keywordsInput.value = '';
+                renderKeywordTags();
+            }
+        }
+
+        // Keywords input handler - Enter key
+        elements.keywordsInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addKeywordFromInput();
+            }
+        });
+
+        // Click on container focuses the input
+        elements.tagInputContainer.addEventListener('click', () => {
+            elements.keywordsInput.focus();
+        });
+
+        // =====================================================
+        // EXCLUSIONS TAG INPUT
+        // =====================================================
+
+        // Render exclusion tags inside the exclusion input container
+        function renderExclusionTags() {
+            // Remove existing tags (keep the input)
+            const existingTags = elements.exclusionInputContainer.querySelectorAll('.keyword-tag');
+            existingTags.forEach(tag => tag.remove());
+
+            // Insert tags before the input
+            state.selectedExclusions.forEach(ex => {
+                const tag = document.createElement('div');
+                tag.className = 'keyword-tag';
+                tag.innerHTML = `
+                    <span class="keyword-tag-text">${ex}</span>
+                    <button class="keyword-tag-remove" data-exclusion="${ex}" aria-label="Entfernen">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                `;
+                elements.exclusionInputContainer.insertBefore(tag, elements.exclusionsInput);
+            });
+
+            // Add click handlers for remove buttons
+            elements.exclusionInputContainer.querySelectorAll('.keyword-tag-remove').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    removeExclusion(btn.dataset.exclusion);
+                });
+            });
+        }
+
+        // Remove exclusion
+        function removeExclusion(exclusion) {
+            const index = state.selectedExclusions.indexOf(exclusion);
+            if (index > -1) {
+                state.selectedExclusions.splice(index, 1);
+                renderExclusionTags();
+            }
+        }
+
+        // Add exclusion from input
+        function addExclusionFromInput() {
+            const value = elements.exclusionsInput.value.trim();
+            if (value && !state.selectedExclusions.includes(value)) {
+                state.selectedExclusions.push(value);
+                elements.exclusionsInput.value = '';
+                renderExclusionTags();
+            }
+        }
+
+        // Exclusions input handler - Enter key
+        elements.exclusionsInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addExclusionFromInput();
+            }
+        });
+
+        // Click on container focuses the input
+        elements.exclusionInputContainer.addEventListener('click', () => {
+            elements.exclusionsInput.focus();
+        });
+
+        // Apply suggestions from test data
+        function applyStep3Suggestions() {
+            // Apply suggested keywords as pre-selected tags
+            if (state.suggestedKeywords.length > 0) {
+                state.suggestedKeywords.forEach(kw => {
+                    if (!state.selectedKeywords.includes(kw)) {
+                        state.selectedKeywords.push(kw);
+                    }
+                });
+                // Render the tags
+                renderKeywordTags();
+            }
+
+            // Apply suggested exclusions as pre-selected tags
+            if (state.suggestedExclusions.length > 0) {
+                state.suggestedExclusions.forEach(ex => {
+                    if (!state.selectedExclusions.includes(ex)) {
+                        state.selectedExclusions.push(ex);
+                    }
+                });
+                // Render the tags
+                renderExclusionTags();
+            }
+
+            // Apply suggested CPV codes
+            if (state.suggestedCpv.length > 0) {
+                state.suggestedCpv.forEach(suggestion => {
+                    const item = elements.cpvTree.querySelector(`.code-item[data-code="${suggestion.code}"]`);
+                    if (item) {
+                        item.classList.add('selected');
+                        state.selectedCpv.push({ code: suggestion.code, name: suggestion.name });
+                    }
+                });
+            }
+
+            // Apply suggested NPK codes
+            if (state.suggestedNpk.length > 0 && state.selectedIndustries.includes('construction')) {
+                state.suggestedNpk.forEach(suggestion => {
+                    const item = elements.npkTree.querySelector(`.code-item[data-code="${suggestion.code}"]`);
+                    if (item) {
+                        item.classList.add('selected');
+                        state.selectedNpk.push({ code: suggestion.code, name: suggestion.name });
+                    }
+                });
+            }
+
+            updateSectionCounts();
+            updateCategoryCounts();
+            updateSelectionSummaries();
+            updateStep3Button();
+        }
+
+        // Initialize section toggles
+        function initializeSectionToggles() {
+            document.querySelectorAll('.code-section-header').forEach(header => {
+                header.addEventListener('click', () => {
+                    header.parentElement.classList.toggle('expanded');
+                });
+            });
+        }
+
+        // Update section counts
+        function updateSectionCounts() {
+            elements.cpvSectionCount.textContent = state.selectedCpv.length || '';
+            elements.npkSectionCount.textContent = state.selectedNpk.length || '';
+        }
+
+        // Update category-level counts for CPV and NPK
+        function updateCategoryCounts() {
+            // CPV category counts
+            const cpvCounts = {};
+            state.selectedCpv.forEach(item => {
+                const selectedItem = elements.cpvTree.querySelector(`.code-item[data-code="${item.code}"]`);
+                if (selectedItem) {
+                    const parent = selectedItem.dataset.parent;
+                    cpvCounts[parent] = (cpvCounts[parent] || 0) + 1;
+                }
+            });
+            elements.cpvTree.querySelectorAll('.code-category-count').forEach(el => {
+                const category = el.dataset.category;
+                const count = cpvCounts[category] || 0;
+                el.textContent = count;
+                el.classList.toggle('visible', count > 0);
+            });
+
+            // NPK category counts
+            const npkCounts = {};
+            state.selectedNpk.forEach(item => {
+                const selectedItem = elements.npkTree.querySelector(`.code-item[data-code="${item.code}"]`);
+                if (selectedItem) {
+                    const parent = selectedItem.dataset.parent;
+                    npkCounts[parent] = (npkCounts[parent] || 0) + 1;
+                }
+            });
+            elements.npkTree.querySelectorAll('.code-category-count').forEach(el => {
+                const category = el.dataset.category;
+                const count = npkCounts[category] || 0;
+                el.textContent = count;
+                el.classList.toggle('visible', count > 0);
+            });
+        }
+
+        // Update selection summaries for CPV and NPK
+        function updateSelectionSummaries() {
+            // CPV Selection Summary
+            const cpvCount = state.selectedCpv.length;
+            elements.cpvSelectionSummary.classList.toggle('visible', cpvCount > 0);
+
+            let cpvHtml = state.selectedCpv.map(c => `
+                <div class="selection-tag">
+                    <span class="selection-tag-label">${c.code} ${c.name.substring(0, 20)}${c.name.length > 20 ? '...' : ''}</span>
+                    <button onclick="removeSelection('cpv', '${c.code}')" aria-label="Entfernen">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+            `).join('');
+            elements.cpvSelectionItems.innerHTML = cpvHtml;
+
+            // NPK Selection Summary
+            const npkCount = state.selectedNpk.length;
+            elements.npkSelectionSummary.classList.toggle('visible', npkCount > 0);
+
+            let npkHtml = state.selectedNpk.map(c => `
+                <div class="selection-tag">
+                    <span class="selection-tag-label">${c.code} ${c.name.substring(0, 20)}${c.name.length > 20 ? '...' : ''}</span>
+                    <button onclick="removeSelection('npk', '${c.code}')" aria-label="Entfernen">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+            `).join('');
+            elements.npkSelectionItems.innerHTML = npkHtml;
+        }
+
+        // Remove selection item
+        window.removeSelection = function(type, code) {
+            if (type === 'cpv') {
+                const index = state.selectedCpv.findIndex(c => c.code === code);
+                if (index > -1) state.selectedCpv.splice(index, 1);
+                const item = elements.cpvTree.querySelector(`.code-item[data-code="${code}"]`);
+                if (item) item.classList.remove('selected');
+            } else if (type === 'npk') {
+                const index = state.selectedNpk.findIndex(c => c.code === code);
+                if (index > -1) state.selectedNpk.splice(index, 1);
+                const item = elements.npkTree.querySelector(`.code-item[data-code="${code}"]`);
+                if (item) item.classList.remove('selected');
+            }
+            updateSectionCounts();
+            updateCategoryCounts();
+            updateSelectionSummaries();
+            updateStep3Button();
+        };
+
+        // =====================================================
+        // STEP 3: CPV/NPK SELECTION
+        // =====================================================
+
+        // Reset selections (called when rebuilding trees)
+        function resetCodeSelections() {
+            state.selectedCpv = [];
+            state.selectedNpk = [];
+            state.selectedKeywords = [];
+            updateSectionCounts();
+            updateCategoryCounts();
+            updateSelectionSummaries();
+        }
+
+        function buildCpvTree(preserveSelections = false) {
+            // Optionally preserve current selections
+            const previousSelections = preserveSelections ? [...state.selectedCpv] : [];
+            if (!preserveSelections) {
+                resetCodeSelections();
+            }
+
+            let html = '';
+            let divisions;
+
+            if (state.showAllCpv) {
+                // Show all CPV divisions
+                divisions = cpvAllDivisions;
+            } else {
+                // Show only recommended divisions based on:
+                // 1. If company has suggested CPV codes, show only those categories
+                // 2. Otherwise, show categories based on selected industries
+                if (state.suggestedCpv.length > 0) {
+                    // Get unique prefixes from suggested CPV codes
+                    const suggestedPrefixes = new Set();
+                    state.suggestedCpv.forEach(cpv => {
+                        suggestedPrefixes.add(cpv.code.substring(0, 2));
+                    });
+                    divisions = cpvAllDivisions.filter(d =>
+                        Array.from(suggestedPrefixes).some(prefix => d.code.startsWith(prefix))
+                    );
+                } else {
+                    // Fall back to industry-based filtering
+                    const relevantPrefixes = new Set();
+                    state.selectedIndustries.forEach(industry => {
+                        const prefixes = cpvIndustryMappings[industry] || [];
+                        prefixes.forEach(p => relevantPrefixes.add(p));
+                    });
+
+                    if (relevantPrefixes.size > 0) {
+                        divisions = cpvAllDivisions.filter(d =>
+                            Array.from(relevantPrefixes).some(prefix => d.code.startsWith(prefix))
+                        );
+                    } else {
+                        // No industries selected, show all as fallback
+                        divisions = cpvAllDivisions;
+                    }
+                }
+            }
+
+            divisions.forEach(category => {
+                html += `
+                    <div class="code-category" data-category="${category.code}">
+                        <div class="code-category-header">
+                            <svg class="code-toggle" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="9 18 15 12 9 6"></polyline>
+                            </svg>
+                            <span class="code-category-name">${category.name}</span>
+                            <span class="code-category-count" data-category="${category.code}"></span>
+                            <span class="code-category-code">${category.code}</span>
+                        </div>
+                        <div class="code-items">
+                            ${category.children.map(item => `
+                                <div class="code-item" data-code="${item.code}" data-name="${item.name}" data-parent="${category.code}">
+                                    <div class="code-checkbox">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                            <polyline points="20 6 9 17 4 12"></polyline>
+                                        </svg>
+                                    </div>
+                                    <span class="code-item-name">${item.name}</span>
+                                    <span class="code-item-code">${item.code}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+
+            elements.cpvTree.innerHTML = html;
+            initializeCodeTree(elements.cpvTree, 'cpv');
+
+            // Restore previous selections if preserving
+            if (preserveSelections && previousSelections.length > 0) {
+                previousSelections.forEach(sel => {
+                    const item = elements.cpvTree.querySelector(`.code-item[data-code="${sel.code}"]`);
+                    if (item) {
+                        item.classList.add('selected');
+                        if (!state.selectedCpv.find(c => c.code === sel.code)) {
+                            state.selectedCpv.push(sel);
+                        }
+                    }
+                });
+                updateSectionCounts();
+                updateCategoryCounts();
+                updateSelectionSummaries();
+            }
+        }
+
+        function buildNpkTree(preserveSelections = false) {
+            // Optionally preserve current selections
+            const previousSelections = preserveSelections ? [...state.selectedNpk] : [];
+
+            let chapters;
+
+            if (state.showAllNpk) {
+                // Show all NPK chapters
+                chapters = npkAllChapters;
+            } else {
+                // Show only recommended chapters based on suggestedNpk
+                if (state.suggestedNpk.length > 0) {
+                    // Get chapter codes that contain suggested NPK codes
+                    const suggestedChapterCodes = new Set();
+                    state.suggestedNpk.forEach(npk => {
+                        // Find which chapter contains this NPK code
+                        npkAllChapters.forEach(chapter => {
+                            if (chapter.children.some(child => child.code === npk.code)) {
+                                suggestedChapterCodes.add(chapter.code);
+                            }
+                        });
+                    });
+                    chapters = npkAllChapters.filter(ch => suggestedChapterCodes.has(ch.code));
+                } else {
+                    // No suggestions, show all as fallback
+                    chapters = npkAllChapters;
+                }
+            }
+
+            let html = chapters.map(category => `
+                <div class="code-category" data-category="${category.code}">
+                    <div class="code-category-header">
+                        <svg class="code-toggle" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                        <span class="code-category-name">${category.name}</span>
+                        <span class="code-category-count" data-category="${category.code}"></span>
+                        <span class="code-category-code">${category.code}</span>
+                    </div>
+                    <div class="code-items">
+                        ${category.children.map(item => `
+                            <div class="code-item" data-code="${item.code}" data-name="${item.name}" data-parent="${category.code}">
+                                <div class="code-checkbox">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                </div>
+                                <span class="code-item-name">${item.name}</span>
+                                <span class="code-item-code">${item.code}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+
+            elements.npkTree.innerHTML = html;
+            initializeCodeTree(elements.npkTree, 'npk');
+
+            // Restore previous selections if preserving
+            if (preserveSelections && previousSelections.length > 0) {
+                previousSelections.forEach(sel => {
+                    const item = elements.npkTree.querySelector(`.code-item[data-code="${sel.code}"]`);
+                    if (item) {
+                        item.classList.add('selected');
+                        if (!state.selectedNpk.find(c => c.code === sel.code)) {
+                            state.selectedNpk.push(sel);
+                        }
+                    }
+                });
+                updateSectionCounts();
+                updateCategoryCounts();
+                updateSelectionSummaries();
+            }
+        }
+
+        function initializeCodeTree(tree, type) {
+            // Category expansion
+            tree.querySelectorAll('.code-category-header').forEach(header => {
+                header.addEventListener('click', () => {
+                    header.parentElement.classList.toggle('expanded');
+                });
+            });
+
+            // Item selection
+            tree.querySelectorAll('.code-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const code = item.dataset.code;
+                    const name = item.dataset.name;
+                    item.classList.toggle('selected');
+
+                    const selectedArray = type === 'cpv' ? state.selectedCpv : state.selectedNpk;
+
+                    if (item.classList.contains('selected')) {
+                        selectedArray.push({ code, name });
+                    } else {
+                        const index = selectedArray.findIndex(c => c.code === code);
+                        if (index > -1) selectedArray.splice(index, 1);
+                    }
+
+                    updateSectionCounts();
+                    updateCategoryCounts();
+                    updateSelectionSummaries();
+                    updateStep3Button();
+                });
+            });
+        }
+
+        function updateStep3Button() {
+            const hasSelection = state.selectedKeywords.length > 0 || state.selectedCpv.length > 0 || state.selectedNpk.length > 0;
+            document.getElementById('step3Next').disabled = !hasSelection;
+        }
+
+        // Search filtering
+        elements.cpvSearch.addEventListener('input', (e) => filterCodeTree(e.target.value, elements.cpvTree));
+        elements.npkSearch.addEventListener('input', (e) => filterCodeTree(e.target.value, elements.npkTree));
+
+        // Filter toggle - CPV
+        elements.cpvFilterRecommended.addEventListener('click', () => {
+            if (!state.showAllCpv) return; // Already showing recommended
+            state.showAllCpv = false;
+            elements.cpvFilterRecommended.classList.add('active');
+            elements.cpvFilterAll.classList.remove('active');
+            buildCpvTree(true); // Preserve selections
+        });
+
+        elements.cpvFilterAll.addEventListener('click', () => {
+            if (state.showAllCpv) return; // Already showing all
+            state.showAllCpv = true;
+            elements.cpvFilterAll.classList.add('active');
+            elements.cpvFilterRecommended.classList.remove('active');
+            buildCpvTree(true); // Preserve selections
+        });
+
+        // Filter toggle - NPK
+        elements.npkFilterRecommended.addEventListener('click', () => {
+            if (!state.showAllNpk) return;
+            state.showAllNpk = false;
+            elements.npkFilterRecommended.classList.add('active');
+            elements.npkFilterAll.classList.remove('active');
+            buildNpkTree(true);
+        });
+
+        elements.npkFilterAll.addEventListener('click', () => {
+            if (state.showAllNpk) return;
+            state.showAllNpk = true;
+            elements.npkFilterAll.classList.add('active');
+            elements.npkFilterRecommended.classList.remove('active');
+            buildNpkTree(true);
+        });
+
+        function filterCodeTree(query, tree) {
+            query = query.toLowerCase().trim();
+            tree.querySelectorAll('.code-category').forEach(category => {
+                let hasVisibleChildren = false;
+                category.querySelectorAll('.code-item').forEach(item => {
+                    const name = item.dataset.name.toLowerCase();
+                    const code = item.dataset.code.toLowerCase();
+                    const matches = !query || name.includes(query) || code.includes(query);
+                    item.style.display = matches ? 'flex' : 'none';
+                    if (matches) hasVisibleChildren = true;
+                });
+                category.style.display = hasVisibleChildren ? 'block' : 'none';
+                if (query && hasVisibleChildren) {
+                    category.classList.add('expanded');
+                }
+            });
+        }
+
+        document.getElementById('step3Back').addEventListener('click', () => goToStep(2));
+
+        document.getElementById('step3Next').addEventListener('click', () => {
+            updateSummary();
+            goToStep(4);
+        });
+
+        // =====================================================
+        // STEP 4: CONFIRMATION
+        // =====================================================
+
+        function updateSummary() {
+            document.getElementById('summaryCompanyName').textContent = state.company.name;
+            document.getElementById('summaryCompanyUid').textContent = state.company.uid === 'Manuell'
+                ? state.company.location
+                : `${state.company.uid} · ${state.company.location}`;
+
+            document.getElementById('summaryIndustries').textContent =
+                state.selectedIndustries.map(i => industryNames[i]).join(', ');
+
+            // Keywords
+            const hasKeywords = state.selectedKeywords.length > 0;
+            document.getElementById('summaryKeywordsRow').style.display = hasKeywords ? 'flex' : 'none';
+            if (hasKeywords) {
+                document.getElementById('summaryKeywords').textContent = state.selectedKeywords.join(', ');
+            }
+
+            document.getElementById('summaryCpv').textContent =
+                state.selectedCpv.map(c => `${c.code} (${c.name})`).join(', ') || '-';
+
+            const hasConstruction = state.selectedIndustries.includes('construction');
+            document.getElementById('summaryNpkRow').style.display = hasConstruction ? 'flex' : 'none';
+            if (hasConstruction) {
+                document.getElementById('summaryNpk').textContent =
+                    state.selectedNpk.map(c => `${c.code} (${c.name})`).join(', ') || '-';
+            }
+        }
+
+        document.getElementById('editProfile').addEventListener('click', () => goToStep(1));
+
+        document.getElementById('goToDashboard').addEventListener('click', () => {
+            alert('Dashboard kommt bald! Dies ist eine Mockup-Version.');
+        });
+
+        // =====================================================
+        // INITIALIZATION
+        // =====================================================
+
+        initTheme();
+        loadTestCompanies();
+    </script>
+</body>
+</html>
