@@ -75,12 +75,15 @@ const MOCK_TENDERS = [
         title: "Sanierung Schulhaus Mattenhof",
         authority: "Gemeinde Zürich",
         price: "CHF 2.5 - 3.0 Mio.",
-        deadline: "Heute", // For testing immediate visual
+        deadline: "Heute",
         deadlineDate: "2026-01-29",
         status: "Offen",
         match: 94,
         region: "ZH",
-        cpv: ["45210000", "45260000"]
+        cpv: ["45210000", "45260000"],
+        bookmarked: true,
+        applied: false,
+        hidden: false
     },
     {
         id: 2,
@@ -92,7 +95,10 @@ const MOCK_TENDERS = [
         status: "Bald fällig",
         match: 87,
         region: "AG",
-        cpv: ["72000000"]
+        cpv: ["72000000"],
+        bookmarked: false,
+        applied: true,
+        hidden: false
     },
     {
         id: 3,
@@ -104,7 +110,55 @@ const MOCK_TENDERS = [
         status: "Offen",
         match: 82,
         region: "ZH",
-        cpv: ["45230000"]
+        cpv: ["45230000"],
+        bookmarked: true,
+        applied: false,
+        hidden: false
+    },
+    {
+        id: 4,
+        title: "Neubau Verwaltungsgebäude",
+        authority: "Stadt Zug",
+        price: "CHF 8.0 - 10.0 Mio.",
+        deadline: "14 Tage",
+        deadlineDate: "2026-02-01",
+        status: "Offen",
+        match: 91,
+        region: "ZG",
+        cpv: ["45210000"],
+        bookmarked: false,
+        applied: false,
+        hidden: false
+    },
+    {
+        id: 5,
+        title: "Fassadensanierung Kantonsschule",
+        authority: "Kanton Zürich",
+        price: "CHF 1.5 - 2.0 Mio.",
+        deadline: "2 Tage",
+        deadlineDate: "2026-01-20",
+        status: "Bald fällig",
+        match: 88,
+        region: "ZH",
+        cpv: ["45260000"],
+        bookmarked: true,
+        applied: true,
+        hidden: false
+    },
+    {
+        id: 6,
+        title: "Renovierung Gemeindehaus",
+        authority: "Gemeinde Baar",
+        price: "CHF 800k - 1.2 Mio.",
+        deadline: "21 Tage",
+        deadlineDate: "2026-02-08",
+        status: "Offen",
+        match: 65,
+        region: "ZG",
+        cpv: ["45210000"],
+        bookmarked: false,
+        applied: false,
+        hidden: true
     }
 ];
 
@@ -118,7 +172,8 @@ const state = {
     view: 'landing', // landing, auth, profile-selection, company-search, ai-review, dashboard, tender-detail
     company: null,
     user: null,
-    selectedTender: null
+    selectedTender: null,
+    currentFilter: 'all' // all, open, closing, bookmarked
 };
 
 // DOM Elements
@@ -343,7 +398,7 @@ function selectCompany(name) {
             if (rec.npk && rec.npk.length > 0) {
                 npkSection.style.display = 'block';
                 npkContainer.innerHTML = rec.npk.map(code =>
-                    `<div class="flex items-center gap-2"><span class="text-accent">✓</span> <span>${code}</span></div>`
+                    `<div class="flex items-center gap-2"><svg class="text-accent" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <span>${code}</span></div>`
                 ).join('');
             } else {
                 npkSection.style.display = 'none';
@@ -355,7 +410,10 @@ function selectCompany(name) {
         if (cpvContainer) {
             cpvContainer.innerHTML = rec.cpv.map(c => `
                 <div class="flex items-center gap-2">
-                    <span class="text-accent">✓</span> <span>${c.code} - ${c.label}</span>
+                    <svg class="text-accent" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    <span>${c.code} - ${c.label}</span>
                 </div>
             `).join('');
         }
@@ -375,6 +433,9 @@ function renderTenderFeed(tenders = MOCK_TENDERS) {
     const container = document.getElementById('tender-feed');
     if (!container) return;
 
+    // Update filter counts
+    updateFilterCounts();
+
     if (tenders.length === 0) {
         container.innerHTML = `<div class="p-8 text-center text-secondary">Keine Ausschreibungen gefunden.</div>`;
         return;
@@ -382,27 +443,163 @@ function renderTenderFeed(tenders = MOCK_TENDERS) {
 
     container.innerHTML = tenders.map(t => {
         let badgeColor = 'green';
-        if (t.status === 'Bald fällig') badgeColor = 'orange'; // Fixed status mapping
+        if (t.status === 'Bald fällig') badgeColor = 'orange';
+        if (t.applied) badgeColor = 'blue';
+
+        // Status indicators
+        const statusBadge = t.applied
+            ? `<span class="badge badge-blue">Beworben</span>`
+            : `<span class="badge badge-${badgeColor}">${t.status}</span>`;
+
+        // Action button states
+        const bookmarkClass = t.bookmarked ? 'is-active' : '';
+        const appliedClass = t.applied ? 'is-active' : '';
+        const hiddenClass = t.hidden ? 'is-active' : '';
 
         return `
             <div class="card card-interactive" onclick="viewTender(${t.id})">
-                <div class="flex justify-between items-center" style="margin-bottom: var(--space-4)">
-                    <span class="badge badge-${badgeColor}">${t.status}</span>
-                    <span class="text-h3 text-accent">${t.match}% Match</span>
+                <div class="flex justify-between items-center mb-3">
+                    ${statusBadge}
+                    <span class="text-h3 text-accent">${t.match}%</span>
                 </div>
-                <h3 class="text-h3" style="margin-bottom: var(--space-2)">${t.title}</h3>
-                <div class="text-secondary text-sm" style="margin-bottom: var(--space-4)">${t.authority}</div>
-                
-                <div class="flex justify-between items-center text-sm text-muted">
+                <h3 class="text-h3 mb-2">${t.title}</h3>
+                <div class="text-secondary text-sm mb-4">${t.authority}</div>
+
+                <div class="flex justify-between items-center text-sm text-muted mb-4">
                     <span>${t.price}</span>
-                    <span class="flex items-center gap-2">
-                        <span>⏰ ${t.deadline}</span>
+                    <span class="flex items-center gap-1">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                        ${t.deadline}
                     </span>
+                </div>
+
+                <div class="tender-actions">
+                    <button class="tender-action ${bookmarkClass}" onclick="toggleBookmark(${t.id}, event)" title="${t.bookmarked ? 'Nicht mehr merken' : 'Merken'}">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="${t.bookmarked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
+                            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+                        </svg>
+                        <span>${t.bookmarked ? 'Gemerkt' : 'Merken'}</span>
+                    </button>
+                    <button class="tender-action ${appliedClass}" onclick="toggleApplied(${t.id}, event)" title="${t.applied ? 'Bewerbung zurückziehen' : 'Als beworben markieren'}">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                            <polyline points="22 4 12 14.01 9 11.01"/>
+                        </svg>
+                        <span>${t.applied ? 'Beworben' : 'Bewerben'}</span>
+                    </button>
+                    <button class="tender-action ${hiddenClass}" onclick="toggleHidden(${t.id}, event)" title="${t.hidden ? 'Wieder anzeigen' : 'Ausblenden'}">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            ${t.hidden
+                                ? '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>'
+                                : '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'
+                            }
+                        </svg>
+                        <span>${t.hidden ? 'Anzeigen' : 'Ausblenden'}</span>
+                    </button>
                 </div>
             </div>
         `;
     }).join('');
 }
+
+// Filter tabs functionality
+function filterTenders(filter) {
+    state.currentFilter = filter;
+
+    // Update active tab styling
+    const tabs = document.querySelectorAll('#filter-tabs button');
+    tabs.forEach(tab => {
+        if (tab.dataset.filter === filter) {
+            tab.classList.remove('btn-ghost');
+            tab.classList.add('btn-primary');
+        } else {
+            tab.classList.remove('btn-primary');
+            tab.classList.add('btn-ghost');
+        }
+    });
+
+    // Filter the tenders
+    let filtered = MOCK_TENDERS;
+
+    switch (filter) {
+        case 'open':
+            filtered = MOCK_TENDERS.filter(t => t.status === 'Offen' && !t.hidden);
+            break;
+        case 'closing':
+            filtered = MOCK_TENDERS.filter(t => t.status === 'Bald fällig' && !t.hidden);
+            break;
+        case 'bookmarked':
+            filtered = MOCK_TENDERS.filter(t => t.bookmarked === true && !t.hidden);
+            break;
+        case 'applied':
+            filtered = MOCK_TENDERS.filter(t => t.applied === true);
+            break;
+        case 'hidden':
+            filtered = MOCK_TENDERS.filter(t => t.hidden === true);
+            break;
+        case 'all':
+        default:
+            // "All" excludes hidden tenders
+            filtered = MOCK_TENDERS.filter(t => !t.hidden);
+            break;
+    }
+
+    renderTenderFeed(filtered);
+}
+
+function updateFilterCounts() {
+    const countAll = document.getElementById('count-all');
+    const countOpen = document.getElementById('count-open');
+    const countClosing = document.getElementById('count-closing');
+    const countBookmarked = document.getElementById('count-bookmarked');
+    const countApplied = document.getElementById('count-applied');
+    const countHidden = document.getElementById('count-hidden');
+
+    // "All" count excludes hidden
+    if (countAll) countAll.textContent = MOCK_TENDERS.filter(t => !t.hidden).length;
+    if (countOpen) countOpen.textContent = MOCK_TENDERS.filter(t => t.status === 'Offen' && !t.hidden).length;
+    if (countClosing) countClosing.textContent = MOCK_TENDERS.filter(t => t.status === 'Bald fällig' && !t.hidden).length;
+    if (countBookmarked) countBookmarked.textContent = MOCK_TENDERS.filter(t => t.bookmarked === true && !t.hidden).length;
+    if (countApplied) countApplied.textContent = MOCK_TENDERS.filter(t => t.applied === true).length;
+    if (countHidden) countHidden.textContent = MOCK_TENDERS.filter(t => t.hidden === true).length;
+}
+
+// Toggle tender status functions
+function toggleBookmark(id, event) {
+    event.stopPropagation();
+    const tender = MOCK_TENDERS.find(t => t.id === id);
+    if (tender) {
+        tender.bookmarked = !tender.bookmarked;
+        filterTenders(state.currentFilter);
+    }
+}
+
+function toggleApplied(id, event) {
+    event.stopPropagation();
+    const tender = MOCK_TENDERS.find(t => t.id === id);
+    if (tender) {
+        tender.applied = !tender.applied;
+        filterTenders(state.currentFilter);
+    }
+}
+
+function toggleHidden(id, event) {
+    event.stopPropagation();
+    const tender = MOCK_TENDERS.find(t => t.id === id);
+    if (tender) {
+        tender.hidden = !tender.hidden;
+        filterTenders(state.currentFilter);
+    }
+}
+
+// Make functions globally available
+window.filterTenders = filterTenders;
+window.toggleBookmark = toggleBookmark;
+window.toggleApplied = toggleApplied;
+window.toggleHidden = toggleHidden;
 
 function viewTender(id) {
     const tender = MOCK_TENDERS.find(t => t.id === id);
@@ -503,7 +700,7 @@ function renderProfiles() {
                         <div class="text-sm text-secondary">${p.role}</div>
                     </div>
                 </div>
-                <div class="text-accent">→</div>
+                <svg class="text-accent" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
             </div>
         </div>
     `).join('');
@@ -700,7 +897,8 @@ function saveEdit() {
             if (cpvContainer) {
                 cpvContainer.innerHTML = rec.cpv.map(c => `
                     <div class="flex items-center gap-2">
-                        <span class="text-accent">✓</span> <span>${c.code} - ${c.label}</span>
+                        <svg class="text-accent" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        <span>${c.code} - ${c.label}</span>
                     </div>
                 `).join('');
             }
@@ -714,7 +912,7 @@ function saveEdit() {
             const npkContainer = document.getElementById('ai-npk-codes');
             if (npkContainer) {
                 npkContainer.innerHTML = rec.npk.map(code =>
-                    `<div class="flex items-center gap-2"><span class="text-accent">✓</span> <span>${code}</span></div>`
+                    `<div class="flex items-center gap-2"><svg class="text-accent" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <span>${code}</span></div>`
                 ).join('');
             }
         }

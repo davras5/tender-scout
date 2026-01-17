@@ -52,16 +52,16 @@
                     </button>
                     <div class="lang-dropdown-menu" id="lang-menu">
                         <button class="lang-option is-active" onclick="selectLang('DE')">
-                            <span>🇩🇪</span> Deutsch
+                            <span class="lang-code">DE</span> Deutsch
                         </button>
                         <button class="lang-option" onclick="selectLang('FR')">
-                            <span>🇫🇷</span> Français
+                            <span class="lang-code">FR</span> Français
                         </button>
                         <button class="lang-option" onclick="selectLang('IT')">
-                            <span>🇮🇹</span> Italiano
+                            <span class="lang-code">IT</span> Italiano
                         </button>
                         <button class="lang-option" onclick="selectLang('EN')">
-                            <span>🇬🇧</span> English
+                            <span class="lang-code">EN</span> English
                         </button>
                     </div>
                 </div>
@@ -238,18 +238,18 @@
                 <div class="steps-grid">
                     <div class="step-card">
                         <div class="step-number">1</div>
-                        <h3>Firma eingeben</h3>
-                        <p>Nur Ihr Firmenname – den Rest erledigen wir.</p>
+                        <h3>Starten in 30 Sekunden</h3>
+                        <p>Nur Ihr Firmenname genügt – keine Formulare, kein Aufwand.</p>
                     </div>
                     <div class="step-card">
                         <div class="step-number">2</div>
-                        <h3>KI findet Matches</h3>
-                        <p>Unsere KI analysiert täglich neue Ausschreibungen für Sie.</p>
+                        <h3>KI arbeitet für Sie</h3>
+                        <p>Wir durchsuchen täglich alle Schweizer Ausschreibungen nach Ihren Chancen.</p>
                     </div>
                     <div class="step-card">
                         <div class="step-number">3</div>
-                        <h3>Sie gewinnen</h3>
-                        <p>Passende Ausschreibungen landen direkt in Ihrem Dashboard.</p>
+                        <h3>Mehr Aufträge gewinnen</h3>
+                        <p>Verpassen Sie nie wieder eine passende Ausschreibung.</p>
                     </div>
                 </div>
             </div>
@@ -377,8 +377,6 @@
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
                                     <polyline points="14,2 14,8 20,8"/>
-                                    <path d="m9 15 3 3 3-3"/>
-                                    <path d="M12 12v6"/>
                                 </svg>
                             </div>
                             <span>Tender Scout</span>
@@ -440,7 +438,7 @@
 
     <!-- 2.5 Profile Selection View (New) -->
     <div id="view-profile-selection" class="view">
-        <div class="container container--narrow pt-12">
+        <div class="container container--narrow pt-12 pb-12">
             <div class="text-center mb-8">
                 <h2 class="text-h1">Suchprofile</h2>
                 <p class="text-secondary">Wählen Sie ein Profil oder erstellen Sie ein neues.</p>
@@ -458,7 +456,7 @@
 
     <!-- 3. Company Search View -->
     <div id="view-company-search" class="view">
-        <div class="container container--narrow pt-12">
+        <div class="container container--narrow pt-12 pb-12">
             <div class="wizard-steps">
                 <div class="step-dot active"></div>
                 <div class="step-dot"></div>
@@ -504,7 +502,7 @@
             <div class="text-sm text-secondary mt-2">Bitte warten, während wir Ihr Profil erstellen</div>
         </div>
 
-        <div id="ai-results-content" class="container container--narrow pt-12 hidden">
+        <div id="ai-results-content" class="container container--narrow pt-12 pb-12 hidden">
             <div class="wizard-steps">
                 <div class="step-dot completed"></div>
                 <div class="step-dot active"></div>
@@ -557,10 +555,12 @@
                     </div>
                     <div id="ai-cpv-codes" class="flex flex-col gap-2">
                         <div class="flex items-center gap-2">
-                            <span class="text-accent">✓</span> <span>45210000 - Hochbauarbeiten</span>
+                            <svg class="text-accent" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                            <span>45210000 - Hochbauarbeiten</span>
                         </div>
                         <div class="flex items-center gap-2">
-                            <span class="text-accent">✓</span> <span>45260000 - Dachdeckarbeiten</span>
+                            <svg class="text-accent" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                            <span>45260000 - Dachdeckarbeiten</span>
                         </div>
                     </div>
                 </div>
@@ -595,7 +595,7 @@
 
     <!-- 5. Dashboard View -->
     <div id="view-dashboard" class="view">
-        <div class="container pt-8">
+        <div class="container pt-8 pb-8">
             <!-- Breadcrumb -->
             <nav class="breadcrumb" aria-label="Breadcrumb">
                 <span class="breadcrumb-item is-clickable" onclick="navigateTo('profile-selection')">Meine Profile</span>
@@ -615,11 +615,13 @@
                 </div>
             </div>
 
-            <div class="flex gap-4 mb-6 overflow-x-auto pb-1">
-                <button class="btn btn-sm btn-primary">Alle (47)</button>
-                <button class="btn btn-sm btn-ghost">Offen (32)</button>
-                <button class="btn btn-sm btn-ghost">Bald fällig (5)</button>
-                <button class="btn btn-sm btn-ghost">Gemerkt (12)</button>
+            <div id="filter-tabs" class="flex gap-3 mb-6 overflow-x-auto pb-1">
+                <button class="btn btn-sm btn-primary" data-filter="all" onclick="filterTenders('all')">Alle&nbsp;(<span id="count-all">0</span>)</button>
+                <button class="btn btn-sm btn-ghost" data-filter="open" onclick="filterTenders('open')">Offen&nbsp;(<span id="count-open">0</span>)</button>
+                <button class="btn btn-sm btn-ghost" data-filter="closing" onclick="filterTenders('closing')">Bald fällig&nbsp;(<span id="count-closing">0</span>)</button>
+                <button class="btn btn-sm btn-ghost" data-filter="bookmarked" onclick="filterTenders('bookmarked')">Gemerkt&nbsp;(<span id="count-bookmarked">0</span>)</button>
+                <button class="btn btn-sm btn-ghost" data-filter="applied" onclick="filterTenders('applied')">Beworben&nbsp;(<span id="count-applied">0</span>)</button>
+                <button class="btn btn-sm btn-ghost" data-filter="hidden" onclick="filterTenders('hidden')">Ausgeblendet&nbsp;(<span id="count-hidden">0</span>)</button>
             </div>
 
             <div id="tender-feed" class="tender-grid">
@@ -630,7 +632,7 @@
 
     <!-- 6. Tender Detail View -->
     <div id="view-tender-detail" class="view">
-        <div class="container pt-8">
+        <div class="container pt-8 pb-8">
             <!-- Dynamic Breadcrumb -->
             <nav id="tender-detail-breadcrumbs" class="breadcrumb" aria-label="Breadcrumb">
                 <!-- Injected via JS -->
@@ -694,16 +696,10 @@
 
     <!-- 7. Settings / Subscription View (New) -->
     <div id="view-settings" class="view">
-        <div class="container container--wide pt-8">
+        <div class="container container--wide pt-8 pb-8">
             <!-- Breadcrumb -->
             <nav class="breadcrumb" aria-label="Breadcrumb">
                 <span class="breadcrumb-item is-clickable" onclick="navigateTo('profile-selection')">Meine Profile</span>
-                <span class="breadcrumb-separator">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="9 18 15 12 9 6"/>
-                    </svg>
-                </span>
-                <span class="breadcrumb-item is-clickable" onclick="navigateTo('dashboard')">Müller Bau AG</span>
                 <span class="breadcrumb-separator">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="9 18 15 12 9 6"/>
