@@ -1,0 +1,807 @@
+
+// Mock Data
+const MOCK_COMPANIES = [
+    { name: "Müller Bau AG", uid: "CHE-123.456.789", city: "Zürich", type: "AG" },
+    { name: "Müller Bauunternehmung GmbH", uid: "CHE-987.654.321", city: "Basel", type: "GmbH" },
+    { name: "Hans Müller Bau", uid: "CHE-111.222.333", city: "Bern", type: "Einzelunternehmen" },
+    { name: "TechSolutions AG", uid: "CHE-444.555.666", city: "Zug", type: "AG" },
+    { name: "GreenGardens GmbH", uid: "CHE-777.888.999", city: "Luzern", type: "GmbH" },
+    { name: "Alpha Security", uid: "CHE-222.333.444", city: "St. Gallen", type: "AG" }
+];
+
+const AI_RECOMMENDATIONS = {
+    "Müller": {
+        industry: "Baugewerbe / Hochbau",
+        size: "10-49 Mitarbeitende",
+        keywords: ["Schulhaus", "Sanierung", "Fassaden", "Energetisch"],
+        excludeKeywords: ["Neubau", "Gartenbau"],
+        npk: ["211 - Baumeisterarbeiten", "221 - Montagebau in Stahl", "271 - Gipserarbeiten"],
+        cpv: [
+            { code: "45210000", label: "Hochbauarbeiten" },
+            { code: "45260000", label: "Dachdeckarbeiten" }
+        ],
+        region: "Zürich, Aargau, Zug"
+    },
+    "Hans": {
+        industry: "Baugewerbe / Tiefbau",
+        size: "1-9 Mitarbeitende",
+        keywords: ["Rohrleitungen", "Tiefbau", "Strassenbau"],
+        excludeKeywords: ["Hochbau"],
+        npk: ["111 - Regiearbeiten", "237 - Kanalisationen"],
+        cpv: [
+            { code: "45230000", label: "Bauarbeiten für Rohrleitungen..." }
+        ],
+        region: "Bern, Solothurn"
+    },
+    "Tech": {
+        industry: "IT-Dienstleistungen",
+        size: "10-49 Mitarbeitende",
+        keywords: ["Software", "Entwicklung", "Beratung", "Cloud"],
+        excludeKeywords: ["Hardware", "Support"],
+        npk: [], // IT doesn't use NPK
+        cpv: [
+            { code: "72000000", label: "IT-Dienste: Beratung, Software..." },
+            { code: "72200000", label: "Softwareprogrammierung" }
+        ],
+        region: "Ganze Schweiz"
+    },
+    "Green": {
+        industry: "Gartenbau & Landschaftspflege",
+        size: "1-9 Mitarbeitende",
+        keywords: ["Gartenpflege", "Bepflanzung", "Unterhalt"],
+        excludeKeywords: ["Bau", "Beton"],
+        npk: ["181 - Gartenbau"],
+        cpv: [
+            { code: "77310000", label: "Anpflanzung und Pflege von Grünflächen" }
+        ],
+        region: "Zentralschweiz"
+    },
+    "Alpha": {
+        industry: "Sicherheitsdienste",
+        size: "50-249 Mitarbeitende",
+        keywords: ["Sicherheit", "Bewachung", "Zutrittskontrolle"],
+        excludeKeywords: ["Reinigung"],
+        npk: [],
+        cpv: [
+            { code: "79710000", label: "Sicherheitsdienste" }
+        ],
+        region: "Ostschweiz"
+    }
+};
+
+const MOCK_TENDERS = [
+    {
+        id: 1,
+        title: "Sanierung Schulhaus Mattenhof",
+        authority: "Gemeinde Zürich",
+        price: "CHF 2.5 - 3.0 Mio.",
+        deadline: "Heute", // For testing immediate visual
+        deadlineDate: "2026-01-29",
+        status: "Offen",
+        match: 94,
+        region: "ZH",
+        cpv: ["45210000", "45260000"]
+    },
+    {
+        id: 2,
+        title: "IT-Infrastruktur Modernisierung",
+        authority: "Kanton Aargau",
+        price: "CHF 500k - 750k",
+        deadline: "3 Tage",
+        deadlineDate: "2026-01-20",
+        status: "Bald fällig",
+        match: 87,
+        region: "AG",
+        cpv: ["72000000"]
+    },
+    {
+        id: 3,
+        title: "Strassenbau Projekt Nord",
+        authority: "Stadt Winterthur",
+        price: "CHF 1.2 - 1.8 Mio.",
+        deadline: "28 Tage",
+        deadlineDate: "2026-02-14",
+        status: "Offen",
+        match: 82,
+        region: "ZH",
+        cpv: ["45230000"]
+    }
+];
+
+const MOCK_USER_PROFILES = [
+    { id: 1, name: "Müller Bau AG", role: "Administrator", company: "Müller Bau AG" },
+    { id: 2, name: "Immo Zürich AG", role: "Mitglied", company: "Immo Zürich AG" }
+];
+
+// State
+const state = {
+    view: 'landing', // landing, auth, profile-selection, company-search, ai-review, dashboard, tender-detail
+    company: null,
+    user: null,
+    selectedTender: null
+};
+
+// DOM Elements
+const views = {};
+const nav = {};
+
+// Init
+document.addEventListener('DOMContentLoaded', () => {
+    // Cache Views
+    ['landing', 'auth', 'profile-selection', 'company-search', 'ai-review', 'dashboard', 'tender-detail', 'settings', 'manual-entry'].forEach(id => {
+        views[id] = document.getElementById(`view-${id}`);
+    });
+
+    // Navigation
+    document.querySelectorAll('[data-goto]').forEach(el => {
+        el.addEventListener('click', (e) => {
+            e.preventDefault();
+            const target = el.dataset.goto;
+            navigateTo(target);
+        });
+    });
+
+    // Render Profiles
+    renderProfiles();
+
+    // Init URL State
+    handleUrlParams();
+    window.addEventListener('popstate', (e) => {
+        if (e.state && e.state.view) {
+            navigateTo(e.state.view);
+        }
+    });
+
+    // ... Search Logic etc ...
+    const searchInput = document.getElementById('company-search-input');
+    const searchResults = document.getElementById('company-search-results');
+
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            if (query.length > 2) {
+                const matches = MOCK_COMPANIES.filter(c => c.name.toLowerCase().includes(query));
+                renderSearchResults(matches, searchResults);
+            } else {
+                searchResults.innerHTML = '';
+            }
+        });
+    }
+
+    // Render Feed
+    renderTenderFeed();
+});
+
+// Auth Controller
+function logout() {
+    state.user = null;
+    state.company = null;
+    state.selectedTender = null;
+    state.recommendations = null;
+
+    navigateTo('landing');
+}
+window.logout = logout;
+
+// Navigation Controller
+function navigateTo(viewId) {
+    // Hide all
+    Object.values(views).forEach(el => {
+        if (el) el.classList.remove('active');
+    });
+
+    // Show Target
+    if (views[viewId]) {
+        views[viewId].classList.add('active');
+        state.view = viewId;
+        window.scrollTo(0, 0);
+
+        // Update URL and Header
+        updateUrl(viewId);
+        updateHeader();
+    }
+}
+
+function updateUrl(viewId) {
+    const url = new URL(window.location);
+    url.searchParams.set('view', viewId);
+    window.history.pushState({ view: viewId }, '', url);
+}
+
+function updateHeader() {
+    const authNav = document.getElementById('nav-links-auth');
+    const publicNav = document.getElementById('nav-links-public');
+    const authCta = document.getElementById('nav-cta-auth');
+    const publicCta = document.getElementById('nav-cta-public');
+
+    // Simple logic: If view implies auth, show auth nav
+    const authViews = ['dashboard', 'settings', 'profile-selection', 'company-search', 'ai-review', 'tender-detail', 'manual-entry'];
+    const isAuth = authViews.includes(state.view);
+
+    if (isAuth) {
+        if (authNav) authNav.classList.remove('hidden');
+        if (publicNav) publicNav.classList.add('hidden');
+        if (authCta) authCta.classList.remove('hidden');
+        if (publicCta) publicCta.classList.add('hidden');
+    } else {
+        if (authNav) authNav.classList.add('hidden');
+        if (publicNav) publicNav.classList.remove('hidden');
+        if (authCta) authCta.classList.add('hidden');
+        if (publicCta) publicCta.classList.remove('hidden');
+    }
+}
+
+function handleUrlParams() {
+    const params = new URLSearchParams(window.location.search);
+    const view = params.get('view');
+    if (view && views[view]) {
+        navigateTo(view);
+    }
+}
+
+// Helpers
+function setSearch(term) {
+    const input = document.getElementById('company-search-input');
+    const results = document.getElementById('company-search-results');
+    if (input) {
+        input.value = term;
+        // Trigger input event manually
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+}
+
+function renderSearchResults(companies, container) {
+    container.innerHTML = companies.map(c => `
+        <div class="card card-interactive" onclick="selectCompany('${c.name}')">
+            <div class="flex justify-between items-center">
+                <div>
+                    <div class="text-h3">${c.name}</div>
+                    <div class="text-sm text-secondary">${c.uid} • ${c.city}</div>
+                </div>
+                <div class="btn btn-sm btn-secondary">Select</div>
+            </div>
+        </div>
+    `).join('<div class="gap-2" style="height: 8px"></div>'); // vertical spacer
+}
+
+function selectCompany(name) {
+    state.company = { name };
+
+    // Determine recommendations
+    let rec = AI_RECOMMENDATIONS.Müller; // default fallback
+
+    if (name.includes("Hans")) rec = AI_RECOMMENDATIONS.Hans;
+    else if (name.includes("Tech")) rec = AI_RECOMMENDATIONS.Tech;
+    else if (name.includes("Green")) rec = AI_RECOMMENDATIONS.Green;
+    else if (name.includes("Alpha")) rec = AI_RECOMMENDATIONS.Alpha;
+
+    // Clone to state to allow editing without affecting base mock
+    state.recommendations = JSON.parse(JSON.stringify(rec));
+    rec = state.recommendations;
+
+    // Simulate AI Processing State
+    const overlay = document.getElementById('ai-loading-overlay');
+    const content = document.getElementById('ai-results-content');
+    const statusText = document.getElementById('ai-loading-text');
+
+    // Reset state
+    if (overlay) overlay.classList.remove('hidden');
+    if (content) content.classList.add('hidden');
+
+    navigateTo('ai-review');
+
+    // Animation Steps
+    const steps = [
+        "Scanning Zefix Registry...",
+        "Analyzing Web Presence...",
+        "Identifying Industry Codes...",
+        "Checking NPK Database...",
+        "Finalizing Profile..."
+    ];
+
+    let stepIndex = 0;
+    if (statusText) statusText.textContent = steps[0];
+
+    const interval = setInterval(() => {
+        stepIndex++;
+        if (stepIndex < steps.length && statusText) {
+            statusText.textContent = steps[stepIndex];
+        }
+    }, 800); // Change text every 800ms
+
+    setTimeout(() => {
+        clearInterval(interval);
+
+        // Hydrate AI Review View
+        const nameEl = document.getElementById('ai-company-name');
+        if (nameEl) nameEl.textContent = name;
+
+        // Industry
+        const industryEl = document.getElementById('ai-industry');
+        if (industryEl) industryEl.textContent = rec.industry;
+
+        // Size (New)
+        const sizeEl = document.getElementById('ai-size');
+        if (sizeEl) sizeEl.textContent = rec.size;
+
+        // Keywords (New)
+        const keywordsContainer = document.getElementById('ai-keywords');
+        if (keywordsContainer) {
+            const positive = rec.keywords.map(k =>
+                `<span class="badge badge-green" style="margin-right: 4px; margin-bottom: 4px;">+ ${k}</span>`
+            ).join('');
+            const negative = rec.excludeKeywords.map(k =>
+                `<span class="badge badge-red" style="margin-right: 4px; margin-bottom: 4px;">- ${k}</span>`
+            ).join('');
+            keywordsContainer.innerHTML = positive + negative;
+        }
+
+        // NPK Codes (New - Conditional)
+        const npkSection = document.getElementById('ai-npk-section');
+        const npkContainer = document.getElementById('ai-npk-codes');
+        if (npkSection && npkContainer) {
+            if (rec.npk && rec.npk.length > 0) {
+                npkSection.style.display = 'block';
+                npkContainer.innerHTML = rec.npk.map(code =>
+                    `<div class="flex items-center gap-2"><span class="text-accent">✓</span> <span>${code}</span></div>`
+                ).join('');
+            } else {
+                npkSection.style.display = 'none';
+            }
+        }
+
+        // CPV Codes
+        const cpvContainer = document.getElementById('ai-cpv-codes');
+        if (cpvContainer) {
+            cpvContainer.innerHTML = rec.cpv.map(c => `
+                <div class="flex items-center gap-2">
+                    <span class="text-accent">✓</span> <span>${c.code} - ${c.label}</span>
+                </div>
+            `).join('');
+        }
+
+        // Region
+        const regionEl = document.getElementById('ai-region');
+        if (regionEl) regionEl.textContent = rec.region;
+
+        // Visual Transition - Hide Overlay, Show Content
+        if (overlay) overlay.classList.add('hidden');
+        if (content) content.classList.remove('hidden');
+
+    }, 4000); // 4s total duration
+}
+
+function renderTenderFeed(tenders = MOCK_TENDERS) {
+    const container = document.getElementById('tender-feed');
+    if (!container) return;
+
+    if (tenders.length === 0) {
+        container.innerHTML = `<div class="p-8 text-center text-secondary">Keine Ausschreibungen gefunden.</div>`;
+        return;
+    }
+
+    container.innerHTML = tenders.map(t => {
+        let badgeColor = 'green';
+        if (t.status === 'Bald fällig') badgeColor = 'orange'; // Fixed status mapping
+
+        return `
+            <div class="card card-interactive" onclick="viewTender(${t.id})">
+                <div class="flex justify-between items-center" style="margin-bottom: var(--space-4)">
+                    <span class="badge badge-${badgeColor}">${t.status}</span>
+                    <span class="text-h3 text-accent">${t.match}% Match</span>
+                </div>
+                <h3 class="text-h3" style="margin-bottom: var(--space-2)">${t.title}</h3>
+                <div class="text-secondary text-sm" style="margin-bottom: var(--space-4)">${t.authority}</div>
+                
+                <div class="flex justify-between items-center text-sm text-muted">
+                    <span>${t.price}</span>
+                    <span class="flex items-center gap-2">
+                        <span>⏰ ${t.deadline}</span>
+                    </span>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function viewTender(id) {
+    const tender = MOCK_TENDERS.find(t => t.id === id);
+    if (tender) {
+        state.selectedTender = tender;
+
+        // Update Breadcrumbs
+        const breadcrumbs = document.getElementById('tender-detail-breadcrumbs');
+        if (breadcrumbs) {
+            breadcrumbs.innerHTML = `
+                <span class="breadcrumb-item is-clickable" onclick="navigateTo('profile-selection')">Meine Profile</span>
+                <span class="breadcrumb-separator">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="9 18 15 12 9 6"/>
+                    </svg>
+                </span>
+                <span class="breadcrumb-item is-clickable" onclick="navigateTo('dashboard')">Müller Bau AG</span>
+                <span class="breadcrumb-separator">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="9 18 15 12 9 6"/>
+                    </svg>
+                </span>
+                <span class="breadcrumb-item is-current is-truncate">${tender.title}</span>
+            `;
+        }
+
+        // Populate Detail View
+        const detailContainer = document.getElementById('tender-detail-content');
+        detailContainer.innerHTML = `
+            <div class="flex justify-between items-start" style="margin-bottom: var(--space-6)">
+                <div>
+                    <span class="badge badge-blue" style="margin-bottom: var(--space-2)">${tender.status}</span>
+                    <h1 class="text-display">${tender.title}</h1>
+                    <div class="text-h3 text-secondary" style="margin-top: var(--space-2)">${tender.authority}</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-display text-accent">${tender.match}%</div>
+                    <div class="text-sm text-muted">Übereinstimmung</div>
+                </div>
+            </div>
+
+            <div class="grid gap-4" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: var(--space-8)">
+                <div class="card">
+                    <div class="text-sm text-muted">Auftragswert</div>
+                    <div class="text-h3">${tender.price}</div>
+                </div>
+                <div class="card">
+                    <div class="text-sm text-muted">Eingabefrist</div>
+                    <div class="text-h3">${tender.deadlineDate}</div>
+                </div>
+                 <div class="card">
+                    <div class="text-sm text-muted">Region</div>
+                    <div class="text-h3">${tender.region}</div>
+                </div>
+            </div>
+
+            <div class="text-body" style="margin-bottom: var(--space-8)">
+                <h3 class="text-h2" style="margin-bottom: var(--space-4)">Beschreibung</h3>
+                <p class="text-secondary" style="margin-bottom: var(--space-4)">
+                    Gesamtsanierung des Schulhauses Mattenhof inkl. energetischer Erneuerung, Fassadensanierung und Innenausbau. 
+                    Der Auftrag umfasst Baumeisterarbeiten, Gipserarbeiten und Montagebau in Stahl.
+                </p>
+                <ul class="text-secondary" style="list-style: disc; padding-left: var(--space-6)">
+                    <li>Baustart: Juni 2026</li>
+                    <li>Dauer: 18 Monate</li>
+                    <li>BKP 211, 221, 271</li>
+                </ul>
+            </div>
+            
+            <div class="flex gap-4">
+                <button class="btn btn-lg btn-primary">Jetzt Bewerben</button>
+                <button class="btn btn-lg btn-secondary">Ausschreibung ansehen (SIMAP)</button>
+            </div>
+        `;
+        navigateTo('tender-detail');
+    }
+}
+
+// Make functions global for inline onclick handlers
+window.selectCompany = selectCompany;
+window.viewTender = viewTender;
+window.setSearch = setSearch;
+window.selectProfile = selectProfile;
+
+function renderProfiles() {
+    const container = document.getElementById('profile-list');
+    if (!container) return;
+
+    container.innerHTML = MOCK_USER_PROFILES.map(p => `
+        <div class="card card-interactive" onclick="selectProfile(${p.id})">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center gap-4">
+                    <div style="width: 40px; height: 40px; background: var(--color-bg-muted); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: var(--color-text-secondary);">
+                        ${p.company.substring(0, 2).toUpperCase()}
+                    </div>
+                    <div>
+                        <div class="text-h3">${p.company}</div>
+                        <div class="text-sm text-secondary">${p.role}</div>
+                    </div>
+                </div>
+                <div class="text-accent">→</div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function selectProfile(id) {
+    const profile = MOCK_USER_PROFILES.find(p => p.id === id);
+    if (profile) {
+        // Mock State Update
+        state.company = { name: profile.company };
+        // Assuming profile is already set up, go to dashboard
+        navigateTo('dashboard');
+    }
+}
+
+// Editing Logic
+window.openEditModal = openEditModal;
+// Filter Logic
+function applyFilters() {
+    const statusOpen = document.getElementById('filter-status-open')?.checked ?? true;
+    const statusClosing = document.getElementById('filter-status-closing')?.checked ?? true;
+    const region = document.getElementById('filter-region')?.value ?? 'all';
+    const matchesOnly = document.getElementById('filter-matches-only')?.checked ?? false;
+
+    // Filter Logic
+    const filteredTenders = MOCK_TENDERS.filter(t => {
+        // Status
+        let statusMatch = false;
+        if (t.status === 'Offen' && statusOpen) statusMatch = true;
+        if (t.status === 'Bald fällig' && statusClosing) statusMatch = true;
+        if (!statusOpen && !statusClosing) statusMatch = true;
+
+        // Region
+        let regionMatch = (region === 'all') || (t.region.includes(region));
+
+        // Match Score
+        let scoreMatch = true;
+        if (matchesOnly) {
+            scoreMatch = t.match >= 80;
+        }
+
+        return statusMatch && regionMatch && scoreMatch;
+    });
+
+    renderTenderFeed(filteredTenders);
+    toggleModal('filter', false);
+}
+
+// Make globally available
+window.applyFilters = applyFilters;
+
+window.saveEdit = saveEdit;
+
+// Manual Entry Logic
+function submitManualEntry() {
+    const name = document.getElementById('manual-name')?.value;
+    const city = document.getElementById('manual-city')?.value;
+
+    if (name && city) {
+        // Use generic recommendation for manual entry
+        selectCompany(name);
+    }
+}
+window.submitManualEntry = submitManualEntry;
+
+function openEditModal(field) {
+    currentEditField = field;
+    const rec = state.recommendations;
+    // Ensure titles exist
+    const titleEl = document.getElementById('modal-edit-title');
+    const contentEl = document.getElementById('modal-edit-content');
+
+    if (!titleEl || !contentEl) return;
+
+    // Title
+    titleEl.textContent = `Edit ${field.charAt(0).toUpperCase() + field.slice(1)}`;
+
+    let html = '';
+
+    if (field === 'industry') {
+        html = `
+            <div class="form-group">
+                <label class="form-label">Branche wählen</label>
+                <select id="edit-input" class="input">
+                    <option value="Baugewerbe / Hochbau" ${rec.industry.includes('Hochbau') ? 'selected' : ''}>Baugewerbe / Hochbau</option>
+                    <option value="Baugewerbe / Tiefbau" ${rec.industry.includes('Tiefbau') ? 'selected' : ''}>Baugewerbe / Tiefbau</option>
+                    <option value="IT-Dienstleistungen" ${rec.industry.includes('IT') ? 'selected' : ''}>IT-Dienstleistungen</option>
+                    <option value="Gartenbau" ${rec.industry.includes('Garten') ? 'selected' : ''}>Gartenbau</option>
+                    <option value="Sicherheitsdienste" ${rec.industry.includes('Sicherheit') ? 'selected' : ''}>Sicherheitsdienste</option>
+                </select>
+            </div>
+        `;
+    } else if (field === 'size') {
+        html = `
+            <div class="form-group">
+                 <label class="form-label">Unternehmensgrösse</label>
+                 <select id="edit-input" class="input">
+                    <option value="1-9 Mitarbeitende" ${rec.size.includes('1-9') ? 'selected' : ''}>1-9 Mitarbeitende</option>
+                    <option value="10-49 Mitarbeitende" ${rec.size.includes('10-49') ? 'selected' : ''}>10-49 Mitarbeitende</option>
+                    <option value="50-249 Mitarbeitende" ${rec.size.includes('50') ? 'selected' : ''}>50-249 Mitarbeitende</option>
+                    <option value="250+ Mitarbeitende" ${rec.size.includes('250') ? 'selected' : ''}>250+ Mitarbeitende</option>
+                </select>
+            </div>
+        `;
+    } else if (field === 'region') {
+        html = `
+            <div class="form-group">
+                <label class="form-label">Regionen (Kommagetrennt)</label>
+                <input type="text" id="edit-input" class="input" value="${rec.region}">
+            </div>
+        `;
+    } else if (field === 'keywords') {
+        html = `
+            <div class="form-group">
+                <label class="form-label">Such-Keywords (Kommagetrennt)</label>
+                <textarea id="edit-input-pos" class="input" style="height: 80px; margin-bottom: 8px;">${rec.keywords.join(', ')}</textarea>
+                <label class="form-label">Ausschluss-Keywords (Kommagetrennt)</label>
+                <textarea id="edit-input-neg" class="input" style="height: 80px;">${rec.excludeKeywords.join(', ')}</textarea>
+            </div>
+        `;
+    } else if (field === 'cpv' || field === 'npk') {
+        let value = '';
+        if (field === 'cpv') value = rec.cpv.map(c => c.code).join(', ');
+        else value = rec.npk.join(', ');
+
+        html = `
+            <div class="form-group">
+                <label class="form-label">${field.toUpperCase()} Codes (Kommagetrennt)</label>
+                <textarea id="edit-input" class="input" style="height: 100px;">${value}</textarea>
+                <div class="text-sm text-secondary" style="margin-top: 4px;">Nur Codes eingeben.</div>
+            </div>
+        `;
+    }
+
+    contentEl.innerHTML = html;
+    toggleModal('edit', true);
+}
+
+function saveEdit() {
+    const rec = state.recommendations;
+    const input = document.getElementById('edit-input');
+
+    if (currentEditField === 'industry') {
+        if (input) rec.industry = input.value;
+        const el = document.getElementById('ai-industry');
+        if (el) el.textContent = rec.industry;
+
+    } else if (currentEditField === 'size') {
+        if (input) rec.size = input.value;
+        const el = document.getElementById('ai-size');
+        if (el) el.textContent = rec.size;
+
+    } else if (currentEditField === 'region') {
+        if (input) rec.region = input.value;
+        const el = document.getElementById('ai-region');
+        if (el) el.textContent = rec.region;
+
+    } else if (currentEditField === 'keywords') {
+        const posInput = document.getElementById('edit-input-pos');
+        const negInput = document.getElementById('edit-input-neg');
+
+        const pos = posInput ? posInput.value.split(',').map(s => s.trim()).filter(s => s) : [];
+        const neg = negInput ? negInput.value.split(',').map(s => s.trim()).filter(s => s) : [];
+
+        rec.keywords = pos;
+        rec.excludeKeywords = neg;
+
+        // Re-render keywords
+        const keywordsContainer = document.getElementById('ai-keywords');
+        if (keywordsContainer) {
+            const positiveHtml = rec.keywords.map(k =>
+                `<span class="badge badge-green" style="margin-right: 4px; margin-bottom: 4px;">+ ${k}</span>`
+            ).join('');
+            const negativeHtml = rec.excludeKeywords.map(k =>
+                `<span class="badge badge-red" style="margin-right: 4px; margin-bottom: 4px;">- ${k}</span>`
+            ).join('');
+            keywordsContainer.innerHTML = positiveHtml + negativeHtml;
+        }
+
+    } else if (currentEditField === 'cpv') {
+        if (input) {
+            const codes = input.value.split(',').map(s => s.trim()).filter(s => s);
+            rec.cpv = codes.map(c => ({ code: c, label: "Manuell" }));
+
+            const cpvContainer = document.getElementById('ai-cpv-codes');
+            if (cpvContainer) {
+                cpvContainer.innerHTML = rec.cpv.map(c => `
+                    <div class="flex items-center gap-2">
+                        <span class="text-accent">✓</span> <span>${c.code} - ${c.label}</span>
+                    </div>
+                `).join('');
+            }
+        }
+
+    } else if (currentEditField === 'npk') {
+        if (input) {
+            const codes = input.value.split(',').map(s => s.trim()).filter(s => s);
+            rec.npk = codes;
+
+            const npkContainer = document.getElementById('ai-npk-codes');
+            if (npkContainer) {
+                npkContainer.innerHTML = rec.npk.map(code =>
+                    `<div class="flex items-center gap-2"><span class="text-accent">✓</span> <span>${code}</span></div>`
+                ).join('');
+            }
+        }
+    }
+
+    toggleModal('edit', false);
+}
+
+// Settings Tab Navigation
+function showSettingsTab(tabId) {
+    // Hide all panels
+    document.querySelectorAll('.settings-panel').forEach(panel => {
+        panel.classList.remove('is-active');
+    });
+
+    // Remove active from all nav items
+    document.querySelectorAll('.settings-nav-item').forEach(item => {
+        item.classList.remove('is-active');
+    });
+
+    // Show selected panel
+    const panel = document.getElementById(`settings-${tabId}`);
+    if (panel) {
+        panel.classList.add('is-active');
+    }
+
+    // Mark the clicked nav item as active
+    const navItems = document.querySelectorAll('.settings-nav-item');
+    navItems.forEach(item => {
+        if (item.textContent.trim().toLowerCase().includes(tabId.substring(0, 4))) {
+            item.classList.add('is-active');
+        }
+    });
+
+    // Better approach: find by onclick attribute
+    const clickedItem = document.querySelector(`.settings-nav-item[onclick*="${tabId}"]`);
+    if (clickedItem) {
+        document.querySelectorAll('.settings-nav-item').forEach(item => {
+            item.classList.remove('is-active');
+        });
+        clickedItem.classList.add('is-active');
+    }
+}
+
+// Make globally available
+window.showSettingsTab = showSettingsTab;
+
+// Language Dropdown Functions
+function toggleLangDropdown() {
+    const dropdown = document.querySelector('.lang-dropdown');
+    if (dropdown) {
+        dropdown.classList.toggle('is-open');
+    }
+}
+
+function selectLang(lang) {
+    // Update the current language display
+    const currentLang = document.querySelector('.lang-current');
+    if (currentLang) {
+        currentLang.textContent = lang;
+    }
+
+    // Update active state in dropdown
+    document.querySelectorAll('.lang-option').forEach(option => {
+        option.classList.remove('is-active');
+        if (option.textContent.includes(getLangName(lang))) {
+            option.classList.add('is-active');
+        }
+    });
+
+    // Close dropdown
+    const dropdown = document.querySelector('.lang-dropdown');
+    if (dropdown) {
+        dropdown.classList.remove('is-open');
+    }
+}
+
+function getLangName(code) {
+    const names = {
+        'DE': 'Deutsch',
+        'FR': 'Français',
+        'IT': 'Italiano',
+        'EN': 'English'
+    };
+    return names[code] || code;
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', (e) => {
+    const dropdown = document.querySelector('.lang-dropdown');
+    if (dropdown && !dropdown.contains(e.target)) {
+        dropdown.classList.remove('is-open');
+    }
+});
+
+// Make globally available
+window.toggleLangDropdown = toggleLangDropdown;
+window.selectLang = selectLang;
