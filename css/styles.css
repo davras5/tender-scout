@@ -39,7 +39,7 @@ html {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: var(--color-secondary);
+    background: var(--color-border-strong);
 }
 
 body {

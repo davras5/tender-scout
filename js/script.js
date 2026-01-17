@@ -258,7 +258,7 @@ function renderSearchResults(companies, container) {
                     <div class="text-h3">${c.name}</div>
                     <div class="text-sm text-secondary">${c.uid} • ${c.city}</div>
                 </div>
-                <div class="btn btn-sm btn-secondary">Select</div>
+                <div class="btn btn-sm btn-secondary">Auswählen</div>
             </div>
         </div>
     `).join('<div class="gap-2" style="height: 8px"></div>'); // vertical spacer
@@ -292,11 +292,11 @@ function selectCompany(name) {
 
     // Animation Steps
     const steps = [
-        "Scanning Zefix Registry...",
-        "Analyzing Web Presence...",
-        "Identifying Industry Codes...",
-        "Checking NPK Database...",
-        "Finalizing Profile..."
+        "Zefix-Datenbank wird durchsucht...",
+        "Web-Präsenz wird analysiert...",
+        "Branchencodes werden identifiziert...",
+        "NPK-Datenbank wird geprüft...",
+        "Profil wird fertiggestellt..."
     ];
 
     let stepIndex = 0;
@@ -579,7 +579,15 @@ function openEditModal(field) {
     if (!titleEl || !contentEl) return;
 
     // Title
-    titleEl.textContent = `Edit ${field.charAt(0).toUpperCase() + field.slice(1)}`;
+    const fieldLabels = {
+        industry: 'Branche',
+        size: 'Unternehmensgrösse',
+        region: 'Region',
+        keywords: 'Keywords',
+        cpv: 'CPV Codes',
+        npk: 'NPK Codes'
+    };
+    titleEl.textContent = `${fieldLabels[field] || field} bearbeiten`;
 
     let html = '';
 
