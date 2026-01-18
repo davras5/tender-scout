@@ -7,8 +7,8 @@ Intelligent tender matching platform for Swiss SMEs. Aggregates public contracts
 </p>
 
 <p align="center">
-  <img src="assets/images/preview2.jpg" width="45%" style="vertical-align: top;"/>
-  <img src="assets/images/preview3.jpg" width="45%" style="vertical-align: top;"/>
+  <img src="assets/preview2.jpg" width="45%" style="vertical-align: top;"/>
+  <img src="assets/preview1.jpg" width="45%" style="vertical-align: top;"/>
 </p>
 
 ## Quick Start
