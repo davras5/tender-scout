@@ -88,6 +88,36 @@ function escapeAttr(str) {
     return String(str).replace(/'/g, "\\'").replace(/"/g, '&quot;');
 }
 
+/**
+ * Looks up AI recommendations for a company by name
+ * Uses the company's searchKey to find matching recommendations
+ * @param {string} companyName - The company name to look up
+ * @returns {Object|null} - The recommendation object or null if not found
+ */
+function getRecommendationForCompany(companyName) {
+    if (!companyName) {
+        console.warn('getRecommendationForCompany: No company name provided');
+        return null;
+    }
+
+    // Find the company in MOCK_COMPANIES by name
+    const company = MOCK_COMPANIES.find(c => c.name === companyName);
+
+    if (company && company.searchKey && AI_RECOMMENDATIONS[company.searchKey]) {
+        return AI_RECOMMENDATIONS[company.searchKey];
+    }
+
+    // Fallback: return first available recommendation
+    const keys = Object.keys(AI_RECOMMENDATIONS);
+    if (keys.length > 0) {
+        console.warn('getRecommendationForCompany: Using fallback for company:', companyName);
+        return AI_RECOMMENDATIONS[keys[0]];
+    }
+
+    console.error('getRecommendationForCompany: No recommendations available');
+    return null;
+}
+
 // ============================================
 // STATE
 // ============================================
@@ -512,26 +542,21 @@ function renderSearchResults(companies, container) {
 function selectCompany(name) {
     state.company = { name };
 
-    // Determine recommendations
-    let rec = AI_RECOMMENDATIONS.Müller; // default fallback
+    // Determine recommendations using company's searchKey
+    const baseRec = getRecommendationForCompany(name);
 
-    if (name.includes("Hans")) rec = AI_RECOMMENDATIONS.Hans;
-    else if (name.includes("Tech")) rec = AI_RECOMMENDATIONS.Tech;
-    else if (name.includes("Green")) rec = AI_RECOMMENDATIONS.Green;
-    else if (name.includes("Alpha")) rec = AI_RECOMMENDATIONS.Alpha;
-
-    // Clone to state to allow editing without affecting base mock
-    state.recommendations = JSON.parse(JSON.stringify(rec));
-    rec = state.recommendations;
+    // Clone to state to allow editing without affecting base mock (handle null case)
+    state.recommendations = baseRec ? JSON.parse(JSON.stringify(baseRec)) : null;
+    const rec = state.recommendations;
 
     // Simulate AI Processing State
-    const overlay = document.getElementById('ai-loading-overlay');
-    const content = document.getElementById('ai-results-content');
-    const statusText = document.getElementById('ai-loading-text');
+    const overlayEl = document.getElementById('ai-loading-overlay');
+    const contentEl = document.getElementById('ai-results-content');
+    const statusTextEl = document.getElementById('ai-loading-text');
 
     // Reset state
-    if (overlay) overlay.classList.remove('hidden');
-    if (content) content.classList.add('hidden');
+    if (overlayEl) overlayEl.classList.remove('hidden');
+    if (contentEl) contentEl.classList.add('hidden');
 
     navigateTo(VIEWS.AI_REVIEW);
 
@@ -545,17 +570,25 @@ function selectCompany(name) {
     ];
 
     let stepIndex = 0;
-    if (statusText) statusText.textContent = steps[0];
+    if (statusTextEl) statusTextEl.textContent = steps[0];
 
     const interval = setInterval(() => {
         stepIndex++;
-        if (stepIndex < steps.length && statusText) {
-            statusText.textContent = steps[stepIndex];
+        if (stepIndex < steps.length && statusTextEl) {
+            statusTextEl.textContent = steps[stepIndex];
         }
     }, 800); // Change text every 800ms
 
     setTimeout(() => {
         clearInterval(interval);
+
+        // Guard against null recommendations
+        if (!rec) {
+            console.error('No recommendations found for company:', name);
+            if (overlayEl) overlayEl.classList.add('hidden');
+            if (contentEl) contentEl.classList.remove('hidden');
+            return;
+        }
 
         // Hydrate AI Review View
         const nameEl = document.getElementById('ai-company-name');
@@ -563,25 +596,25 @@ function selectCompany(name) {
 
         // Industry
         const industryEl = document.getElementById('ai-industry');
-        if (industryEl) industryEl.textContent = rec.industry;
+        if (industryEl) industryEl.textContent = rec.industry || '';
 
-        // Size (New)
+        // Size
         const sizeEl = document.getElementById('ai-size');
-        if (sizeEl) sizeEl.textContent = rec.size;
+        if (sizeEl) sizeEl.textContent = rec.size || '';
 
-        // Keywords (New) - escape all keyword values
+        // Keywords - with null checks
         const keywordsContainer = document.getElementById('ai-keywords');
         if (keywordsContainer) {
-            const positive = rec.keywords.map(k =>
+            const positive = (rec.keywords || []).map(k =>
                 `<span class="badge badge-green mr-1 mb-1">+ ${escapeHtml(k)}</span>`
             ).join('');
-            const negative = rec.excludeKeywords.map(k =>
+            const negative = (rec.excludeKeywords || []).map(k =>
                 `<span class="badge badge-red mr-1 mb-1">- ${escapeHtml(k)}</span>`
             ).join('');
             keywordsContainer.innerHTML = positive + negative;
         }
 
-        // NPK Codes (New - Conditional) - escape code values
+        // NPK Codes - with null checks
         const npkSection = document.getElementById('ai-npk-section');
         const npkContainer = document.getElementById('ai-npk-codes');
         if (npkSection && npkContainer) {
@@ -595,9 +628,9 @@ function selectCompany(name) {
             }
         }
 
-        // CPV Codes - escape code and label values
+        // CPV Codes - with null checks
         const cpvContainer = document.getElementById('ai-cpv-codes');
-        if (cpvContainer) {
+        if (cpvContainer && rec.cpv) {
             cpvContainer.innerHTML = rec.cpv.map(c => `
                 <div class="flex items-center gap-2">
                     <svg class="text-accent" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -610,28 +643,28 @@ function selectCompany(name) {
 
         // Region
         const regionEl = document.getElementById('ai-region');
-        if (regionEl) regionEl.textContent = rec.region;
+        if (regionEl) regionEl.textContent = rec.region || '';
 
         // Visual Transition - Hide Overlay, Show Content
-        if (overlay) overlay.classList.add('hidden');
-        if (content) content.classList.remove('hidden');
+        if (overlayEl) overlayEl.classList.add('hidden');
+        if (contentEl) contentEl.classList.remove('hidden');
 
     }, 4000); // 4s total duration
 }
 
 function renderTenderFeed(tenders = MOCK_TENDERS) {
-    const container = document.getElementById('tender-feed');
-    if (!container) return;
+    const feedContainerEl = document.getElementById('tender-feed');
+    if (!feedContainerEl) return;
 
     // Update filter counts
     updateFilterCounts();
 
     if (tenders.length === 0) {
-        container.innerHTML = `<div class="p-8 text-center text-secondary">Keine Ausschreibungen gefunden.</div>`;
+        feedContainerEl.innerHTML = `<div class="p-8 text-center text-secondary">Keine Ausschreibungen gefunden.</div>`;
         return;
     }
 
-    container.innerHTML = tenders.map(t => {
+    feedContainerEl.innerHTML = tenders.map(t => {
         let badgeColor = 'green';
         if (t.status === TENDER_STATUS.CLOSING_SOON) badgeColor = 'orange';
         if (t.applied) badgeColor = 'blue';
@@ -798,9 +831,9 @@ window.toggleHidden = toggleHidden;
 
 // Sorting functionality
 function toggleSortDropdown() {
-    const dropdown = document.querySelector('.sort-dropdown');
-    if (dropdown) {
-        dropdown.classList.toggle('is-open');
+    const dropdownEl = document.querySelector('.sort-dropdown');
+    if (dropdownEl) {
+        dropdownEl.classList.toggle('is-open');
     }
 }
 
@@ -832,8 +865,8 @@ function sortTenders(sortBy) {
     });
 
     // Close dropdown
-    const dropdown = document.querySelector('.sort-dropdown');
-    if (dropdown) dropdown.classList.remove('is-open');
+    const dropdownEl = document.querySelector('.sort-dropdown');
+    if (dropdownEl) dropdownEl.classList.remove('is-open');
 
     // Re-apply current filter (which will also apply sort)
     filterTenders(state.currentFilter);
@@ -867,22 +900,97 @@ function getSortedTenders(tenders) {
 
 // Close sort dropdown when clicking outside
 document.addEventListener('click', (e) => {
-    const sortDropdown = document.querySelector('.sort-dropdown');
-    if (sortDropdown && !sortDropdown.contains(e.target)) {
-        sortDropdown.classList.remove('is-open');
+    const sortDropdownEl = document.querySelector('.sort-dropdown');
+    if (sortDropdownEl && !sortDropdownEl.contains(e.target)) {
+        sortDropdownEl.classList.remove('is-open');
     }
 });
 
 // Profile settings - open wizard to edit search profile
 function openProfileSettings() {
-    // Simply reuse selectCompany() which handles everything:
-    // - Sets up recommendations data
-    // - Shows loading animation
-    // - Populates the AI review view
-    // - Navigates to the editor
-    if (state.company && state.company.name) {
-        selectCompany(state.company.name);
+    // Ensure we have recommendations data for the current profile
+    if (!state.recommendations && state.company) {
+        // Look up recommendation using company's searchKey
+        const baseRec = getRecommendationForCompany(state.company.name);
+
+        // Clone to state (handle null case)
+        state.recommendations = baseRec ? JSON.parse(JSON.stringify(baseRec)) : null;
     }
+
+    // Populate the AI review view with current data
+    const rec = state.recommendations;
+
+    // Company name (always show, even without recommendations)
+    const nameEl = document.getElementById('ai-company-name');
+    if (nameEl) nameEl.textContent = state.company?.name || 'Unbekannt';
+
+    if (rec) {
+        // Industry
+        const industryEl = document.getElementById('ai-industry');
+        if (industryEl) industryEl.textContent = rec.industry || '';
+
+        // Size
+        const sizeEl = document.getElementById('ai-size');
+        if (sizeEl) sizeEl.textContent = rec.size || '';
+
+        // Keywords - with null checks
+        const keywordsContainer = document.getElementById('ai-keywords');
+        if (keywordsContainer) {
+            const positive = (rec.keywords || []).map(k =>
+                `<span class="badge badge-green mr-1 mb-1">+ ${escapeHtml(k)}</span>`
+            ).join('');
+            const negative = (rec.excludeKeywords || []).map(k =>
+                `<span class="badge badge-red mr-1 mb-1">- ${escapeHtml(k)}</span>`
+            ).join('');
+            keywordsContainer.innerHTML = positive + negative;
+        }
+
+        // NPK Codes - with null checks
+        const npkSection = document.getElementById('ai-npk-section');
+        const npkContainer = document.getElementById('ai-npk-codes');
+        if (npkSection && npkContainer) {
+            if (rec.npk && rec.npk.length > 0) {
+                npkSection.style.display = 'block';
+                npkContainer.innerHTML = rec.npk.map(code =>
+                    `<div class="flex items-center gap-2"><svg class="text-accent" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <span>${escapeHtml(code)}</span></div>`
+                ).join('');
+            } else {
+                npkSection.style.display = 'none';
+            }
+        }
+
+        // Regions - with null checks
+        const regionsContainer = document.getElementById('ai-regions');
+        if (regionsContainer) {
+            if (rec.regions) {
+                regionsContainer.innerHTML = rec.regions.map(r =>
+                    `<span class="badge badge-blue mr-1 mb-1">${escapeHtml(r)}</span>`
+                ).join('');
+            } else if (rec.region) {
+                // Fallback to single region field
+                regionsContainer.innerHTML = `<span class="badge badge-blue mr-1 mb-1">${escapeHtml(rec.region)}</span>`;
+            }
+        }
+
+        // CPV Codes - with null checks
+        const cpvContainer = document.getElementById('ai-cpv-codes');
+        if (cpvContainer && rec.cpv) {
+            cpvContainer.innerHTML = rec.cpv.map(code =>
+                `<div class="flex items-center gap-2"><svg class="text-accent" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <span>${escapeHtml(code)}</span></div>`
+            ).join('');
+        }
+    } else {
+        console.warn('openProfileSettings: No recommendations available for', state.company?.name);
+    }
+
+    // Show content directly (skip loading animation)
+    const overlayEl = document.getElementById('ai-loading-overlay');
+    const contentEl = document.getElementById('ai-results-content');
+    if (overlayEl) overlayEl.classList.add('hidden');
+    if (contentEl) contentEl.classList.remove('hidden');
+
+    // Navigate to the AI review view
+    navigateTo(VIEWS.AI_REVIEW);
 }
 
 window.toggleSortDropdown = toggleSortDropdown;
@@ -987,10 +1095,10 @@ window.setSearch = setSearch;
 window.selectProfile = selectProfile;
 
 function renderProfiles() {
-    const container = document.getElementById('profile-list');
-    if (!container) return;
+    const profileContainerEl = document.getElementById('profile-list');
+    if (!profileContainerEl) return;
 
-    container.innerHTML = MOCK_USER_PROFILES.map(p => {
+    profileContainerEl.innerHTML = MOCK_USER_PROFILES.map(p => {
         // Ensure ID is numeric to prevent injection
         const profileId = parseInt(p.id, 10);
         // Safely get avatar initials
@@ -1277,9 +1385,9 @@ window.showSettingsTab = showSettingsTab;
 
 // Language Dropdown Functions
 function toggleLangDropdown() {
-    const dropdown = document.querySelector('.lang-dropdown');
-    if (dropdown) {
-        dropdown.classList.toggle('is-open');
+    const dropdownEl = document.querySelector('.lang-dropdown');
+    if (dropdownEl) {
+        dropdownEl.classList.toggle('is-open');
     }
 }
 
@@ -1299,9 +1407,9 @@ function selectLang(lang) {
     });
 
     // Close dropdown
-    const dropdown = document.querySelector('.lang-dropdown');
-    if (dropdown) {
-        dropdown.classList.remove('is-open');
+    const dropdownEl = document.querySelector('.lang-dropdown');
+    if (dropdownEl) {
+        dropdownEl.classList.remove('is-open');
     }
 }
 
@@ -1317,9 +1425,9 @@ function getLangName(code) {
 
 // Close dropdown when clicking outside
 document.addEventListener('click', (e) => {
-    const dropdown = document.querySelector('.lang-dropdown');
-    if (dropdown && !dropdown.contains(e.target)) {
-        dropdown.classList.remove('is-open');
+    const dropdownEl = document.querySelector('.lang-dropdown');
+    if (dropdownEl && !dropdownEl.contains(e.target)) {
+        dropdownEl.classList.remove('is-open');
     }
 });
 
