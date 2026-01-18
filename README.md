@@ -82,4 +82,4 @@ tender-scout/
 
 ## License
 
-MIT
+Proprietary - All rights reserved. See [LICENSE.md](LICENSE.md) for details.
