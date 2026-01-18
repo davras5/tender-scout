@@ -21,6 +21,7 @@ High-level business view of the data entities and their purpose.
 | Entity | Type | Description |
 |--------|------|-------------|
 | **users** | Core | User accounts managed by Supabase Auth |
+| **subscriptions** | Core | Stripe subscription status and billing (free/pro tiers) |
 | **companies** | Core | Swiss companies identified via Zefix or manual entry |
 | **user_profiles** | Core | Links users to companies with role information |
 | **search_profiles** | Core | AI-generated or user-defined tender matching criteria |
@@ -32,7 +33,9 @@ High-level business view of the data entities and their purpose.
 ### High-Level Relationships
 
 ```
-Users ──┬── Companies          Tenders
+Users ──┬── Subscriptions (1:1)
+        │
+        ├── Companies          Tenders
         │                         │
         ▼                         │
    User Profiles ◄────────────────┘
@@ -41,7 +44,9 @@ Users ──┬── Companies          Tenders
    Search Profiles ◄─── CPV/NPK Codes (lookup)
 ```
 
+- A **User** has one **Subscription** (free tier with 14-day Pro trial, or paid Pro)
 - A **User** can have multiple **User Profiles** (one per company)
+- **Free tier:** Limited to 1 search profile | **Pro tier:** Unlimited
 - Each **User Profile** has one **Search Profile** (matching criteria)
 - **Tenders** are matched to **Search Profiles** via the matching algorithm
 - Results stored in **User Tender Actions** with match scores
@@ -60,6 +65,21 @@ erDiagram
     users {
         uuid id PK
         varchar email UK
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    subscriptions {
+        uuid id PK
+        uuid user_id FK,UK
+        varchar stripe_customer_id UK
+        varchar stripe_subscription_id UK "nullable"
+        varchar plan "free, pro"
+        varchar status "trialing, active, past_due, cancelled"
+        timestamptz trial_ends_at "nullable"
+        timestamptz current_period_start "nullable"
+        timestamptz current_period_end "nullable"
+        timestamptz cancelled_at "nullable"
         timestamptz created_at
         timestamptz updated_at
     }
@@ -162,6 +182,7 @@ erDiagram
     }
 
     %% Relationships
+    users ||--|| subscriptions : "has one"
     users ||--o{ user_profiles : "has many"
     companies ||--o{ user_profiles : "has many"
     user_profiles ||--|| search_profiles : "has one"
@@ -186,11 +207,53 @@ Managed by **Supabase Auth**. Extended with a profiles table if additional user 
 
 **Notes:**
 - Authentication handled by Supabase Auth (email/password, OAuth)
+- SSO providers (Google, Microsoft) handled natively by Supabase Auth - no additional schema needed
 - Additional profile data (name, avatar) can be stored in a separate `user_metadata` table or Supabase's built-in `raw_user_meta_data`
 
 ---
 
-#### 2. companies
+#### 2. subscriptions
+
+Tracks Stripe subscription status for billing and feature entitlements.
+
+| Attribute              | Type        | Description                          |
+|------------------------|-------------|--------------------------------------|
+| id                     | UUID (PK)   | Unique identifier                    |
+| user_id                | UUID (FK)   | Reference to users (unique)          |
+| stripe_customer_id     | VARCHAR     | Stripe customer ID (unique)          |
+| stripe_subscription_id | VARCHAR     | Stripe subscription ID, nullable     |
+| plan                   | VARCHAR     | 'free' or 'pro'                      |
+| status                 | VARCHAR     | 'trialing', 'active', 'past_due', 'cancelled' |
+| trial_ends_at          | TIMESTAMPTZ | End of 14-day Pro trial, nullable    |
+| current_period_start   | TIMESTAMPTZ | Billing period start, nullable       |
+| current_period_end     | TIMESTAMPTZ | Billing period end, nullable         |
+| cancelled_at           | TIMESTAMPTZ | When subscription was cancelled      |
+| created_at             | TIMESTAMPTZ | Record creation timestamp            |
+| updated_at             | TIMESTAMPTZ | Last update timestamp                |
+
+**Subscription Tiers:**
+
+| Tier | Search Profiles | Trial | Price |
+|------|-----------------|-------|-------|
+| **Free** | 1 | - | CHF 0 |
+| **Pro** | Unlimited | 14 days | TBD |
+
+**Notes:**
+- One subscription per user (1:1 relationship)
+- New users start with `plan='pro'`, `status='trialing'`, `trial_ends_at=NOW()+14 days`
+- After trial ends without payment: `plan='free'`, `status='active'`
+- Stripe webhooks update this table on subscription changes
+- Feature limits enforced in application layer based on `plan`
+
+**Stripe Webhook Events:**
+- `customer.subscription.created` → Insert/update subscription
+- `customer.subscription.updated` → Update status, period dates
+- `customer.subscription.deleted` → Set `cancelled_at`, `status='cancelled'`
+- `invoice.payment_failed` → Set `status='past_due'`
+
+---
+
+#### 3. companies
 
 Swiss companies identified via Zefix or manually entered.
 
@@ -214,7 +277,7 @@ Swiss companies identified via Zefix or manually entered.
 
 ---
 
-#### 3. user_profiles
+#### 4. user_profiles
 
 Links users to companies with role information. A user can have multiple profiles (e.g., consultant working with multiple companies).
 
@@ -237,7 +300,7 @@ Links users to companies with role information. A user can have multiple profile
 
 ---
 
-#### 4. search_profiles
+#### 5. search_profiles
 
 AI-generated or user-defined search criteria for tender matching.
 
@@ -265,7 +328,7 @@ AI-generated or user-defined search criteria for tender matching.
 
 ---
 
-#### 5. tenders
+#### 6. tenders
 
 Public procurement opportunities from SIMAP, TED, and other sources.
 
@@ -303,7 +366,7 @@ Public procurement opportunities from SIMAP, TED, and other sources.
 
 ---
 
-#### 6. user_tender_actions
+#### 7. user_tender_actions
 
 Tracks user interactions with tenders (bookmark, apply, hide).
 
@@ -325,7 +388,7 @@ Tracks user interactions with tenders (bookmark, apply, hide).
 
 ---
 
-#### 7. cpv_codes
+#### 8. cpv_codes
 
 EU Common Procurement Vocabulary - hierarchical classification system.
 
@@ -344,7 +407,7 @@ EU Common Procurement Vocabulary - hierarchical classification system.
 
 ---
 
-#### 8. npk_codes
+#### 9. npk_codes
 
 Swiss construction standards (Normpositionen-Katalog).
 
@@ -362,13 +425,16 @@ Swiss construction standards (Normpositionen-Katalog).
 
 | Relationship                      | Type        | Description                              |
 |-----------------------------------|-------------|------------------------------------------|
+| users → subscriptions             | 1:1         | User has one subscription (free or pro)  |
 | users → user_profiles             | 1:N         | User can have multiple company profiles  |
 | companies → user_profiles         | 1:N         | Company can have multiple users          |
 | user_profiles → search_profiles   | 1:1         | Each profile has one search config       |
 | user_profiles → user_tender_actions| 1:N        | Profile tracks many tender interactions  |
 | tenders → user_tender_actions     | 1:N         | Tender can be acted on by many profiles  |
 
-**Note:** CPV/NPK codes are stored as JSONB arrays within `search_profiles` and `tenders` rather than via junction tables. This simplifies reads and enables atomic updates. The lookup tables (`cpv_codes`, `npk_codes`) are used for code validation and label display.
+**Notes:**
+- CPV/NPK codes stored as JSONB arrays (not junction tables) for simpler reads and atomic updates
+- Subscription limits (free: 1 search profile, pro: unlimited) enforced in application layer
 
 ---
 
@@ -406,6 +472,12 @@ CREATE INDEX idx_actions_tender ON user_tender_actions(tender_id);
 CREATE INDEX idx_companies_active ON companies(id) WHERE deleted_at IS NULL;
 CREATE INDEX idx_user_profiles_active ON user_profiles(user_id) WHERE deleted_at IS NULL;
 CREATE INDEX idx_tenders_active ON tenders(id) WHERE deleted_at IS NULL;
+
+-- Subscription queries
+CREATE UNIQUE INDEX idx_subscriptions_user ON subscriptions(user_id);
+CREATE UNIQUE INDEX idx_subscriptions_stripe_customer ON subscriptions(stripe_customer_id);
+CREATE INDEX idx_subscriptions_status ON subscriptions(status);
+CREATE INDEX idx_subscriptions_trial_ends ON subscriptions(trial_ends_at) WHERE status = 'trialing';
 
 -- Lookup tables (hierarchy queries)
 CREATE INDEX idx_cpv_parent ON cpv_codes(parent_code);
@@ -739,6 +811,8 @@ CPV/NPK codes in JSONB arrays are **not** FK-validated against lookup tables. Th
 | Component | Difficulty | Effort | Notes |
 |-----------|------------|--------|-------|
 | **Supabase setup** | Low | 1-2 days | Tables, RLS, Auth config |
+| **Stripe integration** | Medium | 3-4 days | Checkout, webhooks, customer portal |
+| **Subscription management** | Low | 1-2 days | Trial logic, tier enforcement |
 | **Zefix API integration** | Low | 1-2 days | Simple REST API |
 | **SIMAP API integration** | Medium | 3-5 days | May require scraping if no clean API |
 | **TED API integration** | Medium | 3-5 days | OAuth, pagination, rate limits |
@@ -812,6 +886,7 @@ flowchart LR
 
 | Date       | Version | Changes                    |
 |------------|---------|----------------------------|
+| 2026-01-18 | 0.7     | Add subscriptions table for Stripe billing (free/pro tiers, 14-day trial) |
 | 2026-01-18 | 0.6     | Restructure document: separate Conceptual, Logical, and Physical data models |
 | 2026-01-18 | 0.5     | Address expert review: add indexes, soft delete, status management, updated_at fields |
 | 2026-01-18 | 0.4     | Add Mermaid data flow diagram, expert review, and difficulty estimation |
