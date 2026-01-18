@@ -612,22 +612,10 @@ document.addEventListener('click', (e) => {
     }
 });
 
-// Profile settings - open AI review with current profile data
+// Profile settings - open wizard to edit search profile
 function openProfileSettings() {
-    // If we have recommendations in state, show them
-    if (state.recommendations) {
-        // Skip the loading animation, go directly to results
-        const overlay = document.getElementById('ai-loading-overlay');
-        const content = document.getElementById('ai-results-content');
-
-        if (overlay) overlay.classList.add('hidden');
-        if (content) content.classList.remove('hidden');
-
-        navigateTo('ai-review');
-    } else {
-        // No profile data yet, start fresh
-        navigateTo('company-search');
-    }
+    // Always open the wizard so users can edit their search profile
+    navigateTo('company-search');
 }
 
 window.toggleSortDropdown = toggleSortDropdown;
