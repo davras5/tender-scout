@@ -271,6 +271,7 @@ function hideFieldError(elementId) {
 function handleSSOLogin(provider) {
     const providerNames = {
         google: 'Google',
+        microsoft: 'Microsoft',
         whatsapp: 'WhatsApp'
     };
     const displayName = providerNames[provider] || provider;
