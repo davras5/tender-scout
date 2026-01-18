@@ -1194,15 +1194,12 @@
         }
 
         /* ==========================================================================
-           14. GEARS - Mechanical processing
+           14. GEARS - Mechanical processing (interlocking)
            ========================================================================== */
         .gears {
-            width: 120px;
-            height: 80px;
+            width: 100px;
+            height: 90px;
             position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
 
         .gears .gear {
@@ -1212,32 +1209,35 @@
             justify-content: center;
         }
 
+        /* Large gear - main driver */
         .gears .gear-1 {
             left: 0;
-            top: 10px;
+            top: 24px;
             color: var(--color-accent);
-            animation: spin 3s linear infinite;
+            animation: spin 4s linear infinite;
         }
 
-        .gears .gear-1 i { width: 48px; height: 48px; }
+        .gears .gear-1 i { width: 56px; height: 56px; }
 
+        /* Medium gear - meshes with large gear on upper right */
         .gears .gear-2 {
-            right: 8px;
+            left: 38px;
             top: 0;
             color: var(--color-accent-secondary);
-            animation: spin 2.4s linear infinite reverse;
+            animation: spin 2.8s linear infinite reverse;
         }
 
         .gears .gear-2 i { width: 40px; height: 40px; }
 
+        /* Small gear - meshes with medium gear on lower right */
         .gears .gear-3 {
-            right: 20px;
-            bottom: 0;
+            left: 58px;
+            top: 38px;
             color: var(--color-accent-tertiary);
-            animation: spin 3.2s linear infinite;
+            animation: spin 2s linear infinite;
         }
 
-        .gears .gear-3 i { width: 32px; height: 32px; }
+        .gears .gear-3 i { width: 28px; height: 28px; }
 
         /* ==========================================================================
            15. NEURAL BRAIN - AI thinking
@@ -1351,6 +1351,111 @@
         @keyframes ring-expand {
             0% { transform: scale(1); opacity: 0.8; }
             100% { transform: scale(2.5); opacity: 0; }
+        }
+
+        /* ==========================================================================
+           18. CONVEYOR BARS - Data stream processing
+           ========================================================================== */
+        .conveyor-bars {
+            height: 45px;
+            aspect-ratio: 1.2;
+            --c: no-repeat repeating-linear-gradient(90deg, var(--color-accent) 0 20%, transparent 0 40%);
+            background:
+                var(--c) 50% 0,
+                var(--c) 50% 100%;
+            background-size: calc(500%/6) 50%;
+            animation: conveyor 1s infinite linear;
+        }
+
+        @keyframes conveyor {
+            33%  { background-position: 0 0, 100% 100%; }
+            66%  { background-position: 0 100%, 100% 0; }
+            100% { background-position: 50% 100%, 50% 0; }
+        }
+
+        /* ==========================================================================
+           19. SIGNAL BURST - Broadcast/discovery pulse
+           ========================================================================== */
+        .signal-burst {
+            width: 48px;
+            height: 48px;
+            position: relative;
+        }
+
+        .signal-burst::before,
+        .signal-burst::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 48em;
+            height: 48em;
+            background-image:
+                radial-gradient(circle 10px, var(--color-accent) 100%, transparent 0),
+                radial-gradient(circle 10px, var(--color-accent) 100%, transparent 0),
+                radial-gradient(circle 10px, var(--color-accent-secondary) 100%, transparent 0),
+                radial-gradient(circle 10px, var(--color-accent-secondary) 100%, transparent 0),
+                radial-gradient(circle 10px, var(--color-accent-tertiary) 100%, transparent 0),
+                radial-gradient(circle 10px, var(--color-accent-tertiary) 100%, transparent 0),
+                radial-gradient(circle 10px, var(--color-accent) 100%, transparent 0),
+                radial-gradient(circle 10px, var(--color-accent) 100%, transparent 0);
+            background-position: 0em -18em, 0em 18em, 18em 0em, -18em 0em,
+                                 13em -13em, -13em -13em, 13em 13em, -13em 13em;
+            background-repeat: no-repeat;
+            font-size: 0.5px;
+            border-radius: 50%;
+            animation: burst-expand 1s ease-in infinite;
+        }
+
+        .signal-burst::after {
+            font-size: 1px;
+            background: var(--color-accent);
+            animation: burst-core 1s ease-in infinite;
+        }
+
+        @keyframes burst-core {
+            0%, 100% { font-size: 0.75px; }
+            50% { font-size: 1.5px; }
+        }
+
+        @keyframes burst-expand {
+            0%, 40% { font-size: 0.5px; }
+            70% { opacity: 1; font-size: 4px; }
+            100% { font-size: 6px; opacity: 0; }
+        }
+
+        /* ==========================================================================
+           20. DUAL SQUARES - Rotating frames
+           ========================================================================== */
+        .dual-squares {
+            width: 48px;
+            height: 48px;
+            display: inline-block;
+            position: relative;
+        }
+
+        .dual-squares::after,
+        .dual-squares::before {
+            content: '';
+            width: 48px;
+            height: 48px;
+            border: 3px solid var(--color-accent);
+            position: absolute;
+            left: 0;
+            top: 0;
+            box-sizing: border-box;
+            animation: dual-rotate 2s ease-in-out infinite;
+        }
+
+        .dual-squares::after {
+            border-color: var(--color-accent-secondary);
+            animation-delay: 1s;
+        }
+
+        @keyframes dual-rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -1736,6 +1841,53 @@
                 <div class="label">Time / Patience</div>
                 <div class="design-intent">
                     <strong>Intent:</strong> Acknowledges that quality matching takes time. Sets expectations while suggesting the process is worthwhile.
+                </div>
+            </div>
+        </div>
+
+        <!-- CREATIVE / ABSTRACT THEME -->
+        <div class="section-header">
+            <h2><i data-lucide="sparkles" style="width: 20px; height: 20px;"></i> Creative & Abstract</h2>
+            <p>Modern, minimalist animations with unique visual patterns</p>
+        </div>
+
+        <div class="grid">
+            <!-- 18. Conveyor Bars -->
+            <div class="card">
+                <h3>18. Conveyor Bars</h3>
+                <p>Data stream with flowing segments</p>
+                <div class="demo-area">
+                    <div class="conveyor-bars"></div>
+                </div>
+                <div class="label">Stream / Flow</div>
+                <div class="design-intent">
+                    <strong>Intent:</strong> Represents continuous data processing like a conveyor belt. The flowing bars suggest steady, reliable throughput of tender information.
+                </div>
+            </div>
+
+            <!-- 19. Signal Burst -->
+            <div class="card featured">
+                <h3>19. Signal Burst</h3>
+                <p>Expanding broadcast pulse with particles</p>
+                <div class="demo-area">
+                    <div class="signal-burst"></div>
+                </div>
+                <div class="label">Broadcast / Alert</div>
+                <div class="design-intent">
+                    <strong>Intent:</strong> A discovery moment - when new tenders are found. The expanding burst with particles creates excitement and conveys active broadcasting.
+                </div>
+            </div>
+
+            <!-- 20. Dual Squares -->
+            <div class="card">
+                <h3>20. Dual Squares</h3>
+                <p>Overlapping rotating frames</p>
+                <div class="demo-area">
+                    <div class="dual-squares"></div>
+                </div>
+                <div class="label">Minimal / Modern</div>
+                <div class="design-intent">
+                    <strong>Intent:</strong> Clean, modern aesthetic with two intersecting perspectives. Suggests analyzing data from multiple angles simultaneously.
                 </div>
             </div>
         </div>
