@@ -2,11 +2,55 @@
 
 ## Overview
 
-This document defines the conceptual data model for Tender Scout, designed for implementation with **Supabase** (PostgreSQL + Auth + Storage + Realtime).
+This document defines the data model for Tender Scout at three levels of abstraction:
+
+| Level | Purpose | Contents |
+|-------|---------|----------|
+| **Conceptual** | Business view | Entity overview, high-level relationships |
+| **Logical** | Design view | ERD with attributes, data types, keys, cardinality |
+| **Physical** | Implementation view | Indexes, constraints, Supabase-specific configuration |
+
+**Target Platform:** Supabase (PostgreSQL + Auth + Storage + Realtime)
 
 ---
 
 ## Conceptual Data Model
+
+High-level business view of the data entities and their purpose.
+
+| Entity | Type | Description |
+|--------|------|-------------|
+| **users** | Core | User accounts managed by Supabase Auth |
+| **companies** | Core | Swiss companies identified via Zefix or manual entry |
+| **user_profiles** | Core | Links users to companies with role information |
+| **search_profiles** | Core | AI-generated or user-defined tender matching criteria |
+| **tenders** | Core | Public procurement opportunities from SIMAP/TED |
+| **user_tender_actions** | Core | Tracks user interactions and match scores |
+| **cpv_codes** | Lookup | EU Common Procurement Vocabulary (hierarchical) |
+| **npk_codes** | Lookup | Swiss construction standards (hierarchical) |
+
+### High-Level Relationships
+
+```
+Users ──┬── Companies          Tenders
+        │                         │
+        ▼                         │
+   User Profiles ◄────────────────┘
+        │                    (via user_tender_actions)
+        ▼
+   Search Profiles ◄─── CPV/NPK Codes (lookup)
+```
+
+- A **User** can have multiple **User Profiles** (one per company)
+- Each **User Profile** has one **Search Profile** (matching criteria)
+- **Tenders** are matched to **Search Profiles** via the matching algorithm
+- Results stored in **User Tender Actions** with match scores
+
+---
+
+## Logical Data Model
+
+Detailed design view with attributes, data types, keys, and cardinality.
 
 ### Entity Relationship Diagram
 
@@ -127,24 +171,9 @@ erDiagram
 
 ---
 
-### Entity Overview
+### Entity Specifications
 
-| Entity | Type | Description |
-|--------|------|-------------|
-| **users** | Core | User accounts managed by Supabase Auth |
-| **companies** | Core | Swiss companies identified via Zefix or manual entry |
-| **user_profiles** | Core | Links users to companies with role information |
-| **search_profiles** | Core | AI-generated or user-defined tender matching criteria (includes CPV/NPK codes as JSONB) |
-| **tenders** | Core | Public procurement opportunities from SIMAP/TED (includes CPV codes as JSONB) |
-| **user_tender_actions** | Core | Tracks user interactions and match scores |
-| **cpv_codes** | Lookup | EU Common Procurement Vocabulary (hierarchical) |
-| **npk_codes** | Lookup | Swiss construction standards (hierarchical) |
-
----
-
-## Entities
-
-### 1. users
+#### 1. users
 
 Managed by **Supabase Auth**. Extended with a profiles table if additional user metadata is needed.
 
@@ -161,7 +190,7 @@ Managed by **Supabase Auth**. Extended with a profiles table if additional user 
 
 ---
 
-### 2. companies
+#### 2. companies
 
 Swiss companies identified via Zefix or manually entered.
 
@@ -185,7 +214,7 @@ Swiss companies identified via Zefix or manually entered.
 
 ---
 
-### 3. user_profiles
+#### 3. user_profiles
 
 Links users to companies with role information. A user can have multiple profiles (e.g., consultant working with multiple companies).
 
@@ -208,7 +237,7 @@ Links users to companies with role information. A user can have multiple profile
 
 ---
 
-### 4. search_profiles
+#### 4. search_profiles
 
 AI-generated or user-defined search criteria for tender matching.
 
@@ -236,7 +265,7 @@ AI-generated or user-defined search criteria for tender matching.
 
 ---
 
-### 5. tenders
+#### 5. tenders
 
 Public procurement opportunities from SIMAP, TED, and other sources.
 
@@ -274,7 +303,7 @@ Public procurement opportunities from SIMAP, TED, and other sources.
 
 ---
 
-### 6. user_tender_actions
+#### 6. user_tender_actions
 
 Tracks user interactions with tenders (bookmark, apply, hide).
 
@@ -296,7 +325,7 @@ Tracks user interactions with tenders (bookmark, apply, hide).
 
 ---
 
-### 7. cpv_codes
+#### 7. cpv_codes
 
 EU Common Procurement Vocabulary - hierarchical classification system.
 
@@ -315,7 +344,7 @@ EU Common Procurement Vocabulary - hierarchical classification system.
 
 ---
 
-### 8. npk_codes
+#### 8. npk_codes
 
 Swiss construction standards (Normpositionen-Katalog).
 
@@ -329,7 +358,7 @@ Swiss construction standards (Normpositionen-Katalog).
 
 ---
 
-## Relationships Summary
+### Relationships Summary
 
 | Relationship                      | Type        | Description                              |
 |-----------------------------------|-------------|------------------------------------------|
@@ -343,13 +372,17 @@ Swiss construction standards (Normpositionen-Katalog).
 
 ---
 
-## Indexes
+## Physical Data Model
 
-### Primary Indexes (auto-created)
+Implementation details for PostgreSQL/Supabase deployment.
+
+### Indexes
+
+#### Primary Indexes (auto-created)
 - All primary keys (UUID) are automatically indexed
 - Unique constraints create indexes on `users.email`, `companies.uid`
 
-### Recommended Performance Indexes
+#### Recommended Performance Indexes
 
 ```sql
 -- Tender queries (dashboard, filtering)
@@ -379,23 +412,23 @@ CREATE INDEX idx_cpv_parent ON cpv_codes(parent_code);
 CREATE INDEX idx_npk_parent ON npk_codes(parent_code);
 ```
 
-### Index Notes
+#### Index Notes
 - GIN indexes on JSONB enable fast `@>`, `?`, `?|` operators for code matching
 - Partial indexes with `WHERE deleted_at IS NULL` optimize active record queries
 - Composite indexes ordered by selectivity (status before deadline)
 
 ---
 
-## Supabase-Specific Considerations
+### Supabase Configuration
 
-### Authentication
+#### Authentication
 - Use Supabase Auth for user management
 - Support email/password + OAuth providers (Google, Microsoft)
 - Row Level Security (RLS) policies based on `auth.uid()`
 
-### Row Level Security (RLS) Policies
+#### Row Level Security (RLS) Policies
 
-```
+```sql
 -- Users can only see their own profiles
 user_profiles: auth.uid() = user_id
 
@@ -412,16 +445,16 @@ tenders: auth.role() = 'authenticated'
 cpv_codes, npk_codes: true (public read)
 ```
 
-### Realtime Subscriptions
+#### Realtime Subscriptions
 - Subscribe to `tenders` for new tender notifications
 - Subscribe to `user_tender_actions` for cross-device sync
 
-### Storage
+#### Storage Buckets
 - User avatars in `avatars` bucket
 - Company logos in `company-logos` bucket
 - Tender attachments in `tender-documents` bucket (future)
 
-### Edge Functions
+#### Edge Functions
 - `sync-simap`: Fetch new tenders from SIMAP API
 - `sync-ted`: Fetch new tenders from TED API
 
@@ -779,6 +812,7 @@ flowchart LR
 
 | Date       | Version | Changes                    |
 |------------|---------|----------------------------|
+| 2026-01-18 | 0.6     | Restructure document: separate Conceptual, Logical, and Physical data models |
 | 2026-01-18 | 0.5     | Address expert review: add indexes, soft delete, status management, updated_at fields |
 | 2026-01-18 | 0.4     | Add Mermaid data flow diagram, expert review, and difficulty estimation |
 | 2026-01-18 | 0.3     | Add detailed Mermaid flowcharts for matching algorithm |
