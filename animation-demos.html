@@ -57,7 +57,7 @@
 
         .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
             gap: 2rem;
         }
 
@@ -67,6 +67,8 @@
             padding: 2rem;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             border: 1px solid var(--color-border);
+            display: flex;
+            flex-direction: column;
         }
 
         .card h3 {
@@ -75,15 +77,15 @@
             font-size: 1.125rem;
         }
 
-        .card p {
+        .card > p {
             text-align: center;
             color: var(--color-text-muted);
             font-size: 0.875rem;
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
         }
 
         .demo-area {
-            height: 200px;
+            height: 180px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -98,6 +100,23 @@
             color: var(--color-text-muted);
             text-transform: uppercase;
             letter-spacing: 0.05em;
+            margin-bottom: 1rem;
+        }
+
+        .design-intent {
+            background: linear-gradient(135deg, var(--color-accent-subtle), #f5f3ff);
+            border-radius: 8px;
+            padding: 0.875rem 1rem;
+            font-size: 0.8125rem;
+            color: var(--color-text-secondary);
+            line-height: 1.5;
+            margin-top: auto;
+            border-left: 3px solid var(--color-accent);
+        }
+
+        .design-intent strong {
+            color: var(--color-accent);
+            font-weight: 600;
         }
 
         /* ========================================
@@ -259,56 +278,52 @@
         }
 
         /* ========================================
-           Option 4: Spinning Gears
+           Option 4: Spinning Gears (SVG)
            ======================================== */
         .orb-gears {
-            width: 120px;
+            width: 140px;
             height: 100px;
             position: relative;
         }
 
-        .gear {
+        .gear-svg {
             position: absolute;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            animation: spin linear infinite;
         }
 
-        .gear::before {
-            content: '';
-            position: absolute;
-            width: 40%;
-            height: 40%;
-            background: var(--color-bg-base);
-            border-radius: 50%;
-        }
-
-        .gear-1 {
-            width: 60px;
-            height: 60px;
+        .gear-svg-1 {
+            width: 70px;
+            height: 70px;
             left: 0;
-            top: 20px;
-            background: conic-gradient(from 0deg, var(--color-accent) 0deg 30deg, transparent 30deg 60deg, var(--color-accent) 60deg 90deg, transparent 90deg 120deg, var(--color-accent) 120deg 150deg, transparent 150deg 180deg, var(--color-accent) 180deg 210deg, transparent 210deg 240deg, var(--color-accent) 240deg 270deg, transparent 270deg 300deg, var(--color-accent) 300deg 330deg, transparent 330deg 360deg);
-            animation: spin 3s linear infinite;
+            top: 15px;
+            animation-duration: 3s;
+            color: var(--color-accent);
         }
 
-        .gear-2 {
-            width: 50px;
-            height: 50px;
-            right: 10px;
-            top: 10px;
-            background: conic-gradient(from 15deg, var(--color-accent-secondary) 0deg 30deg, transparent 30deg 60deg, var(--color-accent-secondary) 60deg 90deg, transparent 90deg 120deg, var(--color-accent-secondary) 120deg 150deg, transparent 150deg 180deg, var(--color-accent-secondary) 180deg 210deg, transparent 210deg 240deg, var(--color-accent-secondary) 240deg 270deg, transparent 270deg 300deg, var(--color-accent-secondary) 300deg 330deg, transparent 330deg 360deg);
-            animation: spin 2.5s linear infinite reverse;
+        .gear-svg-2 {
+            width: 55px;
+            height: 55px;
+            right: 5px;
+            top: 5px;
+            animation-duration: 2.36s;
+            animation-direction: reverse;
+            color: var(--color-accent-secondary);
         }
 
-        .gear-3 {
+        .gear-svg-3 {
             width: 40px;
             height: 40px;
-            right: 20px;
+            right: 25px;
             bottom: 0;
-            background: conic-gradient(from 0deg, var(--color-accent-tertiary) 0deg 30deg, transparent 30deg 60deg, var(--color-accent-tertiary) 60deg 90deg, transparent 90deg 120deg, var(--color-accent-tertiary) 120deg 150deg, transparent 150deg 180deg, var(--color-accent-tertiary) 180deg 210deg, transparent 210deg 240deg, var(--color-accent-tertiary) 240deg 270deg, transparent 270deg 300deg, var(--color-accent-tertiary) 300deg 330deg, transparent 330deg 360deg);
-            animation: spin 2s linear infinite;
+            animation-duration: 3.27s;
+            color: var(--color-accent-tertiary);
+        }
+
+        .gear-svg svg {
+            width: 100%;
+            height: 100%;
+            fill: currentColor;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
         }
 
         /* ========================================
@@ -557,22 +572,6 @@
         .orb-circuit .line-h-left { left: 18%; }
         .orb-circuit .line-h-right { right: 18%; }
 
-        .orb-circuit .pulse-line {
-            position: absolute;
-            background: var(--color-accent);
-            animation: line-pulse 1.5s ease-in-out infinite;
-        }
-
-        .orb-circuit .pulse-line-v {
-            width: 2px;
-            height: 0;
-        }
-
-        .orb-circuit .pulse-line-h {
-            height: 2px;
-            width: 0;
-        }
-
         @keyframes node-pulse {
             0%, 100% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 5px var(--color-accent); }
             50% { transform: translate(-50%, -50%) scale(1.3); box-shadow: 0 0 15px var(--color-accent); }
@@ -678,7 +677,7 @@
         }
 
         /* ========================================
-           Option 12: Cube Rotation
+           Option 12: 3D Cube Rotation
            ======================================== */
         .orb-cube-container {
             width: 100px;
@@ -716,6 +715,228 @@
             from { transform: rotateX(0deg) rotateY(0deg); }
             to { transform: rotateX(360deg) rotateY(360deg); }
         }
+
+        /* ========================================
+           Option 13: Typing Dots
+           ======================================== */
+        .orb-typing {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .orb-typing .dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--color-accent);
+            animation: typing-bounce 1.4s ease-in-out infinite;
+        }
+
+        .orb-typing .dot:nth-child(1) { animation-delay: 0s; }
+        .orb-typing .dot:nth-child(2) { animation-delay: 0.2s; background: var(--color-accent-secondary); }
+        .orb-typing .dot:nth-child(3) { animation-delay: 0.4s; background: var(--color-accent-tertiary); }
+
+        @keyframes typing-bounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-20px); }
+        }
+
+        /* ========================================
+           Option 14: Infinity Loop
+           ======================================== */
+        .orb-infinity {
+            width: 120px;
+            height: 60px;
+            position: relative;
+        }
+
+        .orb-infinity .path {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        .orb-infinity svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .orb-infinity .infinity-line {
+            fill: none;
+            stroke: var(--color-border);
+            stroke-width: 4;
+            stroke-linecap: round;
+        }
+
+        .orb-infinity .infinity-glow {
+            fill: none;
+            stroke: url(#infinity-gradient);
+            stroke-width: 4;
+            stroke-linecap: round;
+            stroke-dasharray: 200;
+            stroke-dashoffset: 200;
+            animation: infinity-trace 3s ease-in-out infinite;
+        }
+
+        @keyframes infinity-trace {
+            0% { stroke-dashoffset: 200; }
+            50% { stroke-dashoffset: 0; }
+            100% { stroke-dashoffset: -200; }
+        }
+
+        /* ========================================
+           Option 15: Heartbeat Pulse
+           ======================================== */
+        .orb-heartbeat {
+            width: 140px;
+            height: 60px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .orb-heartbeat svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .orb-heartbeat .line {
+            fill: none;
+            stroke: var(--color-accent);
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-dasharray: 300;
+            stroke-dashoffset: 300;
+            animation: heartbeat-draw 2s ease-in-out infinite;
+        }
+
+        .orb-heartbeat .glow {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: var(--color-accent);
+            border-radius: 50%;
+            top: 50%;
+            transform: translateY(-50%);
+            box-shadow: 0 0 12px var(--color-accent);
+            animation: heartbeat-dot 2s ease-in-out infinite;
+        }
+
+        @keyframes heartbeat-draw {
+            0%, 100% { stroke-dashoffset: 300; }
+            50% { stroke-dashoffset: 0; }
+        }
+
+        @keyframes heartbeat-dot {
+            0% { left: 0; opacity: 1; }
+            100% { left: 100%; opacity: 0; }
+        }
+
+        /* ========================================
+           Option 16: Hourglass
+           ======================================== */
+        .orb-hourglass {
+            width: 60px;
+            height: 100px;
+            position: relative;
+        }
+
+        .orb-hourglass svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .orb-hourglass .frame {
+            fill: none;
+            stroke: var(--color-accent);
+            stroke-width: 3;
+        }
+
+        .orb-hourglass .sand-top,
+        .orb-hourglass .sand-bottom {
+            fill: var(--color-accent-secondary);
+        }
+
+        .orb-hourglass .sand-stream {
+            fill: var(--color-accent-tertiary);
+        }
+
+        .hourglass-group {
+            animation: hourglass-flip 4s ease-in-out infinite;
+            transform-origin: center center;
+        }
+
+        @keyframes hourglass-flip {
+            0%, 45% { transform: rotate(0deg); }
+            50%, 95% { transform: rotate(180deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* ========================================
+           Option 17: Neural Network
+           ======================================== */
+        .orb-neural {
+            width: 120px;
+            height: 100px;
+            position: relative;
+        }
+
+        .orb-neural .neuron {
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            background: var(--color-accent);
+            border-radius: 50%;
+            animation: neuron-pulse 2s ease-in-out infinite;
+        }
+
+        .orb-neural .layer-1 .neuron { background: var(--color-accent); }
+        .orb-neural .layer-2 .neuron { background: var(--color-accent-secondary); }
+        .orb-neural .layer-3 .neuron { background: var(--color-accent-tertiary); }
+
+        .orb-neural .n1 { left: 0; top: 20%; animation-delay: 0s; }
+        .orb-neural .n2 { left: 0; top: 50%; animation-delay: 0.1s; }
+        .orb-neural .n3 { left: 0; top: 80%; animation-delay: 0.2s; }
+
+        .orb-neural .n4 { left: 43%; top: 10%; animation-delay: 0.3s; }
+        .orb-neural .n5 { left: 43%; top: 40%; animation-delay: 0.4s; }
+        .orb-neural .n6 { left: 43%; top: 70%; animation-delay: 0.5s; }
+        .orb-neural .n7 { left: 43%; top: 100%; animation-delay: 0.6s; }
+
+        .orb-neural .n8 { right: 0; top: 30%; animation-delay: 0.7s; }
+        .orb-neural .n9 { right: 0; top: 70%; animation-delay: 0.8s; }
+
+        .orb-neural svg {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+        }
+
+        .orb-neural .connection {
+            stroke: var(--color-border);
+            stroke-width: 1;
+            fill: none;
+        }
+
+        .orb-neural .signal {
+            fill: var(--color-accent);
+            animation: signal-travel 2s ease-in-out infinite;
+        }
+
+        @keyframes neuron-pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 5px currentColor; }
+            50% { transform: scale(1.2); box-shadow: 0 0 15px currentColor; }
+        }
+
+        @keyframes signal-travel {
+            0% { opacity: 0; }
+            50% { opacity: 1; }
+            100% { opacity: 0; }
+        }
     </style>
 </head>
 <body>
@@ -726,12 +947,15 @@
         <div class="grid">
             <!-- Option 1: Current -->
             <div class="card">
-                <h3>1. Current (Pulse + Ring)</h3>
-                <p>Existing animation with pulsing orb and spinning ring</p>
+                <h3>1. Pulse + Ring</h3>
+                <p>Organic pulsing orb with orbiting ring accent</p>
                 <div class="demo-area">
                     <div class="orb-current"></div>
                 </div>
                 <div class="label">Organic / Calm</div>
+                <div class="design-intent">
+                    <strong>Intent:</strong> Conveys a living, breathing intelligence. The gentle pulse suggests contemplation and care, while the orbiting ring hints at constant awareness.
+                </div>
             </div>
 
             <!-- Option 2: Data Processing Rings -->
@@ -747,6 +971,9 @@
                     </div>
                 </div>
                 <div class="label">Technical / Processing</div>
+                <div class="design-intent">
+                    <strong>Intent:</strong> Represents layers of computation working in parallel. Each ring symbolizes a different processing layer, from data ingestion to output refinement.
+                </div>
             </div>
 
             <!-- Option 3: Radar Sweep -->
@@ -760,26 +987,44 @@
                     </div>
                 </div>
                 <div class="label">Searching / Scanning</div>
+                <div class="design-intent">
+                    <strong>Intent:</strong> Ideal for search-related tasks. Communicates active exploration of data, like sonar finding relevant information in a sea of possibilities.
+                </div>
             </div>
 
-            <!-- Option 4: Spinning Gears -->
+            <!-- Option 4: Spinning Gears (SVG) -->
             <div class="card">
                 <h3>4. Spinning Gears</h3>
-                <p>Interlocking gears in motion</p>
+                <p>Interlocking mechanical gears in motion</p>
                 <div class="demo-area">
                     <div class="orb-gears">
-                        <div class="gear gear-1"></div>
-                        <div class="gear gear-2"></div>
-                        <div class="gear gear-3"></div>
+                        <div class="gear-svg gear-svg-1">
+                            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M50 10 L54 10 L56 18 L60 16 L64 12 L68 16 L64 20 L66 24 L74 22 L76 26 L74 30 L78 34 L86 32 L88 36 L82 40 L84 44 L90 46 L90 50 L84 52 L86 56 L92 60 L90 64 L84 62 L82 66 L88 72 L84 76 L78 70 L74 74 L76 82 L72 84 L68 76 L64 78 L66 86 L62 88 L58 80 L54 82 L54 90 L50 90 L50 82 L46 80 L42 88 L38 86 L40 78 L36 76 L32 84 L28 82 L30 74 L26 70 L18 76 L14 72 L22 66 L20 62 L12 64 L10 60 L18 56 L16 52 L10 50 L10 46 L16 44 L14 40 L8 36 L12 32 L20 38 L24 34 L22 26 L26 24 L30 32 L34 28 L32 20 L36 18 L40 26 L44 24 L46 16 L50 18 L50 10 Z M50 35 A15 15 0 1 0 50 65 A15 15 0 1 0 50 35 Z" fill="currentColor"/>
+                            </svg>
+                        </div>
+                        <div class="gear-svg gear-svg-2">
+                            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M50 10 L54 10 L56 18 L60 16 L64 12 L68 16 L64 20 L66 24 L74 22 L76 26 L74 30 L78 34 L86 32 L88 36 L82 40 L84 44 L90 46 L90 50 L84 52 L86 56 L92 60 L90 64 L84 62 L82 66 L88 72 L84 76 L78 70 L74 74 L76 82 L72 84 L68 76 L64 78 L66 86 L62 88 L58 80 L54 82 L54 90 L50 90 L50 82 L46 80 L42 88 L38 86 L40 78 L36 76 L32 84 L28 82 L30 74 L26 70 L18 76 L14 72 L22 66 L20 62 L12 64 L10 60 L18 56 L16 52 L10 50 L10 46 L16 44 L14 40 L8 36 L12 32 L20 38 L24 34 L22 26 L26 24 L30 32 L34 28 L32 20 L36 18 L40 26 L44 24 L46 16 L50 18 L50 10 Z M50 35 A15 15 0 1 0 50 65 A15 15 0 1 0 50 35 Z" fill="currentColor"/>
+                            </svg>
+                        </div>
+                        <div class="gear-svg gear-svg-3">
+                            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M50 10 L54 10 L56 18 L60 16 L64 12 L68 16 L64 20 L66 24 L74 22 L76 26 L74 30 L78 34 L86 32 L88 36 L82 40 L84 44 L90 46 L90 50 L84 52 L86 56 L92 60 L90 64 L84 62 L82 66 L88 72 L84 76 L78 70 L74 74 L76 82 L72 84 L68 76 L64 78 L66 86 L62 88 L58 80 L54 82 L54 90 L50 90 L50 82 L46 80 L42 88 L38 86 L40 78 L36 76 L32 84 L28 82 L30 74 L26 70 L18 76 L14 72 L22 66 L20 62 L12 64 L10 60 L18 56 L16 52 L10 50 L10 46 L16 44 L14 40 L8 36 L12 32 L20 38 L24 34 L22 26 L26 24 L30 32 L34 28 L32 20 L36 18 L40 26 L44 24 L46 16 L50 18 L50 10 Z M50 35 A15 15 0 1 0 50 65 A15 15 0 1 0 50 35 Z" fill="currentColor"/>
+                            </svg>
+                        </div>
                     </div>
                 </div>
                 <div class="label">Mechanical / Computing</div>
+                <div class="design-intent">
+                    <strong>Intent:</strong> Represents the machinery of thought. Interlocking gears convey precision, reliability, and the complex orchestration of multiple processes working together.
+                </div>
             </div>
 
             <!-- Option 5: Segmented Loader -->
             <div class="card">
                 <h3>5. Segmented Loader</h3>
-                <p>Staggered spinning segments</p>
+                <p>Staggered spinning segments with varied timing</p>
                 <div class="demo-area">
                     <div class="orb-segments">
                         <div class="segment segment-1"></div>
@@ -789,12 +1034,15 @@
                     </div>
                 </div>
                 <div class="label">Progress / Steps</div>
+                <div class="design-intent">
+                    <strong>Intent:</strong> Suggests progress through distinct phases. Each segment represents a step in the process, creating anticipation while showing work in motion.
+                </div>
             </div>
 
             <!-- Option 6: Binary Pulse Grid -->
             <div class="card">
                 <h3>6. Binary Pulse Grid</h3>
-                <p>Pulsing dot matrix with wave pattern</p>
+                <p>Pulsing dot matrix with radiating wave pattern</p>
                 <div class="demo-area">
                     <div class="orb-grid">
                         <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
@@ -805,12 +1053,15 @@
                     </div>
                 </div>
                 <div class="label">Data / Matrix</div>
+                <div class="design-intent">
+                    <strong>Intent:</strong> Evokes binary data and pixel-level processing. The ripple effect from center outward suggests information radiating from a core intelligence.
+                </div>
             </div>
 
             <!-- Option 7: Orbiting Particles -->
             <div class="card">
                 <h3>7. Orbiting Particles</h3>
-                <p>Particles circling a central core</p>
+                <p>Particles circling a pulsing central core</p>
                 <div class="demo-area">
                     <div class="orb-particles">
                         <div class="center"></div>
@@ -820,24 +1071,30 @@
                     </div>
                 </div>
                 <div class="label">Atomic / Neural</div>
+                <div class="design-intent">
+                    <strong>Intent:</strong> Inspired by atomic structure and neural activity. Conveys energy, potential, and the dynamic nature of intelligent thought processes.
+                </div>
             </div>
 
             <!-- Option 8: Hexagon Morph -->
             <div class="card">
                 <h3>8. Morphing Shape</h3>
-                <p>Smooth shape transformation with rotation</p>
+                <p>Smooth shape transformation with slow rotation</p>
                 <div class="demo-area">
                     <div class="orb-hexagon">
                         <div class="shape"></div>
                     </div>
                 </div>
                 <div class="label">Fluid / Adaptive</div>
+                <div class="design-intent">
+                    <strong>Intent:</strong> Represents adaptability and transformation. The ever-changing form suggests an AI that molds itself to understand and respond appropriately.
+                </div>
             </div>
 
             <!-- Option 9: Circuit Pulse -->
             <div class="card">
                 <h3>9. Circuit Pulse</h3>
-                <p>Connected nodes with pulsing signals</p>
+                <p>Connected nodes with synchronized pulsing signals</p>
                 <div class="demo-area">
                     <div class="orb-circuit">
                         <div class="line line-v line-v-top"></div>
@@ -852,12 +1109,15 @@
                     </div>
                 </div>
                 <div class="label">Network / Connected</div>
+                <div class="design-intent">
+                    <strong>Intent:</strong> Visualizes a network of interconnected thoughts. The central hub coordinates peripheral nodes, representing how AI synthesizes information from multiple sources.
+                </div>
             </div>
 
             <!-- Option 10: Waveform -->
             <div class="card">
                 <h3>10. Audio Waveform</h3>
-                <p>Equalizer-style animated bars</p>
+                <p>Equalizer-style animated bars with gradient</p>
                 <div class="demo-area">
                     <div class="orb-waveform">
                         <div class="bar"></div>
@@ -872,12 +1132,15 @@
                     </div>
                 </div>
                 <div class="label">Processing / Active</div>
+                <div class="design-intent">
+                    <strong>Intent:</strong> Perfect for voice or audio-related AI. Suggests active listening and response generation, like a visual heartbeat of conversation.
+                </div>
             </div>
 
             <!-- Option 11: DNA Helix -->
             <div class="card">
                 <h3>11. DNA Helix</h3>
-                <p>Double helix with connected pairs</p>
+                <p>Double helix with connected oscillating pairs</p>
                 <div class="demo-area">
                     <div class="orb-dna">
                         <div class="connector connector-1"></div>
@@ -893,12 +1156,15 @@
                     </div>
                 </div>
                 <div class="label">Bio / Transformation</div>
+                <div class="design-intent">
+                    <strong>Intent:</strong> Represents the building blocks of intelligence. The DNA metaphor suggests learning, evolution, and the organic foundation of AI understanding.
+                </div>
             </div>
 
             <!-- Option 12: 3D Cube -->
             <div class="card">
                 <h3>12. 3D Rotating Cube</h3>
-                <p>Wireframe cube with depth</p>
+                <p>Wireframe cube with depth and multi-axis rotation</p>
                 <div class="demo-area">
                     <div class="orb-cube-container">
                         <div class="orb-cube">
@@ -912,6 +1178,149 @@
                     </div>
                 </div>
                 <div class="label">3D / Dimensional</div>
+                <div class="design-intent">
+                    <strong>Intent:</strong> Represents multi-dimensional thinking. The cube shows all perspectives simultaneously, suggesting comprehensive analysis from every angle.
+                </div>
+            </div>
+
+            <!-- Option 13: Typing Dots -->
+            <div class="card">
+                <h3>13. Typing Indicator</h3>
+                <p>Classic chat-style bouncing dots</p>
+                <div class="demo-area">
+                    <div class="orb-typing">
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                    </div>
+                </div>
+                <div class="label">Chat / Conversational</div>
+                <div class="design-intent">
+                    <strong>Intent:</strong> Familiar messaging pattern that users instantly recognize. Creates anticipation and human-like presence, as if someone is composing a thoughtful reply.
+                </div>
+            </div>
+
+            <!-- Option 14: Infinity Loop -->
+            <div class="card">
+                <h3>14. Infinity Loop</h3>
+                <p>Continuous flowing path with gradient trace</p>
+                <div class="demo-area">
+                    <div class="orb-infinity">
+                        <svg viewBox="0 0 120 60" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <linearGradient id="infinity-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" style="stop-color: var(--color-accent)"/>
+                                    <stop offset="50%" style="stop-color: var(--color-accent-secondary)"/>
+                                    <stop offset="100%" style="stop-color: var(--color-accent-tertiary)"/>
+                                </linearGradient>
+                            </defs>
+                            <path class="infinity-line" d="M30 30 C30 10, 10 10, 10 30 C10 50, 30 50, 30 30 C30 10, 50 10, 50 30 L70 30 C70 10, 90 10, 90 30 C90 50, 70 50, 70 30 C70 10, 90 10, 90 30 C90 50, 110 50, 110 30 C110 10, 90 10, 90 30"/>
+                            <path class="infinity-glow" d="M30 30 C30 10, 10 10, 10 30 C10 50, 30 50, 30 30 C30 10, 50 10, 50 30 L70 30 C70 10, 90 10, 90 30 C90 50, 70 50, 70 30 C70 10, 90 10, 90 30 C90 50, 110 50, 110 30 C110 10, 90 10, 90 30"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="label">Continuous / Endless</div>
+                <div class="design-intent">
+                    <strong>Intent:</strong> Symbolizes unlimited potential and continuous processing. The infinity form suggests boundless capability and the cyclical nature of learning.
+                </div>
+            </div>
+
+            <!-- Option 15: Heartbeat Pulse -->
+            <div class="card">
+                <h3>15. Heartbeat Monitor</h3>
+                <p>ECG-style pulse line with traveling indicator</p>
+                <div class="demo-area">
+                    <div class="orb-heartbeat">
+                        <svg viewBox="0 0 140 60" xmlns="http://www.w3.org/2000/svg">
+                            <path class="line" d="M0 30 L30 30 L40 30 L50 10 L60 50 L70 20 L80 40 L90 30 L140 30"/>
+                        </svg>
+                        <div class="glow"></div>
+                    </div>
+                </div>
+                <div class="label">Vital / Alive</div>
+                <div class="design-intent">
+                    <strong>Intent:</strong> Gives AI a sense of life and vitality. The heartbeat metaphor creates emotional connection, suggesting the system is alive and responsive.
+                </div>
+            </div>
+
+            <!-- Option 16: Hourglass -->
+            <div class="card">
+                <h3>16. Hourglass Timer</h3>
+                <p>Classic time symbol with flip animation</p>
+                <div class="demo-area">
+                    <div class="orb-hourglass">
+                        <svg viewBox="0 0 60 100" xmlns="http://www.w3.org/2000/svg">
+                            <g class="hourglass-group">
+                                <path class="frame" d="M10 5 L50 5 L50 10 L35 45 L35 55 L50 90 L50 95 L10 95 L10 90 L25 55 L25 45 L10 10 Z"/>
+                                <path class="sand-top" d="M15 15 L45 15 L32 40 L28 40 Z">
+                                    <animate attributeName="d"
+                                        values="M15 15 L45 15 L32 40 L28 40 Z;M25 35 L35 35 L32 40 L28 40 Z;M15 15 L45 15 L32 40 L28 40 Z"
+                                        dur="4s" repeatCount="indefinite"/>
+                                </path>
+                                <rect class="sand-stream" x="28" y="45" width="4" height="10">
+                                    <animate attributeName="opacity" values="1;1;0;0;1" dur="4s" repeatCount="indefinite"/>
+                                </rect>
+                                <path class="sand-bottom" d="M28 60 L32 60 L45 85 L15 85 Z">
+                                    <animate attributeName="d"
+                                        values="M28 60 L32 60 L30 62 L30 62 Z;M28 60 L32 60 L45 85 L15 85 Z;M28 60 L32 60 L30 62 L30 62 Z"
+                                        dur="4s" repeatCount="indefinite"/>
+                                </path>
+                            </g>
+                        </svg>
+                    </div>
+                </div>
+                <div class="label">Time / Patience</div>
+                <div class="design-intent">
+                    <strong>Intent:</strong> Acknowledges that quality takes time. The hourglass sets expectations while its elegant form suggests the process is worthwhile waiting for.
+                </div>
+            </div>
+
+            <!-- Option 17: Neural Network -->
+            <div class="card">
+                <h3>17. Neural Network</h3>
+                <p>Connected neurons with signal propagation</p>
+                <div class="demo-area">
+                    <div class="orb-neural">
+                        <svg viewBox="0 0 120 100">
+                            <line class="connection" x1="14" y1="27" x2="58" y2="17"/>
+                            <line class="connection" x1="14" y1="27" x2="58" y2="47"/>
+                            <line class="connection" x1="14" y1="27" x2="58" y2="77"/>
+                            <line class="connection" x1="14" y1="57" x2="58" y2="17"/>
+                            <line class="connection" x1="14" y1="57" x2="58" y2="47"/>
+                            <line class="connection" x1="14" y1="57" x2="58" y2="77"/>
+                            <line class="connection" x1="14" y1="57" x2="58" y2="107"/>
+                            <line class="connection" x1="14" y1="87" x2="58" y2="47"/>
+                            <line class="connection" x1="14" y1="87" x2="58" y2="77"/>
+                            <line class="connection" x1="14" y1="87" x2="58" y2="107"/>
+                            <line class="connection" x1="58" y1="17" x2="106" y2="37"/>
+                            <line class="connection" x1="58" y1="17" x2="106" y2="77"/>
+                            <line class="connection" x1="58" y1="47" x2="106" y2="37"/>
+                            <line class="connection" x1="58" y1="47" x2="106" y2="77"/>
+                            <line class="connection" x1="58" y1="77" x2="106" y2="37"/>
+                            <line class="connection" x1="58" y1="77" x2="106" y2="77"/>
+                            <line class="connection" x1="58" y1="107" x2="106" y2="77"/>
+                        </svg>
+                        <div class="layer-1">
+                            <div class="neuron n1"></div>
+                            <div class="neuron n2"></div>
+                            <div class="neuron n3"></div>
+                        </div>
+                        <div class="layer-2">
+                            <div class="neuron n4"></div>
+                            <div class="neuron n5"></div>
+                            <div class="neuron n6"></div>
+                            <div class="neuron n7"></div>
+                        </div>
+                        <div class="layer-3">
+                            <div class="neuron n8"></div>
+                            <div class="neuron n9"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="label">AI / Intelligence</div>
+                <div class="design-intent">
+                    <strong>Intent:</strong> Directly represents AI architecture. Shows how information flows through layers of processing, making the invisible visible and technical approachable.
+                </div>
             </div>
         </div>
     </div>
