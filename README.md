@@ -2,6 +2,15 @@
 
 Intelligent tender matching platform for Swiss SMEs. Aggregates public contracts from SIMAP, TED, and cantonal portals, using AI-powered matching to deliver personalized recommendations.
 
+<p align="center">
+  <img src="assets/banner2.jpg" width="90%"/>
+</p>
+
+<p align="center">
+  <img src="assets/images/preview2.jpg" width="45%" style="vertical-align: top;"/>
+  <img src="assets/images/preview3.jpg" width="45%" style="vertical-align: top;"/>
+</p>
+
 ## Quick Start
 
 ```bash
