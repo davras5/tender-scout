@@ -555,9 +555,9 @@
                 <div class="footer-bottom">
                     <span class="footer-copy">&copy; 2026 Tender Scout Schweiz AG. Made in Zürich.</span>
                     <div class="footer-legal">
-                        <a href="#">Datenschutz</a>
-                        <a href="#">AGB</a>
-                        <a href="#">Impressum</a>
+                        <a href="#" onclick="navigateTo('legal'); setTimeout(() => document.getElementById('datenschutz').scrollIntoView({behavior: 'smooth'}), 100); return false;">Datenschutz</a>
+                        <a href="#" onclick="navigateTo('legal'); setTimeout(() => document.getElementById('agb').scrollIntoView({behavior: 'smooth'}), 100); return false;">AGB</a>
+                        <a href="#" onclick="navigateTo('legal'); setTimeout(() => document.getElementById('impressum').scrollIntoView({behavior: 'smooth'}), 100); return false;">Impressum</a>
                     </div>
                 </div>
             </div>
@@ -645,7 +645,7 @@
                     <div class="form-group">
                         <label class="flex items-center gap-2 text-sm">
                             <input type="checkbox" id="register-terms" required>
-                            <span>Ich akzeptiere die <a href="#" class="text-accent">AGB</a> und <a href="#" class="text-accent">Datenschutzerklärung</a></span>
+                            <span>Ich akzeptiere die <a href="#" onclick="navigateTo('legal'); setTimeout(() => document.getElementById('agb').scrollIntoView({behavior: 'smooth'}), 100); return false;" class="text-accent">AGB</a> und <a href="#" onclick="navigateTo('legal'); setTimeout(() => document.getElementById('datenschutz').scrollIntoView({behavior: 'smooth'}), 100); return false;" class="text-accent">Datenschutzerklärung</a></span>
                         </label>
                         <span id="register-terms-error" class="text-sm text-error hidden"></span>
                     </div>
@@ -1466,6 +1466,257 @@
             <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="toggleModal('edit', false)">Abbrechen</button>
                 <button class="btn btn-primary" onclick="saveEdit()">Speichern</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 8. Legal View (Datenschutz, AGB, Impressum) -->
+    <div id="view-legal" class="view">
+        <div class="container container--narrow pt-8 pb-8">
+            <!-- Back Navigation -->
+            <nav class="breadcrumb" aria-label="Breadcrumb">
+                <span class="breadcrumb-item is-clickable" onclick="navigateTo('landing')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m12 19-7-7 7-7"/>
+                        <path d="M19 12H5"/>
+                    </svg>
+                    Zurück zur Startseite
+                </span>
+            </nav>
+
+            <h1 class="text-h1 mb-6">Rechtliches</h1>
+
+            <!-- Legal Navigation -->
+            <div class="legal-nav mb-8">
+                <a href="#datenschutz" class="legal-nav-item">Datenschutz</a>
+                <a href="#agb" class="legal-nav-item">AGB</a>
+                <a href="#impressum" class="legal-nav-item">Impressum</a>
+            </div>
+
+            <!-- Datenschutz Section -->
+            <section id="datenschutz" class="legal-section card mb-8">
+                <h2 class="text-h2 mb-4">Datenschutzerklärung</h2>
+                <p class="text-muted mb-6">Stand: Januar 2026</p>
+
+                <div class="legal-content">
+                    <h3>1. Verantwortliche Stelle</h3>
+                    <p>Verantwortlich für die Datenverarbeitung auf dieser Website ist:</p>
+                    <address>
+                        Tender Scout Schweiz AG<br>
+                        Musterstrasse 123<br>
+                        8001 Zürich<br>
+                        Schweiz<br>
+                        E-Mail: datenschutz@tenderscout.ch
+                    </address>
+
+                    <h3>2. Erhebung und Verarbeitung von Daten</h3>
+                    <p>Wir erheben und verarbeiten personenbezogene Daten nur, soweit dies für die Bereitstellung unserer Dienstleistungen erforderlich ist. Die Verarbeitung erfolgt auf Grundlage von Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung) und Art. 13 DSG (Schweiz).</p>
+
+                    <h4>2.1 Bei Registrierung und Nutzung</h4>
+                    <ul>
+                        <li>E-Mail-Adresse</li>
+                        <li>Firmenname und UID-Nummer</li>
+                        <li>Kontaktdaten des Unternehmens</li>
+                        <li>Branche und Tätigkeitsbereiche (CPV/NPK-Codes)</li>
+                        <li>Nutzungsdaten und Präferenzen</li>
+                    </ul>
+
+                    <h4>2.2 Automatisch erfasste Daten</h4>
+                    <ul>
+                        <li>IP-Adresse (anonymisiert)</li>
+                        <li>Browser-Typ und -Version</li>
+                        <li>Betriebssystem</li>
+                        <li>Datum und Uhrzeit des Zugriffs</li>
+                    </ul>
+
+                    <h3>3. Zweck der Datenverarbeitung</h3>
+                    <p>Ihre Daten werden verarbeitet für:</p>
+                    <ul>
+                        <li>Die Bereitstellung unseres KI-gestützten Ausschreibungs-Matching-Dienstes</li>
+                        <li>Die Personalisierung von Ausschreibungsempfehlungen</li>
+                        <li>Die Verwaltung Ihres Benutzerkontos</li>
+                        <li>Die Abwicklung von Zahlungen</li>
+                        <li>Die Verbesserung unserer Dienste</li>
+                        <li>Die Kommunikation mit Ihnen (z.B. E-Mail-Benachrichtigungen)</li>
+                    </ul>
+
+                    <h3>4. Datenweitergabe</h3>
+                    <p>Wir geben Ihre personenbezogenen Daten nur in folgenden Fällen an Dritte weiter:</p>
+                    <ul>
+                        <li>Mit Ihrer ausdrücklichen Einwilligung</li>
+                        <li>Zur Vertragserfüllung (z.B. Zahlungsabwicklung über Stripe)</li>
+                        <li>Wenn wir gesetzlich dazu verpflichtet sind</li>
+                    </ul>
+
+                    <h3>5. Datensicherheit</h3>
+                    <p>Wir setzen technische und organisatorische Sicherheitsmassnahmen ein, um Ihre Daten gegen zufällige oder vorsätzliche Manipulationen, Verlust, Zerstörung oder den Zugriff unberechtigter Personen zu schützen. Unsere Sicherheitsmassnahmen werden entsprechend der technologischen Entwicklung fortlaufend verbessert.</p>
+
+                    <h3>6. Speicherdauer</h3>
+                    <p>Wir speichern personenbezogene Daten nur so lange, wie dies für die Erfüllung der Zwecke, für die sie erhoben wurden, erforderlich ist oder gesetzliche Aufbewahrungspflichten bestehen. Nach Vertragsbeendigung werden Ihre Daten nach Ablauf der gesetzlichen Aufbewahrungsfristen gelöscht.</p>
+
+                    <h3>7. Ihre Rechte</h3>
+                    <p>Sie haben jederzeit das Recht auf:</p>
+                    <ul>
+                        <li><strong>Auskunft</strong> über Ihre bei uns gespeicherten Daten</li>
+                        <li><strong>Berichtigung</strong> unrichtiger Daten</li>
+                        <li><strong>Löschung</strong> Ihrer Daten</li>
+                        <li><strong>Einschränkung</strong> der Verarbeitung</li>
+                        <li><strong>Datenübertragbarkeit</strong></li>
+                        <li><strong>Widerspruch</strong> gegen die Verarbeitung</li>
+                    </ul>
+                    <p>Zur Ausübung Ihrer Rechte wenden Sie sich bitte an: datenschutz@tenderscout.ch</p>
+
+                    <h3>8. Cookies</h3>
+                    <p>Wir verwenden nur technisch notwendige Cookies, die für den Betrieb der Website erforderlich sind. Diese Cookies speichern keine personenbezogenen Daten und werden nach Beendigung der Browser-Sitzung automatisch gelöscht.</p>
+
+                    <h3>9. Änderungen dieser Datenschutzerklärung</h3>
+                    <p>Wir behalten uns vor, diese Datenschutzerklärung anzupassen, damit sie stets den aktuellen rechtlichen Anforderungen entspricht oder um Änderungen unserer Leistungen umzusetzen. Die neue Datenschutzerklärung gilt dann für Ihren nächsten Besuch.</p>
+                </div>
+            </section>
+
+            <!-- AGB Section -->
+            <section id="agb" class="legal-section card mb-8">
+                <h2 class="text-h2 mb-4">Allgemeine Geschäftsbedingungen (AGB)</h2>
+                <p class="text-muted mb-6">Stand: Januar 2026</p>
+
+                <div class="legal-content">
+                    <h3>1. Geltungsbereich</h3>
+                    <p>Diese Allgemeinen Geschäftsbedingungen gelten für alle Verträge zwischen der Tender Scout Schweiz AG (nachfolgend «Tender Scout») und dem Kunden über die Nutzung der Tender Scout Plattform.</p>
+
+                    <h3>2. Leistungsbeschreibung</h3>
+                    <p>Tender Scout bietet eine KI-gestützte Plattform zur Identifikation und Vermittlung von öffentlichen Ausschreibungen. Die Plattform umfasst:</p>
+                    <ul>
+                        <li>Automatische Aggregation öffentlicher Ausschreibungen aus Schweizer Quellen</li>
+                        <li>KI-basiertes Matching von Ausschreibungen mit dem Firmenprofil</li>
+                        <li>Personalisierte Benachrichtigungen über relevante Ausschreibungen</li>
+                        <li>Filterung und Suchfunktionen</li>
+                    </ul>
+
+                    <h3>3. Vertragsschluss</h3>
+                    <p>Der Vertrag kommt durch die Registrierung auf der Plattform und die Bestätigung der Registrierung durch Tender Scout zustande. Mit der Registrierung akzeptiert der Kunde diese AGB.</p>
+
+                    <h3>4. Abonnements und Preise</h3>
+                    <h4>4.1 Kostenlose Testphase</h4>
+                    <p>Neue Kunden erhalten eine kostenlose Testphase von 14 Tagen mit vollem Funktionsumfang.</p>
+
+                    <h4>4.2 Abonnement-Modelle</h4>
+                    <ul>
+                        <li><strong>Starter:</strong> CHF 49/Monat – Bis zu 50 Matches pro Monat, E-Mail-Benachrichtigungen</li>
+                        <li><strong>Professional:</strong> CHF 149/Monat – Unbegrenzte Matches, Mehrere Firmenprofile, Prioritäts-Support</li>
+                        <li><strong>Enterprise:</strong> Auf Anfrage – Individuelle Lösungen für grössere Unternehmen</li>
+                    </ul>
+
+                    <h4>4.3 Zahlungsbedingungen</h4>
+                    <p>Die Zahlung erfolgt monatlich im Voraus per Kreditkarte oder auf Rechnung (nur Enterprise). Bei Zahlungsverzug behält sich Tender Scout das Recht vor, den Zugang zur Plattform zu sperren.</p>
+
+                    <h3>5. Pflichten des Kunden</h3>
+                    <p>Der Kunde verpflichtet sich:</p>
+                    <ul>
+                        <li>Korrekte und vollständige Angaben bei der Registrierung zu machen</li>
+                        <li>Seine Zugangsdaten vertraulich zu behandeln</li>
+                        <li>Die Plattform nicht missbräuchlich zu nutzen</li>
+                        <li>Keine automatisierten Zugriffe (Scraping, Bots) durchzuführen</li>
+                    </ul>
+
+                    <h3>6. Verfügbarkeit und Haftung</h3>
+                    <h4>6.1 Verfügbarkeit</h4>
+                    <p>Tender Scout strebt eine Verfügbarkeit der Plattform von 99.5% an (ausgenommen geplante Wartungsarbeiten). Eine Garantie für ununterbrochene Verfügbarkeit wird nicht gegeben.</p>
+
+                    <h4>6.2 Haftungsbeschränkung</h4>
+                    <p>Die Haftung von Tender Scout ist auf Vorsatz und grobe Fahrlässigkeit beschränkt. Eine Haftung für entgangenen Gewinn, Datenverlust oder indirekte Schäden ist ausgeschlossen. Die Informationen zu Ausschreibungen werden von Drittquellen bezogen. Tender Scout übernimmt keine Gewähr für deren Vollständigkeit, Richtigkeit oder Aktualität.</p>
+
+                    <h3>7. Kündigung</h3>
+                    <h4>7.1 Ordentliche Kündigung</h4>
+                    <p>Das Abonnement kann jederzeit zum Ende des Abrechnungszeitraums gekündigt werden. Die Kündigung erfolgt über die Kontoeinstellungen oder per E-Mail an support@tenderscout.ch.</p>
+
+                    <h4>7.2 Ausserordentliche Kündigung</h4>
+                    <p>Bei schwerwiegenden Vertragsverletzungen kann jede Partei den Vertrag fristlos kündigen.</p>
+
+                    <h3>8. Datenschutz</h3>
+                    <p>Die Verarbeitung personenbezogener Daten erfolgt gemäss unserer Datenschutzerklärung, die Bestandteil dieser AGB ist.</p>
+
+                    <h3>9. Änderungen der AGB</h3>
+                    <p>Tender Scout behält sich vor, diese AGB zu ändern. Änderungen werden dem Kunden mindestens 30 Tage vor Inkrafttreten mitgeteilt. Widerspricht der Kunde nicht innerhalb dieser Frist, gelten die Änderungen als akzeptiert.</p>
+
+                    <h3>10. Schlussbestimmungen</h3>
+                    <h4>10.1 Anwendbares Recht</h4>
+                    <p>Es gilt schweizerisches Recht unter Ausschluss des UN-Kaufrechts.</p>
+
+                    <h4>10.2 Gerichtsstand</h4>
+                    <p>Ausschliesslicher Gerichtsstand ist Zürich, Schweiz.</p>
+
+                    <h4>10.3 Salvatorische Klausel</h4>
+                    <p>Sollten einzelne Bestimmungen dieser AGB unwirksam sein, bleibt die Wirksamkeit der übrigen Bestimmungen unberührt.</p>
+                </div>
+            </section>
+
+            <!-- Impressum Section -->
+            <section id="impressum" class="legal-section card mb-8">
+                <h2 class="text-h2 mb-4">Impressum</h2>
+
+                <div class="legal-content">
+                    <h3>Angaben gemäss Art. 3 UWG und Art. 5 DSG</h3>
+
+                    <h4>Betreiber der Website</h4>
+                    <address>
+                        <strong>Tender Scout Schweiz AG</strong><br>
+                        Musterstrasse 123<br>
+                        8001 Zürich<br>
+                        Schweiz
+                    </address>
+
+                    <h4>Kontakt</h4>
+                    <p>
+                        Telefon: +41 44 123 45 67<br>
+                        E-Mail: info@tenderscout.ch<br>
+                        Website: www.tenderscout.ch
+                    </p>
+
+                    <h4>Handelsregister</h4>
+                    <p>
+                        Eingetragen im Handelsregister des Kantons Zürich<br>
+                        UID: CHE-123.456.789<br>
+                        MWST-Nr: CHE-123.456.789 MWST
+                    </p>
+
+                    <h4>Vertretungsberechtigte Personen</h4>
+                    <p>
+                        Geschäftsführer: [Name]<br>
+                        Verwaltungsratspräsident: [Name]
+                    </p>
+
+                    <h4>Verantwortlich für den Inhalt</h4>
+                    <p>
+                        Tender Scout Schweiz AG<br>
+                        Musterstrasse 123<br>
+                        8001 Zürich
+                    </p>
+
+                    <h3>Haftungsausschluss</h3>
+                    <h4>Haftung für Inhalte</h4>
+                    <p>Die Inhalte unserer Seiten wurden mit grösster Sorgfalt erstellt. Für die Richtigkeit, Vollständigkeit und Aktualität der Inhalte können wir jedoch keine Gewähr übernehmen.</p>
+
+                    <h4>Haftung für Links</h4>
+                    <p>Unser Angebot enthält Links zu externen Webseiten Dritter, auf deren Inhalte wir keinen Einfluss haben. Für die Inhalte der verlinkten Seiten ist stets der jeweilige Anbieter verantwortlich.</p>
+
+                    <h3>Urheberrecht</h3>
+                    <p>Die durch Tender Scout erstellten Inhalte und Werke auf diesen Seiten unterliegen dem schweizerischen Urheberrecht. Die Vervielfältigung, Bearbeitung, Verbreitung und jede Art der Verwertung ausserhalb der Grenzen des Urheberrechts bedürfen der schriftlichen Zustimmung von Tender Scout.</p>
+
+                    <h3>Streitbeilegung</h3>
+                    <p>Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit: <a href="https://ec.europa.eu/consumers/odr" target="_blank" rel="noopener">https://ec.europa.eu/consumers/odr</a></p>
+                    <p>Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.</p>
+                </div>
+            </section>
+
+            <!-- Back to Top -->
+            <div class="text-center">
+                <button class="btn btn-secondary" onclick="navigateTo('landing')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m12 19-7-7 7-7"/>
+                        <path d="M19 12H5"/>
+                    </svg>
+                    Zurück zur Startseite
+                </button>
             </div>
         </div>
     </div>
