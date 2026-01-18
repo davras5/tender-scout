@@ -1406,6 +1406,22 @@ textarea.input-md {
     #tender-detail-content .text-display {
         font-size: var(--text-xl);
     }
+
+    /* Action buttons - two column grid on mobile */
+    #tender-detail-content > .flex.gap-4 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-3);
+    }
+
+    #tender-detail-content > .flex.gap-4 .btn-lg {
+        padding: var(--space-3) var(--space-2);
+        font-size: var(--text-sm);
+        height: auto;
+        min-height: var(--size-btn-lg);
+        white-space: normal;
+        text-align: center;
+    }
 }
 
 /* Tender Action Buttons */
