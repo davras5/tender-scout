@@ -1075,6 +1075,67 @@ textarea.input-md {
     margin: var(--space-12) auto;
 }
 
+/* SSO Buttons */
+.sso-divider {
+    display: flex;
+    align-items: center;
+    margin: var(--space-6) 0;
+    gap: var(--space-4);
+}
+
+.sso-divider::before,
+.sso-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--color-border-subtle);
+}
+
+.sso-divider span {
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+    text-transform: lowercase;
+}
+
+.sso-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.btn-sso {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3);
+    width: 100%;
+    height: var(--size-btn-md);
+    padding: 0 var(--space-4);
+    background: var(--color-bg-base);
+    border: var(--border-width) solid var(--color-border-subtle);
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    color: var(--color-text-primary);
+    cursor: pointer;
+    transition: all var(--duration-fast) var(--ease-out);
+}
+
+.btn-sso:hover {
+    background: var(--color-bg-muted);
+    border-color: var(--color-border);
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-sso:focus-visible {
+    outline: var(--border-width-2) solid var(--color-accent);
+    outline-offset: 2px;
+}
+
+.sso-icon {
+    flex-shrink: 0;
+}
+
 /* Wizard */
 .wizard-steps {
     display: flex;
