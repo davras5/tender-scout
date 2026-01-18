@@ -27,7 +27,11 @@
 ### Overview Flow
 
 ```
-Landing Page → Sign Up → Company Identification → AI Recommendations → Dashboard
+Landing Page → Sign Up → Profile Selection → Company Identification → AI Recommendations → Dashboard
+                              ↓
+                    (Returning users with
+                     existing profiles can
+                     skip to Dashboard)
 ```
 
 ### Detailed Journey
@@ -42,10 +46,23 @@ Landing Page → Sign Up → Company Identification → AI Recommendations → D
 #### 2. Authentication
 - **Sign Up:** Email/password registration
 - **Sign In:** Email/password login
-- **Password Recovery:** Email-based reset flow
-- Future consideration: Social login, Enterprise SSO
+- **Password Recovery:** Email-based reset flow (planned)
+- **SSO Options (UI implemented, backend pending):**
+  - Google Sign-In
+  - Microsoft Account
+  - WhatsApp (mobile-friendly option for Swiss market)
 
-#### 3. Company Identification
+#### 3. Profile Selection (Returning Users)
+
+After authentication, users see their existing company profiles:
+- List of saved company profiles with company name, role, and last activity
+- Quick access to dashboard for any profile
+- Option to create a new company profile
+- Profile management (delete profiles from Settings)
+
+**New User Flow:** If no profiles exist, user proceeds directly to Company Identification.
+
+#### 4. Company Identification
 
 Two paths to identify the user's company:
 
@@ -68,7 +85,7 @@ Two paths to identify the user's company:
   - UID (optional)
 - Use cases: Non-Swiss companies, new companies, user preference
 
-#### 4. AI-Powered Recommendations
+#### 5. AI-Powered Recommendations
 
 Based on company data (from Zefix or manual entry), AI generates:
 
@@ -86,7 +103,7 @@ Based on company data (from Zefix or manual entry), AI generates:
 - Adjust any/all recommendations manually
 - Proceed to dashboard
 
-#### 5. Dashboard
+#### 6. Dashboard
 
 Primary interface after onboarding - see Dashboard section below.
 
@@ -224,6 +241,16 @@ Primary interface after onboarding - see Dashboard section below.
 │                                         │
 │   ─────────── oder ───────────          │
 │                                         │
+│   ┌─────────────────────────────────┐   │
+│   │ [G] Mit Google fortfahren       │   │
+│   └─────────────────────────────────┘   │
+│   ┌─────────────────────────────────┐   │
+│   │ [M] Mit Microsoft fortfahren    │   │
+│   └─────────────────────────────────┘   │
+│   ┌─────────────────────────────────┐   │
+│   │ [W] Mit WhatsApp fortfahren     │   │
+│   └─────────────────────────────────┘   │
+│                                         │
 │   Bereits ein Konto? Anmelden           │
 │                                         │
 └─────────────────────────────────────────┘
@@ -262,7 +289,56 @@ Primary interface after onboarding - see Dashboard section below.
 │                                         │
 │   ─────────── oder ───────────          │
 │                                         │
+│   ┌─────────────────────────────────┐   │
+│   │ [G] Mit Google fortfahren       │   │
+│   └─────────────────────────────────┘   │
+│   ┌─────────────────────────────────┐   │
+│   │ [M] Mit Microsoft fortfahren    │   │
+│   └─────────────────────────────────┘   │
+│   ┌─────────────────────────────────┐   │
+│   │ [W] Mit WhatsApp fortfahren     │   │
+│   └─────────────────────────────────┘   │
+│                                         │
 │   Noch kein Konto? Registrieren         │
+│                                         │
+└─────────────────────────────────────────┘
+```
+
+---
+
+### W2.5: Profile Selection (Returning Users)
+
+```
+┌─────────────────────────────────────────┐
+│ PROFILE SELECTION (Mobile)              │
+├─────────────────────────────────────────┤
+│ ┌─────────────────────────────────────┐ │
+│ │ [Logo]              [DE▼] [◐]      │ │
+│ └─────────────────────────────────────┘ │
+│                                         │
+│        Willkommen zurück, Hans          │
+│                                         │
+│        Wählen Sie ein Profil            │
+│                                         │
+│   ┌─────────────────────────────────┐   │
+│   │ [🏢] Müller Bau AG              │   │
+│   │      Admin                      │   │
+│   │      Zuletzt aktiv: Heute       │   │
+│   │                            [→]  │   │
+│   └─────────────────────────────────┘   │
+│                                         │
+│   ┌─────────────────────────────────┐   │
+│   │ [🏢] TechSolutions AG           │   │
+│   │      Mitglied                   │   │
+│   │      Zuletzt aktiv: 15.01.2026  │   │
+│   │                            [→]  │   │
+│   └─────────────────────────────────┘   │
+│                                         │
+│   ─────────────────────────────────     │
+│                                         │
+│   ┌─────────────────────────────────┐   │
+│   │     [+] Neues Profil erstellen  │   │
+│   └─────────────────────────────────┘   │
 │                                         │
 └─────────────────────────────────────────┘
 ```
@@ -478,7 +554,8 @@ Primary interface after onboarding - see Dashboard section below.
 │   └─────────────────────────────────┘   │
 │                                         │
 │   ┌─────────────────────────────────┐   │
-│   │ [Alle] [Offen] [Bald] [Gemerkt] │   │
+│   │[Alle][Offen][Bald][Gemerkt]    │   │
+│   │[Beworben][Versteckt]           │   │
 │   └─────────────────────────────────┘   │
 │                                         │
 │   ┌─────────────────────────────────┐   │
@@ -532,7 +609,7 @@ Primary interface after onboarding - see Dashboard section below.
 │ │  SIDEBAR     │ │  47 passende Ausschreibungen                          │  │
 │ │              │ │  ────────────────────────────────────────────────     │  │
 │ │  [🏠] Home   │ │                                                       │  │
-│ │  [📋] Tenders│ │  [Alle] [Offen] [Bald fällig] [Gemerkt] [Beworben]   │  │
+│ │  [📋] Tenders│ │  [Alle] [Offen] [Bald] [Gemerkt] [Beworben] [Versteckt]│  │
 │ │  [📊]Insights│ │                                                       │  │
 │ │  [👤] Profil │ │  Sortieren: [Relevanz ▼]     Filter: [⚙ Erweitert]   │  │
 │ │  [⚙]Settings │ │                                                       │  │
@@ -1156,10 +1233,10 @@ Primary interface after onboarding - see Dashboard section below.
   - Estimated value (if available)
   - Status badge (Open, Closing Soon, Closed)
 - F2.1.3: Support filtering matched tenders by:
-  - Status (Open / Closing Soon / All)
-  - Region
-  - Value range
-  - CPV category
+  - Quick filter tabs: All, Open, Closing Soon, Bookmarked, Applied, Hidden
+  - Advanced filters: Status, Region, Match score threshold
+  - Value range (planned)
+  - CPV category (planned)
 - F2.1.4: Support sorting by: Relevance, Deadline, Value, Date Published
 - F2.1.5: Paginate results for performance
 
@@ -1480,3 +1557,4 @@ The onboarding wizard maintains a consistent UI across all industries. Specific 
 |---------|------|--------|---------|
 | 0.1 | 2026-01-17 | - | Initial draft |
 | 0.2 | 2026-01-17 | - | Added ASCII wireframes for all main functions |
+| 0.3 | 2026-01-18 | - | Updated to reflect prototype implementation: SSO buttons, profile selection flow, dashboard filter tabs |
