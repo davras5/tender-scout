@@ -95,7 +95,10 @@ function escapeAttr(str) {
  * @returns {Object|null} - The recommendation object or null if not found
  */
 function getRecommendationForCompany(companyName) {
-    if (!companyName) return null;
+    if (!companyName) {
+        console.warn('getRecommendationForCompany: No company name provided');
+        return null;
+    }
 
     // Find the company in MOCK_COMPANIES by name
     const company = MOCK_COMPANIES.find(c => c.name === companyName);
@@ -106,7 +109,13 @@ function getRecommendationForCompany(companyName) {
 
     // Fallback: return first available recommendation
     const keys = Object.keys(AI_RECOMMENDATIONS);
-    return keys.length > 0 ? AI_RECOMMENDATIONS[keys[0]] : null;
+    if (keys.length > 0) {
+        console.warn('getRecommendationForCompany: Using fallback for company:', companyName);
+        return AI_RECOMMENDATIONS[keys[0]];
+    }
+
+    console.error('getRecommendationForCompany: No recommendations available');
+    return null;
 }
 
 // ============================================
@@ -536,8 +545,8 @@ function selectCompany(name) {
     // Determine recommendations using company's searchKey
     const baseRec = getRecommendationForCompany(name);
 
-    // Clone to state to allow editing without affecting base mock
-    state.recommendations = JSON.parse(JSON.stringify(baseRec));
+    // Clone to state to allow editing without affecting base mock (handle null case)
+    state.recommendations = baseRec ? JSON.parse(JSON.stringify(baseRec)) : null;
     const rec = state.recommendations;
 
     // Simulate AI Processing State
@@ -573,31 +582,39 @@ function selectCompany(name) {
     setTimeout(() => {
         clearInterval(interval);
 
+        // Guard against null recommendations
+        if (!rec) {
+            console.error('No recommendations found for company:', name);
+            if (overlayEl) overlayEl.classList.add('hidden');
+            if (contentEl) contentEl.classList.remove('hidden');
+            return;
+        }
+
         // Hydrate AI Review View
         const nameEl = document.getElementById('ai-company-name');
         if (nameEl) nameEl.textContent = name;
 
         // Industry
         const industryEl = document.getElementById('ai-industry');
-        if (industryEl) industryEl.textContent = rec.industry;
+        if (industryEl) industryEl.textContent = rec.industry || '';
 
-        // Size (New)
+        // Size
         const sizeEl = document.getElementById('ai-size');
-        if (sizeEl) sizeEl.textContent = rec.size;
+        if (sizeEl) sizeEl.textContent = rec.size || '';
 
-        // Keywords (New) - escape all keyword values
+        // Keywords - with null checks
         const keywordsContainer = document.getElementById('ai-keywords');
         if (keywordsContainer) {
-            const positive = rec.keywords.map(k =>
+            const positive = (rec.keywords || []).map(k =>
                 `<span class="badge badge-green mr-1 mb-1">+ ${escapeHtml(k)}</span>`
             ).join('');
-            const negative = rec.excludeKeywords.map(k =>
+            const negative = (rec.excludeKeywords || []).map(k =>
                 `<span class="badge badge-red mr-1 mb-1">- ${escapeHtml(k)}</span>`
             ).join('');
             keywordsContainer.innerHTML = positive + negative;
         }
 
-        // NPK Codes (New - Conditional) - escape code values
+        // NPK Codes - with null checks
         const npkSection = document.getElementById('ai-npk-section');
         const npkContainer = document.getElementById('ai-npk-codes');
         if (npkSection && npkContainer) {
@@ -611,9 +628,9 @@ function selectCompany(name) {
             }
         }
 
-        // CPV Codes - escape code and label values
+        // CPV Codes - with null checks
         const cpvContainer = document.getElementById('ai-cpv-codes');
-        if (cpvContainer) {
+        if (cpvContainer && rec.cpv) {
             cpvContainer.innerHTML = rec.cpv.map(c => `
                 <div class="flex items-center gap-2">
                     <svg class="text-accent" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -626,7 +643,7 @@ function selectCompany(name) {
 
         // Region
         const regionEl = document.getElementById('ai-region');
-        if (regionEl) regionEl.textContent = rec.region;
+        if (regionEl) regionEl.textContent = rec.region || '';
 
         // Visual Transition - Hide Overlay, Show Content
         if (overlayEl) overlayEl.classList.add('hidden');
@@ -896,38 +913,39 @@ function openProfileSettings() {
         // Look up recommendation using company's searchKey
         const baseRec = getRecommendationForCompany(state.company.name);
 
-        // Clone to state
-        state.recommendations = JSON.parse(JSON.stringify(baseRec));
+        // Clone to state (handle null case)
+        state.recommendations = baseRec ? JSON.parse(JSON.stringify(baseRec)) : null;
     }
 
     // Populate the AI review view with current data
     const rec = state.recommendations;
-    if (rec) {
-        // Company name
-        const nameEl = document.getElementById('ai-company-name');
-        if (nameEl) nameEl.textContent = state.company?.name || 'Unbekannt';
 
+    // Company name (always show, even without recommendations)
+    const nameEl = document.getElementById('ai-company-name');
+    if (nameEl) nameEl.textContent = state.company?.name || 'Unbekannt';
+
+    if (rec) {
         // Industry
         const industryEl = document.getElementById('ai-industry');
-        if (industryEl) industryEl.textContent = rec.industry;
+        if (industryEl) industryEl.textContent = rec.industry || '';
 
         // Size
         const sizeEl = document.getElementById('ai-size');
-        if (sizeEl) sizeEl.textContent = rec.size;
+        if (sizeEl) sizeEl.textContent = rec.size || '';
 
-        // Keywords
+        // Keywords - with null checks
         const keywordsContainer = document.getElementById('ai-keywords');
         if (keywordsContainer) {
-            const positive = rec.keywords.map(k =>
+            const positive = (rec.keywords || []).map(k =>
                 `<span class="badge badge-green mr-1 mb-1">+ ${escapeHtml(k)}</span>`
             ).join('');
-            const negative = rec.excludeKeywords.map(k =>
+            const negative = (rec.excludeKeywords || []).map(k =>
                 `<span class="badge badge-red mr-1 mb-1">- ${escapeHtml(k)}</span>`
             ).join('');
             keywordsContainer.innerHTML = positive + negative;
         }
 
-        // NPK Codes
+        // NPK Codes - with null checks
         const npkSection = document.getElementById('ai-npk-section');
         const npkContainer = document.getElementById('ai-npk-codes');
         if (npkSection && npkContainer) {
@@ -941,21 +959,28 @@ function openProfileSettings() {
             }
         }
 
-        // Regions
+        // Regions - with null checks
         const regionsContainer = document.getElementById('ai-regions');
-        if (regionsContainer && rec.regions) {
-            regionsContainer.innerHTML = rec.regions.map(r =>
-                `<span class="badge badge-blue mr-1 mb-1">${escapeHtml(r)}</span>`
-            ).join('');
+        if (regionsContainer) {
+            if (rec.regions) {
+                regionsContainer.innerHTML = rec.regions.map(r =>
+                    `<span class="badge badge-blue mr-1 mb-1">${escapeHtml(r)}</span>`
+                ).join('');
+            } else if (rec.region) {
+                // Fallback to single region field
+                regionsContainer.innerHTML = `<span class="badge badge-blue mr-1 mb-1">${escapeHtml(rec.region)}</span>`;
+            }
         }
 
-        // CPV Codes
+        // CPV Codes - with null checks
         const cpvContainer = document.getElementById('ai-cpv-codes');
         if (cpvContainer && rec.cpv) {
             cpvContainer.innerHTML = rec.cpv.map(code =>
                 `<div class="flex items-center gap-2"><svg class="text-accent" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <span>${escapeHtml(code)}</span></div>`
             ).join('');
         }
+    } else {
+        console.warn('openProfileSettings: No recommendations available for', state.company?.name);
     }
 
     // Show content directly (skip loading animation)
