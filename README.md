@@ -82,4 +82,4 @@ tender-scout/
 
 ## License
 
-Proprietary - All rights reserved. See [LICENSE.md](LICENSE.md) for details.
+Apache 2.0 - See [LICENSE.md](LICENSE.md) for details.
