@@ -1333,6 +1333,7 @@ textarea.input-md {
     border-radius: var(--radius-xl);
     box-shadow: var(--shadow-card);
     transition: all var(--duration-normal) var(--ease-out);
+    text-align: center;
 }
 
 .problem-card:hover {
@@ -1341,19 +1342,19 @@ textarea.input-md {
 }
 
 .problem-icon {
-    width: var(--size-icon-box-lg);
-    height: var(--size-icon-box-lg);
+    width: var(--size-icon-box-md);
+    height: var(--size-icon-box-md);
     background: var(--color-warning-bg);
     color: var(--color-warning);
     border-radius: var(--radius-lg);
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: var(--space-5);
+    margin: 0 auto var(--space-5);
 }
 
 .problem-card h3 {
-    font-size: var(--text-lg);
+    font-size: var(--text-xl);
     margin-bottom: var(--space-3);
 }
 
@@ -1650,15 +1651,15 @@ textarea.input-md {
 }
 
 @media (min-width: 640px) {
-    .footer-grid { grid-template-columns: 2fr 1fr 1fr; }
+    .footer-grid { grid-template-columns: repeat(3, 1fr); }
 }
 
 .footer-brand {
-    max-width: var(--footer-brand-max);
+    text-align: center;
 }
 
 .footer-logo {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: var(--space-3);
     font-size: var(--text-lg);
@@ -1684,6 +1685,10 @@ textarea.input-md {
     line-height: var(--leading-relaxed);
 }
 
+.footer-section {
+    text-align: center;
+}
+
 .footer-section h4 {
     font-size: var(--text-sm);
     font-weight: var(--weight-semibold);
@@ -1696,6 +1701,7 @@ textarea.input-md {
 .footer-links {
     display: flex;
     flex-direction: column;
+    align-items: center;
     gap: var(--space-3);
 }
 

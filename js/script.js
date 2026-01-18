@@ -1,171 +1,75 @@
 
-// Mock Data
-const MOCK_COMPANIES = [
-    { name: "Müller Bau AG", uid: "CHE-123.456.789", city: "Zürich", type: "AG" },
-    { name: "Müller Bauunternehmung GmbH", uid: "CHE-987.654.321", city: "Basel", type: "GmbH" },
-    { name: "Hans Müller Bau", uid: "CHE-111.222.333", city: "Bern", type: "Einzelunternehmen" },
-    { name: "TechSolutions AG", uid: "CHE-444.555.666", city: "Zug", type: "AG" },
-    { name: "GreenGardens GmbH", uid: "CHE-777.888.999", city: "Luzern", type: "GmbH" },
-    { name: "Alpha Security", uid: "CHE-222.333.444", city: "St. Gallen", type: "AG" }
-];
+// Test Data - Loaded from JSON
+let MOCK_COMPANIES = [];
+let AI_RECOMMENDATIONS = {};
+let MOCK_TENDERS = [];
+let MOCK_USER_PROFILES = [];
+let TEST_DATA = null;
 
-const AI_RECOMMENDATIONS = {
-    "Müller": {
-        industry: "Baugewerbe / Hochbau",
-        size: "10-49 Mitarbeitende",
-        keywords: ["Schulhaus", "Sanierung", "Fassaden", "Energetisch"],
-        excludeKeywords: ["Neubau", "Gartenbau"],
-        npk: ["211 - Baumeisterarbeiten", "221 - Montagebau in Stahl", "271 - Gipserarbeiten"],
-        cpv: [
-            { code: "45210000", label: "Hochbauarbeiten" },
-            { code: "45260000", label: "Dachdeckarbeiten" }
-        ],
-        region: "Zürich, Aargau, Zug"
-    },
-    "Hans": {
-        industry: "Baugewerbe / Tiefbau",
-        size: "1-9 Mitarbeitende",
-        keywords: ["Rohrleitungen", "Tiefbau", "Strassenbau"],
-        excludeKeywords: ["Hochbau"],
-        npk: ["111 - Regiearbeiten", "237 - Kanalisationen"],
-        cpv: [
-            { code: "45230000", label: "Bauarbeiten für Rohrleitungen..." }
-        ],
-        region: "Bern, Solothurn"
-    },
-    "Tech": {
-        industry: "IT-Dienstleistungen",
-        size: "10-49 Mitarbeitende",
-        keywords: ["Software", "Entwicklung", "Beratung", "Cloud"],
-        excludeKeywords: ["Hardware", "Support"],
-        npk: [], // IT doesn't use NPK
-        cpv: [
-            { code: "72000000", label: "IT-Dienste: Beratung, Software..." },
-            { code: "72200000", label: "Softwareprogrammierung" }
-        ],
-        region: "Ganze Schweiz"
-    },
-    "Green": {
-        industry: "Gartenbau & Landschaftspflege",
-        size: "1-9 Mitarbeitende",
-        keywords: ["Gartenpflege", "Bepflanzung", "Unterhalt"],
-        excludeKeywords: ["Bau", "Beton"],
-        npk: ["181 - Gartenbau"],
-        cpv: [
-            { code: "77310000", label: "Anpflanzung und Pflege von Grünflächen" }
-        ],
-        region: "Zentralschweiz"
-    },
-    "Alpha": {
-        industry: "Sicherheitsdienste",
-        size: "50-249 Mitarbeitende",
-        keywords: ["Sicherheit", "Bewachung", "Zutrittskontrolle"],
-        excludeKeywords: ["Reinigung"],
-        npk: [],
-        cpv: [
-            { code: "79710000", label: "Sicherheitsdienste" }
-        ],
-        region: "Ostschweiz"
+// Load test data from JSON
+async function loadTestData() {
+    try {
+        const response = await fetch('data/test_data.json');
+        TEST_DATA = await response.json();
+
+        // Map companies to expected format
+        MOCK_COMPANIES = TEST_DATA.companies.map(c => ({
+            name: c.name,
+            uid: c.uid,
+            city: c.city,
+            type: c.type,
+            id: c.id,
+            searchKey: c.searchKey
+        }));
+
+        // Map AI recommendations - create lookup by searchKey for backwards compatibility
+        AI_RECOMMENDATIONS = {};
+        for (const [companyId, rec] of Object.entries(TEST_DATA.aiRecommendations)) {
+            const company = TEST_DATA.companies.find(c => c.id === companyId);
+            if (company) {
+                // Format NPK codes as strings for display
+                const formattedRec = {
+                    ...rec,
+                    npk: rec.npk.map(n => `${n.code} - ${n.name}`)
+                };
+                AI_RECOMMENDATIONS[company.searchKey] = formattedRec;
+            }
+        }
+
+        // Map tenders
+        MOCK_TENDERS = TEST_DATA.tenders.map(t => ({
+            id: t.id,
+            title: t.title,
+            authority: t.authority,
+            price: t.price,
+            deadline: t.deadline,
+            deadlineDate: t.deadlineDate,
+            status: t.status,
+            match: t.match,
+            region: t.region,
+            cpv: t.cpv,
+            description: t.description,
+            details: t.details,
+            bookmarked: t.bookmarked,
+            applied: t.applied,
+            hidden: t.hidden
+        }));
+
+        // Map user profiles
+        MOCK_USER_PROFILES = TEST_DATA.userProfiles.map(p => ({
+            id: p.id,
+            name: p.name,
+            role: p.role,
+            company: p.company
+        }));
+
+        return true;
+    } catch (error) {
+        console.error('Failed to load test data:', error);
+        // Fallback to empty arrays - app will still work but with no data
+        return false;
     }
-};
-
-const MOCK_TENDERS = [
-    {
-        id: 1,
-        title: "Sanierung Schulhaus Mattenhof",
-        authority: "Gemeinde Zürich",
-        price: "CHF 2.5 - 3.0 Mio.",
-        deadline: "Heute",
-        deadlineDate: "2026-01-29",
-        status: "Offen",
-        match: 94,
-        region: "ZH",
-        cpv: ["45210000", "45260000"],
-        bookmarked: true,
-        applied: false,
-        hidden: false
-    },
-    {
-        id: 2,
-        title: "IT-Infrastruktur Modernisierung",
-        authority: "Kanton Aargau",
-        price: "CHF 500k - 750k",
-        deadline: "3 Tage",
-        deadlineDate: "2026-01-20",
-        status: "Bald fällig",
-        match: 87,
-        region: "AG",
-        cpv: ["72000000"],
-        bookmarked: false,
-        applied: true,
-        hidden: false
-    },
-    {
-        id: 3,
-        title: "Strassenbau Projekt Nord",
-        authority: "Stadt Winterthur",
-        price: "CHF 1.2 - 1.8 Mio.",
-        deadline: "28 Tage",
-        deadlineDate: "2026-02-14",
-        status: "Offen",
-        match: 82,
-        region: "ZH",
-        cpv: ["45230000"],
-        bookmarked: true,
-        applied: false,
-        hidden: false
-    },
-    {
-        id: 4,
-        title: "Neubau Verwaltungsgebäude",
-        authority: "Stadt Zug",
-        price: "CHF 8.0 - 10.0 Mio.",
-        deadline: "14 Tage",
-        deadlineDate: "2026-02-01",
-        status: "Offen",
-        match: 91,
-        region: "ZG",
-        cpv: ["45210000"],
-        bookmarked: false,
-        applied: false,
-        hidden: false
-    },
-    {
-        id: 5,
-        title: "Fassadensanierung Kantonsschule",
-        authority: "Kanton Zürich",
-        price: "CHF 1.5 - 2.0 Mio.",
-        deadline: "2 Tage",
-        deadlineDate: "2026-01-20",
-        status: "Bald fällig",
-        match: 88,
-        region: "ZH",
-        cpv: ["45260000"],
-        bookmarked: true,
-        applied: true,
-        hidden: false
-    },
-    {
-        id: 6,
-        title: "Renovierung Gemeindehaus",
-        authority: "Gemeinde Baar",
-        price: "CHF 800k - 1.2 Mio.",
-        deadline: "21 Tage",
-        deadlineDate: "2026-02-08",
-        status: "Offen",
-        match: 65,
-        region: "ZG",
-        cpv: ["45210000"],
-        bookmarked: false,
-        applied: false,
-        hidden: true
-    }
-];
-
-const MOCK_USER_PROFILES = [
-    { id: 1, name: "Müller Bau AG", role: "Administrator", company: "Müller Bau AG" },
-    { id: 2, name: "Immo Zürich AG", role: "Mitglied", company: "Immo Zürich AG" }
-];
+}
 
 // State
 const state = {
@@ -181,7 +85,10 @@ const views = {};
 const nav = {};
 
 // Init
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    // Load test data first
+    await loadTestData();
+
     // Cache Views
     ['landing', 'auth', 'profile-selection', 'company-search', 'ai-review', 'dashboard', 'tender-detail', 'settings', 'manual-entry'].forEach(id => {
         views[id] = document.getElementById(`view-${id}`);
@@ -679,14 +586,15 @@ function viewTender(id) {
             <div class="mb-8">
                 <h3 class="text-h2 mb-4">Beschreibung</h3>
                 <p class="text-secondary mb-4">
-                    Gesamtsanierung des Schulhauses Mattenhof inkl. energetischer Erneuerung, Fassadensanierung und Innenausbau.
-                    Der Auftrag umfasst Baumeisterarbeiten, Gipserarbeiten und Montagebau in Stahl.
+                    ${tender.description || 'Keine Beschreibung verfügbar.'}
                 </p>
+                ${tender.details ? `
                 <ul class="text-secondary list-disc pl-6">
-                    <li>Baustart: Juni 2026</li>
-                    <li>Dauer: 18 Monate</li>
-                    <li>BKP 211, 221, 271</li>
+                    ${tender.details.baustart ? `<li>Baustart: ${tender.details.baustart}</li>` : ''}
+                    ${tender.details.dauer ? `<li>Dauer: ${tender.details.dauer}</li>` : ''}
+                    ${tender.details.bkp && tender.details.bkp.length > 0 ? `<li>BKP ${tender.details.bkp.join(', ')}</li>` : ''}
                 </ul>
+                ` : ''}
             </div>
             
             <div class="flex gap-4">

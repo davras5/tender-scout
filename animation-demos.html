@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="de-CH">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Orb Animation Options - Tender Scout</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --color-bg-base: #ffffff;
+            --color-bg-raised: #f1f5f9;
+            --color-bg-subtle: #f8fafc;
+            --color-text-primary: #0f172a;
+            --color-text-secondary: #334155;
+            --color-text-muted: #475569;
+            --color-accent: #2563eb;
+            --color-accent-hover: #1d4ed8;
+            --color-accent-subtle: #eff6ff;
+            --color-accent-glow: rgba(37, 99, 235, 0.12);
+            --color-accent-secondary: #8b5cf6;
+            --color-accent-tertiary: #06b6d4;
+            --color-border: #e2e8f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+            background: var(--color-bg-subtle);
+            color: var(--color-text-primary);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 0.5rem;
+            font-size: 2rem;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: var(--color-text-secondary);
+            margin-bottom: 3rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .card {
+            background: var(--color-bg-base);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid var(--color-border);
+        }
+
+        .card h3 {
+            text-align: center;
+            margin-bottom: 0.5rem;
+            font-size: 1.125rem;
+        }
+
+        .card p {
+            text-align: center;
+            color: var(--color-text-muted);
+            font-size: 0.875rem;
+            margin-bottom: 2rem;
+        }
+
+        .demo-area {
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--color-bg-subtle);
+            border-radius: 12px;
+            margin-bottom: 1rem;
+        }
+
+        .label {
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--color-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* ========================================
+           Option 1: Current (Pulse + Ring)
+           ======================================== */
+        .orb-current {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, var(--color-accent-subtle), var(--color-accent));
+            box-shadow: 0 0 40px var(--color-accent-glow), inset 0 0 20px rgba(255, 255, 255, 0.5);
+            position: relative;
+            animation: pulse-current 2s infinite ease-in-out;
+        }
+
+        .orb-current::after {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            border-radius: 50%;
+            border: 2px solid var(--color-accent-tertiary);
+            opacity: 0.5;
+            animation: spin 4s infinite linear;
+        }
+
+        @keyframes pulse-current {
+            0%, 100% { transform: scale(0.95); box-shadow: 0 0 30px var(--color-accent-glow); }
+            50% { transform: scale(1.05); box-shadow: 0 0 60px var(--color-accent); }
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* ========================================
+           Option 2: Data Processing Rings
+           ======================================== */
+        .orb-rings {
+            width: 100px;
+            height: 100px;
+            position: relative;
+        }
+
+        .orb-rings .ring {
+            position: absolute;
+            border-radius: 50%;
+            border: 2px solid transparent;
+        }
+
+        .orb-rings .ring-1 {
+            width: 100%;
+            height: 100%;
+            border-top-color: var(--color-accent);
+            border-right-color: var(--color-accent);
+            animation: spin 1.5s linear infinite;
+        }
+
+        .orb-rings .ring-2 {
+            width: 75%;
+            height: 75%;
+            top: 12.5%;
+            left: 12.5%;
+            border-top-color: var(--color-accent-secondary);
+            border-left-color: var(--color-accent-secondary);
+            animation: spin 1s linear infinite reverse;
+        }
+
+        .orb-rings .ring-3 {
+            width: 50%;
+            height: 50%;
+            top: 25%;
+            left: 25%;
+            border-bottom-color: var(--color-accent-tertiary);
+            border-right-color: var(--color-accent-tertiary);
+            animation: spin 0.75s linear infinite;
+        }
+
+        .orb-rings .core {
+            position: absolute;
+            width: 20%;
+            height: 20%;
+            top: 40%;
+            left: 40%;
+            background: var(--color-accent);
+            border-radius: 50%;
+            animation: pulse-core 1s ease-in-out infinite;
+        }
+
+        @keyframes pulse-core {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.3); opacity: 0.7; }
+        }
+
+        /* ========================================
+           Option 3: Radar Sweep
+           ======================================== */
+        .orb-radar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: var(--color-bg-raised);
+            border: 2px solid var(--color-accent);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .orb-radar::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 50%;
+            height: 50%;
+            background: conic-gradient(from 0deg, transparent 0deg, var(--color-accent) 30deg, transparent 60deg);
+            transform-origin: 0 0;
+            animation: radar-sweep 2s linear infinite;
+        }
+
+        .orb-radar::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 8px;
+            height: 8px;
+            background: var(--color-accent);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 10px var(--color-accent);
+        }
+
+        .orb-radar .circle {
+            position: absolute;
+            border: 1px solid var(--color-border);
+            border-radius: 50%;
+        }
+
+        .orb-radar .circle-1 {
+            width: 33%;
+            height: 33%;
+            top: 33.5%;
+            left: 33.5%;
+        }
+
+        .orb-radar .circle-2 {
+            width: 66%;
+            height: 66%;
+            top: 17%;
+            left: 17%;
+        }
+
+        @keyframes radar-sweep {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* ========================================
+           Option 4: Spinning Gears
+           ======================================== */
+        .orb-gears {
+            width: 120px;
+            height: 100px;
+            position: relative;
+        }
+
+        .gear {
+            position: absolute;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .gear::before {
+            content: '';
+            position: absolute;
+            width: 40%;
+            height: 40%;
+            background: var(--color-bg-base);
+            border-radius: 50%;
+        }
+
+        .gear-1 {
+            width: 60px;
+            height: 60px;
+            left: 0;
+            top: 20px;
+            background: conic-gradient(from 0deg, var(--color-accent) 0deg 30deg, transparent 30deg 60deg, var(--color-accent) 60deg 90deg, transparent 90deg 120deg, var(--color-accent) 120deg 150deg, transparent 150deg 180deg, var(--color-accent) 180deg 210deg, transparent 210deg 240deg, var(--color-accent) 240deg 270deg, transparent 270deg 300deg, var(--color-accent) 300deg 330deg, transparent 330deg 360deg);
+            animation: spin 3s linear infinite;
+        }
+
+        .gear-2 {
+            width: 50px;
+            height: 50px;
+            right: 10px;
+            top: 10px;
+            background: conic-gradient(from 15deg, var(--color-accent-secondary) 0deg 30deg, transparent 30deg 60deg, var(--color-accent-secondary) 60deg 90deg, transparent 90deg 120deg, var(--color-accent-secondary) 120deg 150deg, transparent 150deg 180deg, var(--color-accent-secondary) 180deg 210deg, transparent 210deg 240deg, var(--color-accent-secondary) 240deg 270deg, transparent 270deg 300deg, var(--color-accent-secondary) 300deg 330deg, transparent 330deg 360deg);
+            animation: spin 2.5s linear infinite reverse;
+        }
+
+        .gear-3 {
+            width: 40px;
+            height: 40px;
+            right: 20px;
+            bottom: 0;
+            background: conic-gradient(from 0deg, var(--color-accent-tertiary) 0deg 30deg, transparent 30deg 60deg, var(--color-accent-tertiary) 60deg 90deg, transparent 90deg 120deg, var(--color-accent-tertiary) 120deg 150deg, transparent 150deg 180deg, var(--color-accent-tertiary) 180deg 210deg, transparent 210deg 240deg, var(--color-accent-tertiary) 240deg 270deg, transparent 270deg 300deg, var(--color-accent-tertiary) 300deg 330deg, transparent 330deg 360deg);
+            animation: spin 2s linear infinite;
+        }
+
+        /* ========================================
+           Option 5: Segmented Loader
+           ======================================== */
+        .orb-segments {
+            width: 100px;
+            height: 100px;
+            position: relative;
+        }
+
+        .segment {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 4px solid transparent;
+        }
+
+        .segment-1 {
+            border-top-color: var(--color-accent);
+            animation: segment-spin 1.5s ease-in-out infinite;
+        }
+
+        .segment-2 {
+            border-right-color: var(--color-accent-secondary);
+            animation: segment-spin 1.5s ease-in-out infinite 0.2s;
+        }
+
+        .segment-3 {
+            border-bottom-color: var(--color-accent-tertiary);
+            animation: segment-spin 1.5s ease-in-out infinite 0.4s;
+        }
+
+        .segment-4 {
+            border-left-color: var(--color-accent);
+            animation: segment-spin 1.5s ease-in-out infinite 0.6s;
+        }
+
+        @keyframes segment-spin {
+            0% { transform: rotate(0deg); opacity: 0.3; }
+            50% { opacity: 1; }
+            100% { transform: rotate(360deg); opacity: 0.3; }
+        }
+
+        /* ========================================
+           Option 6: Binary Pulse Grid
+           ======================================== */
+        .orb-grid {
+            width: 100px;
+            height: 100px;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: repeat(5, 1fr);
+            gap: 4px;
+            padding: 10px;
+        }
+
+        .orb-grid .dot {
+            width: 100%;
+            height: 100%;
+            background: var(--color-accent);
+            border-radius: 50%;
+            animation: grid-pulse 2s ease-in-out infinite;
+        }
+
+        .orb-grid .dot:nth-child(1) { animation-delay: 0s; }
+        .orb-grid .dot:nth-child(2) { animation-delay: 0.1s; }
+        .orb-grid .dot:nth-child(3) { animation-delay: 0.2s; }
+        .orb-grid .dot:nth-child(4) { animation-delay: 0.1s; }
+        .orb-grid .dot:nth-child(5) { animation-delay: 0s; }
+        .orb-grid .dot:nth-child(6) { animation-delay: 0.1s; }
+        .orb-grid .dot:nth-child(7) { animation-delay: 0.2s; background: var(--color-accent-secondary); }
+        .orb-grid .dot:nth-child(8) { animation-delay: 0.3s; background: var(--color-accent-secondary); }
+        .orb-grid .dot:nth-child(9) { animation-delay: 0.2s; background: var(--color-accent-secondary); }
+        .orb-grid .dot:nth-child(10) { animation-delay: 0.1s; }
+        .orb-grid .dot:nth-child(11) { animation-delay: 0.2s; }
+        .orb-grid .dot:nth-child(12) { animation-delay: 0.3s; background: var(--color-accent-secondary); }
+        .orb-grid .dot:nth-child(13) { animation-delay: 0.4s; background: var(--color-accent-tertiary); }
+        .orb-grid .dot:nth-child(14) { animation-delay: 0.3s; background: var(--color-accent-secondary); }
+        .orb-grid .dot:nth-child(15) { animation-delay: 0.2s; }
+        .orb-grid .dot:nth-child(16) { animation-delay: 0.1s; }
+        .orb-grid .dot:nth-child(17) { animation-delay: 0.2s; background: var(--color-accent-secondary); }
+        .orb-grid .dot:nth-child(18) { animation-delay: 0.3s; background: var(--color-accent-secondary); }
+        .orb-grid .dot:nth-child(19) { animation-delay: 0.2s; background: var(--color-accent-secondary); }
+        .orb-grid .dot:nth-child(20) { animation-delay: 0.1s; }
+        .orb-grid .dot:nth-child(21) { animation-delay: 0s; }
+        .orb-grid .dot:nth-child(22) { animation-delay: 0.1s; }
+        .orb-grid .dot:nth-child(23) { animation-delay: 0.2s; }
+        .orb-grid .dot:nth-child(24) { animation-delay: 0.1s; }
+        .orb-grid .dot:nth-child(25) { animation-delay: 0s; }
+
+        @keyframes grid-pulse {
+            0%, 100% { transform: scale(0.5); opacity: 0.3; }
+            50% { transform: scale(1); opacity: 1; }
+        }
+
+        /* ========================================
+           Option 7: Orbiting Particles
+           ======================================== */
+        .orb-particles {
+            width: 100px;
+            height: 100px;
+            position: relative;
+        }
+
+        .orb-particles .center {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--color-accent);
+            border-radius: 50%;
+            box-shadow: 0 0 20px var(--color-accent);
+            animation: center-pulse 1.5s ease-in-out infinite;
+        }
+
+        .orb-particles .orbit {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            animation: spin linear infinite;
+        }
+
+        .orb-particles .orbit-1 { animation-duration: 3s; }
+        .orb-particles .orbit-2 { animation-duration: 2s; animation-direction: reverse; }
+        .orb-particles .orbit-3 { animation-duration: 4s; }
+
+        .orb-particles .particle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .orb-particles .orbit-1 .particle {
+            background: var(--color-accent);
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .orb-particles .orbit-2 .particle {
+            background: var(--color-accent-secondary);
+            top: 50%;
+            right: 0;
+            transform: translateY(-50%);
+        }
+
+        .orb-particles .orbit-3 .particle {
+            background: var(--color-accent-tertiary);
+            bottom: 10%;
+            left: 10%;
+        }
+
+        @keyframes center-pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.2); }
+        }
+
+        /* ========================================
+           Option 8: Hexagon Morph
+           ======================================== */
+        .orb-hexagon {
+            width: 100px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .orb-hexagon .shape {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, var(--color-accent), var(--color-accent-secondary));
+            animation: morph 4s ease-in-out infinite, spin 8s linear infinite;
+            box-shadow: 0 0 30px var(--color-accent-glow);
+        }
+
+        @keyframes morph {
+            0%, 100% { border-radius: 50%; }
+            25% { border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; }
+            50% { border-radius: 10%; }
+            75% { border-radius: 70% 30% 30% 70% / 70% 70% 30% 30%; }
+        }
+
+        /* ========================================
+           Option 9: Circuit Pulse
+           ======================================== */
+        .orb-circuit {
+            width: 100px;
+            height: 100px;
+            position: relative;
+        }
+
+        .orb-circuit .node {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: var(--color-accent);
+            border-radius: 50%;
+            animation: node-pulse 1.5s ease-in-out infinite;
+        }
+
+        .orb-circuit .node-center {
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 16px;
+            height: 16px;
+            background: var(--color-accent-secondary);
+            animation-delay: 0s;
+        }
+
+        .orb-circuit .node-1 { top: 10%; left: 50%; transform: translateX(-50%); animation-delay: 0.2s; }
+        .orb-circuit .node-2 { top: 50%; right: 10%; transform: translateY(-50%); animation-delay: 0.4s; }
+        .orb-circuit .node-3 { bottom: 10%; left: 50%; transform: translateX(-50%); animation-delay: 0.6s; }
+        .orb-circuit .node-4 { top: 50%; left: 10%; transform: translateY(-50%); animation-delay: 0.8s; }
+
+        .orb-circuit .line {
+            position: absolute;
+            background: var(--color-accent);
+            opacity: 0.3;
+        }
+
+        .orb-circuit .line-v {
+            width: 2px;
+            height: 30%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .orb-circuit .line-v-top { top: 18%; }
+        .orb-circuit .line-v-bottom { bottom: 18%; }
+
+        .orb-circuit .line-h {
+            height: 2px;
+            width: 30%;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .orb-circuit .line-h-left { left: 18%; }
+        .orb-circuit .line-h-right { right: 18%; }
+
+        .orb-circuit .pulse-line {
+            position: absolute;
+            background: var(--color-accent);
+            animation: line-pulse 1.5s ease-in-out infinite;
+        }
+
+        .orb-circuit .pulse-line-v {
+            width: 2px;
+            height: 0;
+        }
+
+        .orb-circuit .pulse-line-h {
+            height: 2px;
+            width: 0;
+        }
+
+        @keyframes node-pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 5px var(--color-accent); }
+            50% { transform: translate(-50%, -50%) scale(1.3); box-shadow: 0 0 15px var(--color-accent); }
+        }
+
+        /* ========================================
+           Option 10: Waveform
+           ======================================== */
+        .orb-waveform {
+            width: 120px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .orb-waveform .bar {
+            width: 6px;
+            background: linear-gradient(to top, var(--color-accent), var(--color-accent-secondary));
+            border-radius: 3px;
+            animation: wave 1s ease-in-out infinite;
+        }
+
+        .orb-waveform .bar:nth-child(1) { animation-delay: 0s; }
+        .orb-waveform .bar:nth-child(2) { animation-delay: 0.1s; }
+        .orb-waveform .bar:nth-child(3) { animation-delay: 0.2s; }
+        .orb-waveform .bar:nth-child(4) { animation-delay: 0.3s; }
+        .orb-waveform .bar:nth-child(5) { animation-delay: 0.4s; }
+        .orb-waveform .bar:nth-child(6) { animation-delay: 0.3s; }
+        .orb-waveform .bar:nth-child(7) { animation-delay: 0.2s; }
+        .orb-waveform .bar:nth-child(8) { animation-delay: 0.1s; }
+        .orb-waveform .bar:nth-child(9) { animation-delay: 0s; }
+
+        @keyframes wave {
+            0%, 100% { height: 15px; }
+            50% { height: 50px; }
+        }
+
+        /* ========================================
+           Option 11: DNA Helix
+           ======================================== */
+        .orb-dna {
+            width: 60px;
+            height: 100px;
+            position: relative;
+        }
+
+        .orb-dna .strand {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        .orb-dna .dot-pair {
+            position: absolute;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .orb-dna .dot-pair::before,
+        .orb-dna .dot-pair::after {
+            content: '';
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .orb-dna .dot-pair::before { background: var(--color-accent); }
+        .orb-dna .dot-pair::after { background: var(--color-accent-secondary); }
+
+        .orb-dna .dot-pair-1 { top: 0; animation: dna-wave 2s ease-in-out infinite; }
+        .orb-dna .dot-pair-2 { top: 20%; animation: dna-wave 2s ease-in-out infinite 0.25s; }
+        .orb-dna .dot-pair-3 { top: 40%; animation: dna-wave 2s ease-in-out infinite 0.5s; }
+        .orb-dna .dot-pair-4 { top: 60%; animation: dna-wave 2s ease-in-out infinite 0.75s; }
+        .orb-dna .dot-pair-5 { top: 80%; animation: dna-wave 2s ease-in-out infinite 1s; }
+
+        .orb-dna .connector {
+            position: absolute;
+            height: 2px;
+            background: var(--color-accent-tertiary);
+            opacity: 0.5;
+            left: 10px;
+            right: 10px;
+        }
+
+        .orb-dna .connector-1 { top: 5px; animation: connector-fade 2s ease-in-out infinite; }
+        .orb-dna .connector-2 { top: 25px; animation: connector-fade 2s ease-in-out infinite 0.25s; }
+        .orb-dna .connector-3 { top: 45px; animation: connector-fade 2s ease-in-out infinite 0.5s; }
+        .orb-dna .connector-4 { top: 65px; animation: connector-fade 2s ease-in-out infinite 0.75s; }
+        .orb-dna .connector-5 { top: 85px; animation: connector-fade 2s ease-in-out infinite 1s; }
+
+        @keyframes dna-wave {
+            0%, 100% { transform: scaleX(1); }
+            50% { transform: scaleX(0.3); }
+        }
+
+        @keyframes connector-fade {
+            0%, 100% { opacity: 0.2; width: 40px; }
+            50% { opacity: 0.8; width: 20px; }
+        }
+
+        /* ========================================
+           Option 12: Cube Rotation
+           ======================================== */
+        .orb-cube-container {
+            width: 100px;
+            height: 100px;
+            perspective: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .orb-cube {
+            width: 50px;
+            height: 50px;
+            position: relative;
+            transform-style: preserve-3d;
+            animation: cube-rotate 4s linear infinite;
+        }
+
+        .orb-cube .face {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border: 2px solid var(--color-accent);
+            background: rgba(37, 99, 235, 0.1);
+        }
+
+        .orb-cube .front { transform: translateZ(25px); }
+        .orb-cube .back { transform: rotateY(180deg) translateZ(25px); border-color: var(--color-accent-secondary); }
+        .orb-cube .right { transform: rotateY(90deg) translateZ(25px); border-color: var(--color-accent-tertiary); }
+        .orb-cube .left { transform: rotateY(-90deg) translateZ(25px); border-color: var(--color-accent-secondary); }
+        .orb-cube .top { transform: rotateX(90deg) translateZ(25px); border-color: var(--color-accent-tertiary); }
+        .orb-cube .bottom { transform: rotateX(-90deg) translateZ(25px); }
+
+        @keyframes cube-rotate {
+            from { transform: rotateX(0deg) rotateY(0deg); }
+            to { transform: rotateX(360deg) rotateY(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AI Loading Animation Options</h1>
+        <p class="subtitle">Compare different animation styles for the AI processing indicator</p>
+
+        <div class="grid">
+            <!-- Option 1: Current -->
+            <div class="card">
+                <h3>1. Current (Pulse + Ring)</h3>
+                <p>Existing animation with pulsing orb and spinning ring</p>
+                <div class="demo-area">
+                    <div class="orb-current"></div>
+                </div>
+                <div class="label">Organic / Calm</div>
+            </div>
+
+            <!-- Option 2: Data Processing Rings -->
+            <div class="card">
+                <h3>2. Data Processing Rings</h3>
+                <p>Multiple concentric rings at different speeds</p>
+                <div class="demo-area">
+                    <div class="orb-rings">
+                        <div class="ring ring-1"></div>
+                        <div class="ring ring-2"></div>
+                        <div class="ring ring-3"></div>
+                        <div class="core"></div>
+                    </div>
+                </div>
+                <div class="label">Technical / Processing</div>
+            </div>
+
+            <!-- Option 3: Radar Sweep -->
+            <div class="card">
+                <h3>3. Radar Sweep</h3>
+                <p>Scanning motion with gradient trail</p>
+                <div class="demo-area">
+                    <div class="orb-radar">
+                        <div class="circle circle-1"></div>
+                        <div class="circle circle-2"></div>
+                    </div>
+                </div>
+                <div class="label">Searching / Scanning</div>
+            </div>
+
+            <!-- Option 4: Spinning Gears -->
+            <div class="card">
+                <h3>4. Spinning Gears</h3>
+                <p>Interlocking gears in motion</p>
+                <div class="demo-area">
+                    <div class="orb-gears">
+                        <div class="gear gear-1"></div>
+                        <div class="gear gear-2"></div>
+                        <div class="gear gear-3"></div>
+                    </div>
+                </div>
+                <div class="label">Mechanical / Computing</div>
+            </div>
+
+            <!-- Option 5: Segmented Loader -->
+            <div class="card">
+                <h3>5. Segmented Loader</h3>
+                <p>Staggered spinning segments</p>
+                <div class="demo-area">
+                    <div class="orb-segments">
+                        <div class="segment segment-1"></div>
+                        <div class="segment segment-2"></div>
+                        <div class="segment segment-3"></div>
+                        <div class="segment segment-4"></div>
+                    </div>
+                </div>
+                <div class="label">Progress / Steps</div>
+            </div>
+
+            <!-- Option 6: Binary Pulse Grid -->
+            <div class="card">
+                <h3>6. Binary Pulse Grid</h3>
+                <p>Pulsing dot matrix with wave pattern</p>
+                <div class="demo-area">
+                    <div class="orb-grid">
+                        <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+                        <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+                        <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+                        <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+                        <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+                    </div>
+                </div>
+                <div class="label">Data / Matrix</div>
+            </div>
+
+            <!-- Option 7: Orbiting Particles -->
+            <div class="card">
+                <h3>7. Orbiting Particles</h3>
+                <p>Particles circling a central core</p>
+                <div class="demo-area">
+                    <div class="orb-particles">
+                        <div class="center"></div>
+                        <div class="orbit orbit-1"><div class="particle"></div></div>
+                        <div class="orbit orbit-2"><div class="particle"></div></div>
+                        <div class="orbit orbit-3"><div class="particle"></div></div>
+                    </div>
+                </div>
+                <div class="label">Atomic / Neural</div>
+            </div>
+
+            <!-- Option 8: Hexagon Morph -->
+            <div class="card">
+                <h3>8. Morphing Shape</h3>
+                <p>Smooth shape transformation with rotation</p>
+                <div class="demo-area">
+                    <div class="orb-hexagon">
+                        <div class="shape"></div>
+                    </div>
+                </div>
+                <div class="label">Fluid / Adaptive</div>
+            </div>
+
+            <!-- Option 9: Circuit Pulse -->
+            <div class="card">
+                <h3>9. Circuit Pulse</h3>
+                <p>Connected nodes with pulsing signals</p>
+                <div class="demo-area">
+                    <div class="orb-circuit">
+                        <div class="line line-v line-v-top"></div>
+                        <div class="line line-v line-v-bottom"></div>
+                        <div class="line line-h line-h-left"></div>
+                        <div class="line line-h line-h-right"></div>
+                        <div class="node node-1"></div>
+                        <div class="node node-2"></div>
+                        <div class="node node-3"></div>
+                        <div class="node node-4"></div>
+                        <div class="node node-center"></div>
+                    </div>
+                </div>
+                <div class="label">Network / Connected</div>
+            </div>
+
+            <!-- Option 10: Waveform -->
+            <div class="card">
+                <h3>10. Audio Waveform</h3>
+                <p>Equalizer-style animated bars</p>
+                <div class="demo-area">
+                    <div class="orb-waveform">
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                    </div>
+                </div>
+                <div class="label">Processing / Active</div>
+            </div>
+
+            <!-- Option 11: DNA Helix -->
+            <div class="card">
+                <h3>11. DNA Helix</h3>
+                <p>Double helix with connected pairs</p>
+                <div class="demo-area">
+                    <div class="orb-dna">
+                        <div class="connector connector-1"></div>
+                        <div class="connector connector-2"></div>
+                        <div class="connector connector-3"></div>
+                        <div class="connector connector-4"></div>
+                        <div class="connector connector-5"></div>
+                        <div class="dot-pair dot-pair-1"></div>
+                        <div class="dot-pair dot-pair-2"></div>
+                        <div class="dot-pair dot-pair-3"></div>
+                        <div class="dot-pair dot-pair-4"></div>
+                        <div class="dot-pair dot-pair-5"></div>
+                    </div>
+                </div>
+                <div class="label">Bio / Transformation</div>
+            </div>
+
+            <!-- Option 12: 3D Cube -->
+            <div class="card">
+                <h3>12. 3D Rotating Cube</h3>
+                <p>Wireframe cube with depth</p>
+                <div class="demo-area">
+                    <div class="orb-cube-container">
+                        <div class="orb-cube">
+                            <div class="face front"></div>
+                            <div class="face back"></div>
+                            <div class="face right"></div>
+                            <div class="face left"></div>
+                            <div class="face top"></div>
+                            <div class="face bottom"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="label">3D / Dimensional</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
