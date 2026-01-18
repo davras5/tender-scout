@@ -457,6 +457,219 @@ Swiss construction standards (Normpositionen-Katalog).
 
 Implementation details for PostgreSQL/Supabase deployment.
 
+### SQL Schema
+
+```sql
+-- ============================================
+-- Tender Scout - Supabase Schema
+-- Version: 1.0
+-- ============================================
+
+-- Enable required extensions
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- ============================================
+-- 1. USERS (managed by Supabase Auth)
+-- ============================================
+-- Note: The auth.users table is managed by Supabase Auth.
+-- We reference it via auth.uid() in RLS policies.
+-- Additional user metadata can be stored in auth.users.raw_user_meta_data
+
+-- ============================================
+-- 2. SUBSCRIPTIONS
+-- ============================================
+CREATE TABLE subscriptions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
+    stripe_customer_id VARCHAR(255) NOT NULL UNIQUE,
+    stripe_subscription_id VARCHAR(255) UNIQUE,
+    plan VARCHAR(20) NOT NULL DEFAULT 'pro' CHECK (plan IN ('free', 'pro')),
+    status VARCHAR(20) NOT NULL DEFAULT 'trialing' CHECK (status IN ('trialing', 'active', 'past_due', 'cancelled')),
+    trial_ends_at TIMESTAMPTZ,
+    current_period_start TIMESTAMPTZ,
+    current_period_end TIMESTAMPTZ,
+    cancelled_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ============================================
+-- 3. COMPANIES
+-- ============================================
+CREATE TABLE companies (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) NOT NULL,
+    uid VARCHAR(20) UNIQUE, -- Swiss UID (CHE-xxx.xxx.xxx)
+    city VARCHAR(100) NOT NULL,
+    address VARCHAR(255),
+    company_type VARCHAR(50) NOT NULL,
+    zefix_data JSONB,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    deleted_at TIMESTAMPTZ
+);
+
+-- ============================================
+-- 4. USER_PROFILES
+-- ============================================
+CREATE TABLE user_profiles (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    role VARCHAR(100) NOT NULL,
+    is_default BOOLEAN NOT NULL DEFAULT false,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    deleted_at TIMESTAMPTZ,
+    UNIQUE (user_id, company_id)
+);
+
+-- ============================================
+-- 5. SEARCH_PROFILES
+-- ============================================
+CREATE TABLE search_profiles (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_profile_id UUID NOT NULL UNIQUE REFERENCES user_profiles(id) ON DELETE CASCADE,
+    industry VARCHAR(100),
+    company_size VARCHAR(20),
+    keywords TEXT[] DEFAULT '{}',
+    exclude_keywords TEXT[] DEFAULT '{}',
+    regions TEXT[] DEFAULT '{}',
+    cpv_codes JSONB DEFAULT '[]',
+    npk_codes JSONB DEFAULT '[]',
+    ai_generated BOOLEAN NOT NULL DEFAULT false,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_matched_at TIMESTAMPTZ
+);
+
+-- ============================================
+-- 6. TENDERS
+-- ============================================
+CREATE TABLE tenders (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    external_id VARCHAR(100) NOT NULL,
+    source VARCHAR(20) NOT NULL CHECK (source IN ('simap', 'ted', 'eu')),
+    source_url VARCHAR(500) NOT NULL,
+    title VARCHAR(500) NOT NULL,
+    authority VARCHAR(255) NOT NULL,
+    authority_type VARCHAR(50) CHECK (authority_type IN ('municipal', 'cantonal', 'federal', 'other')),
+    description TEXT,
+    price_min DECIMAL(15, 2),
+    price_max DECIMAL(15, 2),
+    currency VARCHAR(3) DEFAULT 'CHF',
+    deadline TIMESTAMPTZ,
+    publication_date TIMESTAMPTZ NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'closing_soon', 'closed')),
+    status_changed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    region VARCHAR(50),
+    language VARCHAR(5) DEFAULT 'de' CHECK (language IN ('de', 'fr', 'it', 'en')),
+    cpv_codes JSONB DEFAULT '[]',
+    raw_data JSONB,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    deleted_at TIMESTAMPTZ,
+    UNIQUE (external_id, source)
+);
+
+-- ============================================
+-- 7. USER_TENDER_ACTIONS
+-- ============================================
+CREATE TABLE user_tender_actions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_profile_id UUID NOT NULL REFERENCES user_profiles(id) ON DELETE CASCADE,
+    tender_id UUID NOT NULL REFERENCES tenders(id) ON DELETE CASCADE,
+    bookmarked BOOLEAN NOT NULL DEFAULT false,
+    applied BOOLEAN NOT NULL DEFAULT false,
+    hidden BOOLEAN NOT NULL DEFAULT false,
+    match_score INTEGER CHECK (match_score >= 0 AND match_score <= 100),
+    notes TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE (user_profile_id, tender_id)
+);
+
+-- ============================================
+-- 8. CPV_CODES (Lookup)
+-- ============================================
+CREATE TABLE cpv_codes (
+    code VARCHAR(20) PRIMARY KEY,
+    label_de VARCHAR(500) NOT NULL,
+    label_fr VARCHAR(500),
+    label_it VARCHAR(500),
+    label_en VARCHAR(500),
+    parent_code VARCHAR(20) REFERENCES cpv_codes(code)
+);
+
+-- ============================================
+-- 9. NPK_CODES (Lookup)
+-- ============================================
+CREATE TABLE npk_codes (
+    code VARCHAR(20) PRIMARY KEY,
+    name_de VARCHAR(500) NOT NULL,
+    name_fr VARCHAR(500),
+    name_it VARCHAR(500),
+    parent_code VARCHAR(20) REFERENCES npk_codes(code)
+);
+
+-- ============================================
+-- TRIGGERS: Auto-update updated_at
+-- ============================================
+CREATE OR REPLACE FUNCTION update_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER subscriptions_updated_at
+    BEFORE UPDATE ON subscriptions
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+CREATE TRIGGER companies_updated_at
+    BEFORE UPDATE ON companies
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+CREATE TRIGGER user_profiles_updated_at
+    BEFORE UPDATE ON user_profiles
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+CREATE TRIGGER search_profiles_updated_at
+    BEFORE UPDATE ON search_profiles
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+CREATE TRIGGER tenders_updated_at
+    BEFORE UPDATE ON tenders
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+CREATE TRIGGER user_tender_actions_updated_at
+    BEFORE UPDATE ON user_tender_actions
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+-- ============================================
+-- TRIGGER: Ensure only one default profile per user
+-- ============================================
+CREATE OR REPLACE FUNCTION ensure_single_default_profile()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.is_default = true THEN
+        UPDATE user_profiles
+        SET is_default = false
+        WHERE user_id = NEW.user_id
+          AND id != NEW.id
+          AND is_default = true;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER user_profiles_single_default
+    BEFORE INSERT OR UPDATE ON user_profiles
+    FOR EACH ROW EXECUTE FUNCTION ensure_single_default_profile();
+```
+
 ### Indexes
 
 #### Primary Indexes (auto-created)
@@ -952,6 +1165,7 @@ flowchart LR
 
 | Date       | Version | Changes                    |
 |------------|---------|----------------------------|
+| 2026-01-18 | 1.0     | Add complete SQL schema with CREATE TABLE statements, triggers for updated_at and single default profile |
 | 2026-01-18 | 0.9     | QA round 2: add companies RLS, scheduled jobs table, minimum profile requirements, boolean defaults, notification/recalculation behavior, profile-per-company design decision |
 | 2026-01-18 | 0.8     | QA fixes: clarify free tier limits company profiles, add external_id+source unique constraint, add subscriptions RLS, document trial expiration job, add Stripe to data flow, clarify manual tender actions |
 | 2026-01-18 | 0.7     | Add subscriptions table for Stripe billing (free/pro tiers, 14-day trial) |
