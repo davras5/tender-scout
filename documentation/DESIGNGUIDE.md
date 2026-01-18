@@ -682,6 +682,19 @@ German and French text is typically 20-30% longer than English. Design for flexi
 
 ### 12.1 File Structure
 
+The current prototype uses a simplified two-file structure optimized for rapid development:
+
+```
+css/
+├── tokens.css    /* CSS custom properties (design tokens) */
+└── styles.css    /* All component and utility styles */
+```
+
+This structure is appropriate for the current project size. As the codebase grows, consider migrating to a modular structure:
+
+<details>
+<summary>Future Modular Structure (Reference)</summary>
+
 ```
 css/
 ├── base/
@@ -704,28 +717,18 @@ css/
 └── main.css                /* Imports all partials */
 ```
 
+</details>
+
 ### 12.2 Loading Order
 
 ```html
 <head>
-  <link rel="stylesheet" href="/css/base/reset.css">
-  <link rel="stylesheet" href="/css/base/tokens.css">
-  <link rel="stylesheet" href="/css/base/typography.css">
-  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/tokens.css">
+  <link rel="stylesheet" href="/css/styles.css">
 </head>
 ```
 
-Or use a single `main.css` with `@import` statements:
-
-```css
-/* main.css */
-@import "base/reset.css";
-@import "base/tokens.css";
-@import "base/typography.css";
-@import "components/buttons.css";
-@import "components/cards.css";
-/* ... */
-```
+Design tokens must be loaded before styles to ensure CSS custom properties are available.
 
 ### 12.3 Design Tokens
 

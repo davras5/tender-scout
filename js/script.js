@@ -88,6 +88,27 @@ function escapeAttr(str) {
     return String(str).replace(/'/g, "\\'").replace(/"/g, '&quot;');
 }
 
+/**
+ * Looks up AI recommendations for a company by name
+ * Uses the company's searchKey to find matching recommendations
+ * @param {string} companyName - The company name to look up
+ * @returns {Object|null} - The recommendation object or null if not found
+ */
+function getRecommendationForCompany(companyName) {
+    if (!companyName) return null;
+
+    // Find the company in MOCK_COMPANIES by name
+    const company = MOCK_COMPANIES.find(c => c.name === companyName);
+
+    if (company && company.searchKey && AI_RECOMMENDATIONS[company.searchKey]) {
+        return AI_RECOMMENDATIONS[company.searchKey];
+    }
+
+    // Fallback: return first available recommendation
+    const keys = Object.keys(AI_RECOMMENDATIONS);
+    return keys.length > 0 ? AI_RECOMMENDATIONS[keys[0]] : null;
+}
+
 // ============================================
 // STATE
 // ============================================
@@ -512,26 +533,21 @@ function renderSearchResults(companies, container) {
 function selectCompany(name) {
     state.company = { name };
 
-    // Determine recommendations
-    let rec = AI_RECOMMENDATIONS.Müller; // default fallback
-
-    if (name.includes("Hans")) rec = AI_RECOMMENDATIONS.Hans;
-    else if (name.includes("Tech")) rec = AI_RECOMMENDATIONS.Tech;
-    else if (name.includes("Green")) rec = AI_RECOMMENDATIONS.Green;
-    else if (name.includes("Alpha")) rec = AI_RECOMMENDATIONS.Alpha;
+    // Determine recommendations using company's searchKey
+    const baseRec = getRecommendationForCompany(name);
 
     // Clone to state to allow editing without affecting base mock
-    state.recommendations = JSON.parse(JSON.stringify(rec));
-    rec = state.recommendations;
+    state.recommendations = JSON.parse(JSON.stringify(baseRec));
+    const rec = state.recommendations;
 
     // Simulate AI Processing State
-    const overlay = document.getElementById('ai-loading-overlay');
-    const content = document.getElementById('ai-results-content');
-    const statusText = document.getElementById('ai-loading-text');
+    const overlayEl = document.getElementById('ai-loading-overlay');
+    const contentEl = document.getElementById('ai-results-content');
+    const statusTextEl = document.getElementById('ai-loading-text');
 
     // Reset state
-    if (overlay) overlay.classList.remove('hidden');
-    if (content) content.classList.add('hidden');
+    if (overlayEl) overlayEl.classList.remove('hidden');
+    if (contentEl) contentEl.classList.add('hidden');
 
     navigateTo(VIEWS.AI_REVIEW);
 
@@ -545,12 +561,12 @@ function selectCompany(name) {
     ];
 
     let stepIndex = 0;
-    if (statusText) statusText.textContent = steps[0];
+    if (statusTextEl) statusTextEl.textContent = steps[0];
 
     const interval = setInterval(() => {
         stepIndex++;
-        if (stepIndex < steps.length && statusText) {
-            statusText.textContent = steps[stepIndex];
+        if (stepIndex < steps.length && statusTextEl) {
+            statusTextEl.textContent = steps[stepIndex];
         }
     }, 800); // Change text every 800ms
 
@@ -613,25 +629,25 @@ function selectCompany(name) {
         if (regionEl) regionEl.textContent = rec.region;
 
         // Visual Transition - Hide Overlay, Show Content
-        if (overlay) overlay.classList.add('hidden');
-        if (content) content.classList.remove('hidden');
+        if (overlayEl) overlayEl.classList.add('hidden');
+        if (contentEl) contentEl.classList.remove('hidden');
 
     }, 4000); // 4s total duration
 }
 
 function renderTenderFeed(tenders = MOCK_TENDERS) {
-    const container = document.getElementById('tender-feed');
-    if (!container) return;
+    const feedContainerEl = document.getElementById('tender-feed');
+    if (!feedContainerEl) return;
 
     // Update filter counts
     updateFilterCounts();
 
     if (tenders.length === 0) {
-        container.innerHTML = `<div class="p-8 text-center text-secondary">Keine Ausschreibungen gefunden.</div>`;
+        feedContainerEl.innerHTML = `<div class="p-8 text-center text-secondary">Keine Ausschreibungen gefunden.</div>`;
         return;
     }
 
-    container.innerHTML = tenders.map(t => {
+    feedContainerEl.innerHTML = tenders.map(t => {
         let badgeColor = 'green';
         if (t.status === TENDER_STATUS.CLOSING_SOON) badgeColor = 'orange';
         if (t.applied) badgeColor = 'blue';
@@ -798,9 +814,9 @@ window.toggleHidden = toggleHidden;
 
 // Sorting functionality
 function toggleSortDropdown() {
-    const dropdown = document.querySelector('.sort-dropdown');
-    if (dropdown) {
-        dropdown.classList.toggle('is-open');
+    const dropdownEl = document.querySelector('.sort-dropdown');
+    if (dropdownEl) {
+        dropdownEl.classList.toggle('is-open');
     }
 }
 
@@ -832,8 +848,8 @@ function sortTenders(sortBy) {
     });
 
     // Close dropdown
-    const dropdown = document.querySelector('.sort-dropdown');
-    if (dropdown) dropdown.classList.remove('is-open');
+    const dropdownEl = document.querySelector('.sort-dropdown');
+    if (dropdownEl) dropdownEl.classList.remove('is-open');
 
     // Re-apply current filter (which will also apply sort)
     filterTenders(state.currentFilter);
@@ -867,9 +883,9 @@ function getSortedTenders(tenders) {
 
 // Close sort dropdown when clicking outside
 document.addEventListener('click', (e) => {
-    const sortDropdown = document.querySelector('.sort-dropdown');
-    if (sortDropdown && !sortDropdown.contains(e.target)) {
-        sortDropdown.classList.remove('is-open');
+    const sortDropdownEl = document.querySelector('.sort-dropdown');
+    if (sortDropdownEl && !sortDropdownEl.contains(e.target)) {
+        sortDropdownEl.classList.remove('is-open');
     }
 });
 
@@ -877,17 +893,11 @@ document.addEventListener('click', (e) => {
 function openProfileSettings() {
     // Ensure we have recommendations data for the current profile
     if (!state.recommendations && state.company) {
-        // Determine recommendations based on company name
-        const name = state.company.name || '';
-        let rec = AI_RECOMMENDATIONS.Müller; // default fallback
-
-        if (name.includes("Hans")) rec = AI_RECOMMENDATIONS.Hans;
-        else if (name.includes("Tech")) rec = AI_RECOMMENDATIONS.Tech;
-        else if (name.includes("Green")) rec = AI_RECOMMENDATIONS.Green;
-        else if (name.includes("Alpha")) rec = AI_RECOMMENDATIONS.Alpha;
+        // Look up recommendation using company's searchKey
+        const baseRec = getRecommendationForCompany(state.company.name);
 
         // Clone to state
-        state.recommendations = JSON.parse(JSON.stringify(rec));
+        state.recommendations = JSON.parse(JSON.stringify(baseRec));
     }
 
     // Populate the AI review view with current data
@@ -949,10 +959,10 @@ function openProfileSettings() {
     }
 
     // Show content directly (skip loading animation)
-    const overlay = document.getElementById('ai-loading-overlay');
-    const content = document.getElementById('ai-results-content');
-    if (overlay) overlay.classList.add('hidden');
-    if (content) content.classList.remove('hidden');
+    const overlayEl = document.getElementById('ai-loading-overlay');
+    const contentEl = document.getElementById('ai-results-content');
+    if (overlayEl) overlayEl.classList.add('hidden');
+    if (contentEl) contentEl.classList.remove('hidden');
 
     // Navigate to the AI review view
     navigateTo(VIEWS.AI_REVIEW);
@@ -1060,10 +1070,10 @@ window.setSearch = setSearch;
 window.selectProfile = selectProfile;
 
 function renderProfiles() {
-    const container = document.getElementById('profile-list');
-    if (!container) return;
+    const profileContainerEl = document.getElementById('profile-list');
+    if (!profileContainerEl) return;
 
-    container.innerHTML = MOCK_USER_PROFILES.map(p => {
+    profileContainerEl.innerHTML = MOCK_USER_PROFILES.map(p => {
         // Ensure ID is numeric to prevent injection
         const profileId = parseInt(p.id, 10);
         // Safely get avatar initials
@@ -1350,9 +1360,9 @@ window.showSettingsTab = showSettingsTab;
 
 // Language Dropdown Functions
 function toggleLangDropdown() {
-    const dropdown = document.querySelector('.lang-dropdown');
-    if (dropdown) {
-        dropdown.classList.toggle('is-open');
+    const dropdownEl = document.querySelector('.lang-dropdown');
+    if (dropdownEl) {
+        dropdownEl.classList.toggle('is-open');
     }
 }
 
@@ -1372,9 +1382,9 @@ function selectLang(lang) {
     });
 
     // Close dropdown
-    const dropdown = document.querySelector('.lang-dropdown');
-    if (dropdown) {
-        dropdown.classList.remove('is-open');
+    const dropdownEl = document.querySelector('.lang-dropdown');
+    if (dropdownEl) {
+        dropdownEl.classList.remove('is-open');
     }
 }
 
@@ -1390,9 +1400,9 @@ function getLangName(code) {
 
 // Close dropdown when clicking outside
 document.addEventListener('click', (e) => {
-    const dropdown = document.querySelector('.lang-dropdown');
-    if (dropdown && !dropdown.contains(e.target)) {
-        dropdown.classList.remove('is-open');
+    const dropdownEl = document.querySelector('.lang-dropdown');
+    if (dropdownEl && !dropdownEl.contains(e.target)) {
+        dropdownEl.classList.remove('is-open');
     }
 });
 
