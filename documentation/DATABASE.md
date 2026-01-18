@@ -32,16 +32,32 @@ High-level business view of the data entities and their purpose.
 
 ### High-Level Relationships
 
-```
-Users ──┬── Subscriptions (1:1)
-        │
-        ├── Companies          Tenders
-        │                         │
-        ▼                         │
-   User Profiles ◄────────────────┘
-        │                    (via user_tender_actions)
-        ▼
-   Search Profiles ◄─── CPV/NPK Codes (lookup)
+```mermaid
+flowchart TB
+    subgraph Core["Core Entities"]
+        Users
+        Subscriptions
+        Companies
+        UserProfiles["User Profiles"]
+        SearchProfiles["Search Profiles"]
+        Tenders
+        Actions["User Tender Actions"]
+    end
+
+    subgraph Lookup["Lookup Tables"]
+        CPV["CPV Codes"]
+        NPK["NPK Codes"]
+    end
+
+    Users -->|"1:1"| Subscriptions
+    Users -->|"1:N"| UserProfiles
+    Companies -->|"1:N"| UserProfiles
+    UserProfiles -->|"1:1"| SearchProfiles
+    UserProfiles -->|"1:N"| Actions
+    Tenders -->|"1:N"| Actions
+    SearchProfiles -.->|"references"| CPV
+    SearchProfiles -.->|"references"| NPK
+    Tenders -.->|"classified by"| CPV
 ```
 
 - A **User** has one **Subscription** (free tier with 14-day Pro trial, or paid Pro)
