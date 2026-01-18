@@ -1119,7 +1119,7 @@ textarea.input-md {
         display: flex;
     }
 
-    /* Filter tabs responsive layout */
+    /* Filter tabs responsive layout - Wrapped Pills */
     #filter-tabs {
         flex-direction: column;
         align-items: stretch;
@@ -1127,28 +1127,19 @@ textarea.input-md {
     }
 
     #filter-tabs > div:first-child {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-2);
         width: 100%;
-        max-width: 100%;
-        overflow-x: auto;
-        overflow-y: hidden;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: thin;
-        padding-bottom: var(--space-1);
     }
 
-    /* Hide scrollbar but keep functionality */
-    #filter-tabs > div:first-child::-webkit-scrollbar {
-        height: 4px;
-    }
-
-    #filter-tabs > div:first-child::-webkit-scrollbar-track {
-        background: var(--color-bg-subtle);
-        border-radius: 2px;
-    }
-
-    #filter-tabs > div:first-child::-webkit-scrollbar-thumb {
-        background: var(--color-border-default);
-        border-radius: 2px;
+    /* Compact pill styling for filter buttons */
+    #filter-tabs > div:first-child .btn-sm {
+        padding: 0 var(--space-3);
+        height: 36px;
+        font-size: var(--text-sm);
+        border-radius: var(--radius-full, 9999px);
+        flex: 0 0 auto;
     }
 
     #filter-tabs > div:last-child {
@@ -1157,12 +1148,11 @@ textarea.input-md {
 }
 
 @media (max-width: 480px) {
-    /* Smaller filter buttons on very small screens */
-    #filter-tabs .btn-sm {
+    /* Even more compact pills on small screens */
+    #filter-tabs > div:first-child .btn-sm {
         padding: 0 var(--space-2);
-        font-size: var(--text-xs);
         height: 32px;
-        flex-shrink: 0;
+        font-size: var(--text-xs);
     }
 }
 
@@ -2351,14 +2341,15 @@ textarea.input-md {
 .settings-nav {
     display: flex;
     flex-direction: row;
-    gap: var(--space-1);
-    padding: var(--space-2);
-    overflow-x: auto;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    padding: var(--space-3);
 }
 
 @media (min-width: 768px) {
     .settings-nav {
         flex-direction: column;
+        flex-wrap: nowrap;
         gap: var(--space-1);
         padding: var(--space-3);
         position: sticky;
@@ -2370,19 +2361,35 @@ textarea.input-md {
 .settings-nav-item {
     display: flex;
     align-items: center;
-    gap: var(--space-3);
-    padding: var(--space-3) var(--space-4);
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
     font-size: var(--text-sm);
     font-weight: var(--weight-medium);
     color: var(--color-text-secondary);
-    background: transparent;
+    background: var(--color-bg-subtle);
     border: none;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-full);
     cursor: pointer;
     transition: all var(--duration-fast) var(--ease-out);
     white-space: nowrap;
     text-align: left;
     font-family: inherit;
+}
+
+/* Hide icons on mobile for compact pills */
+@media (max-width: 767px) {
+    .settings-nav-item svg {
+        display: none;
+    }
+}
+
+@media (min-width: 768px) {
+    .settings-nav-item {
+        gap: var(--space-3);
+        padding: var(--space-3) var(--space-4);
+        background: transparent;
+        border-radius: var(--radius-md);
+    }
 }
 
 .settings-nav-item:hover {
