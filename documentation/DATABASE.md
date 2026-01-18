@@ -29,6 +29,8 @@ erDiagram
         varchar company_type
         jsonb zefix_data "nullable"
         timestamptz created_at
+        timestamptz updated_at
+        timestamptz deleted_at "nullable"
     }
 
     user_profiles {
@@ -39,6 +41,8 @@ erDiagram
         varchar role
         boolean is_default
         timestamptz created_at
+        timestamptz updated_at
+        timestamptz deleted_at "nullable"
     }
 
     search_profiles {
@@ -54,6 +58,7 @@ erDiagram
         boolean ai_generated
         timestamptz created_at
         timestamptz updated_at
+        timestamptz last_matched_at "nullable"
     }
 
     tenders {
@@ -71,12 +76,14 @@ erDiagram
         timestamptz deadline
         timestamptz publication_date
         varchar status
+        timestamptz status_changed_at
         varchar region
         varchar language
         jsonb cpv_codes "array of codes"
         jsonb raw_data
         timestamptz created_at
         timestamptz updated_at
+        timestamptz deleted_at "nullable"
     }
 
     user_tender_actions {
@@ -168,10 +175,13 @@ Swiss companies identified via Zefix or manually entered.
 | company_type | VARCHAR     | Legal form (AG, GmbH, etc.)          |
 | zefix_data   | JSONB       | Raw Zefix API response, nullable     |
 | created_at   | TIMESTAMPTZ | Record creation timestamp            |
+| updated_at   | TIMESTAMPTZ | Last update timestamp                |
+| deleted_at   | TIMESTAMPTZ | Soft delete timestamp, nullable      |
 
 **Notes:**
 - `uid` is unique when present but nullable for manually entered companies
 - `zefix_data` stores the complete API response for reference
+- Soft delete via `deleted_at` - filter with `WHERE deleted_at IS NULL`
 
 ---
 
@@ -188,10 +198,13 @@ Links users to companies with role information. A user can have multiple profile
 | role         | VARCHAR     | User's role at company               |
 | is_default   | BOOLEAN     | Default profile for this user        |
 | created_at   | TIMESTAMPTZ | Record creation timestamp            |
+| updated_at   | TIMESTAMPTZ | Last update timestamp                |
+| deleted_at   | TIMESTAMPTZ | Soft delete timestamp, nullable      |
 
 **Constraints:**
 - Unique constraint on (user_id, company_id)
 - Only one `is_default = true` per user_id
+- Soft delete via `deleted_at` - filter with `WHERE deleted_at IS NULL`
 
 ---
 
@@ -213,10 +226,13 @@ AI-generated or user-defined search criteria for tender matching.
 | ai_generated     | BOOLEAN     | Whether AI created this profile      |
 | created_at       | TIMESTAMPTZ | Record creation timestamp            |
 | updated_at       | TIMESTAMPTZ | Last modification timestamp          |
+| last_matched_at  | TIMESTAMPTZ | Last time matching job ran, nullable |
 
 **Notes:**
 - One-to-one relationship with user_profiles (each profile has one search configuration)
 - CPV/NPK codes stored as JSONB arrays for simpler reads and atomic updates
+- `last_matched_at` tracks freshness for incremental matching optimization
+- NPK codes are Swiss construction-specific; matched via CPV→NPK mapping (see Matching Algorithm)
 
 ---
 
@@ -224,33 +240,37 @@ AI-generated or user-defined search criteria for tender matching.
 
 Public procurement opportunities from SIMAP, TED, and other sources.
 
-| Attribute      | Type        | Description                          |
-|----------------|-------------|--------------------------------------|
-| id             | UUID (PK)   | Unique identifier                    |
-| external_id    | VARCHAR     | Source system ID (SIMAP/TED ref)     |
-| source         | VARCHAR     | Origin: 'simap', 'ted', 'eu'         |
-| source_url     | VARCHAR     | Link to original tender              |
-| title          | VARCHAR     | Tender title                         |
-| authority      | VARCHAR     | Contracting authority name           |
-| authority_type | VARCHAR     | Type: municipal, cantonal, federal   |
-| description    | TEXT        | Full tender description              |
-| price_min      | DECIMAL     | Minimum estimated value (CHF)        |
-| price_max      | DECIMAL     | Maximum estimated value (CHF)        |
-| currency       | VARCHAR     | Currency code (CHF, EUR)             |
-| deadline       | TIMESTAMPTZ | Submission deadline                  |
-| publication_date| TIMESTAMPTZ| When tender was published            |
-| status         | VARCHAR     | 'open', 'closing_soon', 'closed'     |
-| region         | VARCHAR     | Primary region/canton                |
-| language       | VARCHAR     | Primary language (de, fr, it, en)    |
-| cpv_codes      | JSONB       | CPV classification codes `["45210000", ...]` |
-| raw_data       | JSONB       | Original API response                |
-| created_at     | TIMESTAMPTZ | Record creation timestamp            |
-| updated_at     | TIMESTAMPTZ | Last sync timestamp                  |
+| Attribute        | Type        | Description                          |
+|------------------|-------------|--------------------------------------|
+| id               | UUID (PK)   | Unique identifier                    |
+| external_id      | VARCHAR     | Source system ID (SIMAP/TED ref)     |
+| source           | VARCHAR     | Origin: 'simap', 'ted', 'eu'         |
+| source_url       | VARCHAR     | Link to original tender              |
+| title            | VARCHAR     | Tender title                         |
+| authority        | VARCHAR     | Contracting authority name           |
+| authority_type   | VARCHAR     | Type: municipal, cantonal, federal   |
+| description      | TEXT        | Full tender description              |
+| price_min        | DECIMAL     | Minimum estimated value (CHF)        |
+| price_max        | DECIMAL     | Maximum estimated value (CHF)        |
+| currency         | VARCHAR     | Currency code (CHF, EUR)             |
+| deadline         | TIMESTAMPTZ | Submission deadline                  |
+| publication_date | TIMESTAMPTZ | When tender was published            |
+| status           | VARCHAR     | 'open', 'closing_soon', 'closed'     |
+| status_changed_at| TIMESTAMPTZ | When status last changed             |
+| region           | VARCHAR     | Primary region/canton                |
+| language         | VARCHAR     | Primary language (de, fr, it, en)    |
+| cpv_codes        | JSONB       | CPV classification codes `["45210000", ...]` |
+| raw_data         | JSONB       | Original API response                |
+| created_at       | TIMESTAMPTZ | Record creation timestamp            |
+| updated_at       | TIMESTAMPTZ | Last sync timestamp                  |
+| deleted_at       | TIMESTAMPTZ | Soft delete timestamp, nullable      |
 
 **Notes:**
 - `external_id` + `source` should be unique (prevents duplicate imports)
 - `raw_data` preserves original data for debugging and future parsing improvements
 - CPV codes stored as JSONB array for simpler matching queries
+- Status auto-transitions via scheduled job: `open` → `closing_soon` (7 days before deadline) → `closed` (after deadline)
+- Soft delete via `deleted_at` - filter with `WHERE deleted_at IS NULL`
 
 ---
 
@@ -320,6 +340,49 @@ Swiss construction standards (Normpositionen-Katalog).
 | tenders → user_tender_actions     | 1:N         | Tender can be acted on by many profiles  |
 
 **Note:** CPV/NPK codes are stored as JSONB arrays within `search_profiles` and `tenders` rather than via junction tables. This simplifies reads and enables atomic updates. The lookup tables (`cpv_codes`, `npk_codes`) are used for code validation and label display.
+
+---
+
+## Indexes
+
+### Primary Indexes (auto-created)
+- All primary keys (UUID) are automatically indexed
+- Unique constraints create indexes on `users.email`, `companies.uid`
+
+### Recommended Performance Indexes
+
+```sql
+-- Tender queries (dashboard, filtering)
+CREATE INDEX idx_tenders_status_deadline ON tenders(status, deadline)
+    WHERE deleted_at IS NULL;
+CREATE INDEX idx_tenders_region ON tenders(region)
+    WHERE deleted_at IS NULL;
+CREATE INDEX idx_tenders_cpv_gin ON tenders USING GIN(cpv_codes);
+
+-- Search profile queries
+CREATE INDEX idx_search_profiles_cpv_gin ON search_profiles USING GIN(cpv_codes);
+CREATE INDEX idx_search_profiles_npk_gin ON search_profiles USING GIN(npk_codes);
+CREATE INDEX idx_search_profiles_last_matched ON search_profiles(last_matched_at);
+
+-- User tender actions (dashboard, filtering)
+CREATE INDEX idx_actions_profile_score ON user_tender_actions(user_profile_id, match_score DESC);
+CREATE INDEX idx_actions_profile_status ON user_tender_actions(user_profile_id, bookmarked, applied, hidden);
+CREATE INDEX idx_actions_tender ON user_tender_actions(tender_id);
+
+-- Soft delete filters
+CREATE INDEX idx_companies_active ON companies(id) WHERE deleted_at IS NULL;
+CREATE INDEX idx_user_profiles_active ON user_profiles(user_id) WHERE deleted_at IS NULL;
+CREATE INDEX idx_tenders_active ON tenders(id) WHERE deleted_at IS NULL;
+
+-- Lookup tables (hierarchy queries)
+CREATE INDEX idx_cpv_parent ON cpv_codes(parent_code);
+CREATE INDEX idx_npk_parent ON npk_codes(parent_code);
+```
+
+### Index Notes
+- GIN indexes on JSONB enable fast `@>`, `?`, `?|` operators for code matching
+- Partial indexes with `WHERE deleted_at IS NULL` optimize active record queries
+- Composite indexes ordered by selectivity (status before deadline)
 
 ---
 
@@ -614,64 +677,25 @@ sequenceDiagram
 | **Audit trail** | `created_at`/`updated_at` on all tables |
 | **Multilingual support** | Labels in DE/FR/IT/EN for lookup tables |
 
-### Concerns & Recommendations
+### Concerns & Resolutions
 
-#### 1. Scalability of Matching Algorithm
-**Issue:** Full cross-product matching (profiles × tenders) becomes expensive.
-- 1,000 profiles × 10,000 tenders = 10M calculations
+| # | Concern | Status | Resolution |
+|---|---------|--------|------------|
+| 1 | Scalability of matching | ✅ Addressed | Added `last_matched_at` to `search_profiles` for incremental matching |
+| 2 | Missing indexes | ✅ Addressed | Added comprehensive Indexes section with GIN, composite, and partial indexes |
+| 3 | JSONB data integrity | ⚠️ Documented | Validate in application layer; trade-off for schema simplicity |
+| 4 | Status management | ✅ Addressed | Added `status_changed_at` to `tenders`; auto-transition via scheduled job |
+| 5 | Missing `updated_at` | ✅ Addressed | Added `updated_at` to `companies` and `user_profiles` |
+| 6 | NPK matching unclear | ✅ Addressed | Documented: NPK matched via CPV→NPK mapping in matching algorithm |
+| 7 | No soft delete | ✅ Addressed | Added `deleted_at` to `companies`, `user_profiles`, and `tenders` |
 
-**Recommendation:**
-- Add `last_matched_at` to `search_profiles` to track freshness
-- Pre-filter tenders by CPV code overlap before full scoring
-- Consider PostgreSQL `pg_trgm` for fuzzy keyword matching
-- Partition `user_tender_actions` by date if it grows large
+### Remaining Considerations
 
-#### 2. Missing Indexes
-**Issue:** No index strategy defined for query patterns.
-
-**Recommendation:** Add indexes for common queries:
-```sql
--- Tender queries
-CREATE INDEX idx_tenders_status_deadline ON tenders(status, deadline);
-CREATE INDEX idx_tenders_cpv_gin ON tenders USING GIN(cpv_codes);
-
--- Matching queries
-CREATE INDEX idx_actions_profile_score ON user_tender_actions(user_profile_id, match_score DESC);
-CREATE INDEX idx_search_profiles_cpv_gin ON search_profiles USING GIN(cpv_codes);
-```
-
-#### 3. Data Integrity for JSONB
-**Issue:** No validation that CPV/NPK codes in JSONB arrays exist in lookup tables.
-
-**Recommendation:**
-- Add a CHECK constraint or trigger to validate codes
-- Or validate in application layer before insert
-- Document this as a known trade-off
-
-#### 4. Tender Status Management
-**Issue:** No automatic status transitions (open → closing_soon → closed).
-
-**Recommendation:**
-- Add database trigger or scheduled job to update status based on deadline
-- Consider adding `status_updated_at` timestamp
-
-#### 5. Missing `updated_at` on Some Tables
-**Issue:** `companies` and `user_profiles` lack `updated_at`.
-
-**Recommendation:** Add `updated_at` with trigger for consistency.
-
-#### 6. NPK Matching Logic Unclear
-**Issue:** Tenders have CPV codes but not NPK codes. How does NPK matching work?
-
-**Recommendation:**
-- Either add `npk_codes` to tenders (if SIMAP provides them)
-- Or create a CPV→NPK mapping table for translation
-- Or document that NPK is only for construction and derived from CPV
-
-#### 7. No Soft Delete
-**Issue:** No mechanism for soft-deleting tenders or profiles.
-
-**Recommendation:** Consider adding `deleted_at` for audit compliance.
+#### JSONB Validation Trade-off
+CPV/NPK codes in JSONB arrays are **not** FK-validated against lookup tables. This is an intentional trade-off:
+- **Pro:** Simpler schema, faster writes, atomic updates
+- **Con:** Invalid codes won't be caught by database
+- **Mitigation:** Validate in application layer before insert; use lookup tables for autocomplete
 
 ---
 
@@ -755,6 +779,7 @@ flowchart LR
 
 | Date       | Version | Changes                    |
 |------------|---------|----------------------------|
+| 2026-01-18 | 0.5     | Address expert review: add indexes, soft delete, status management, updated_at fields |
 | 2026-01-18 | 0.4     | Add Mermaid data flow diagram, expert review, and difficulty estimation |
 | 2026-01-18 | 0.3     | Add detailed Mermaid flowcharts for matching algorithm |
 | 2026-01-18 | 0.2     | Replace junction tables with JSONB arrays; add matching algorithm section |
