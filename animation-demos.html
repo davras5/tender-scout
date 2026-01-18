@@ -7,21 +7,55 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons (as specified in DESIGNGUIDE.md Section 6.1) -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     <style>
+        /* ==========================================================================
+           Design Tokens (aligned with DESIGNGUIDE.md Section 12.3)
+           ========================================================================== */
         :root {
+            /* Background layers */
             --color-bg-base: #ffffff;
-            --color-bg-raised: #f1f5f9;
-            --color-bg-subtle: #f8fafc;
+            --color-bg-raised: #f8fafc;
+            --color-bg-muted: #f1f5f9;
+
+            /* Text */
             --color-text-primary: #0f172a;
-            --color-text-secondary: #334155;
-            --color-text-muted: #475569;
+            --color-text-secondary: #475569;
+            --color-text-muted: #64748b;
+
+            /* Brand / Accent */
             --color-accent: #2563eb;
             --color-accent-hover: #1d4ed8;
-            --color-accent-subtle: #eff6ff;
-            --color-accent-glow: rgba(37, 99, 235, 0.12);
+            --color-accent-subtle: #dbeafe;
+            --color-accent-glow: rgba(37, 99, 235, 0.15);
             --color-accent-secondary: #8b5cf6;
             --color-accent-tertiary: #06b6d4;
+
+            /* Border */
             --color-border: #e2e8f0;
+            --color-border-strong: #cbd5e1;
+
+            /* Spacing */
+            --space-1: 0.25rem;
+            --space-2: 0.5rem;
+            --space-3: 0.75rem;
+            --space-4: 1rem;
+            --space-5: 1.25rem;
+            --space-6: 1.5rem;
+            --space-8: 2rem;
+
+            /* Animation (DESIGNGUIDE.md Section 8) */
+            --duration-fast: 100ms;
+            --duration-normal: 200ms;
+            --duration-slow: 300ms;
+            --ease-out: cubic-bezier(0, 0, 0.2, 1);
+            --ease-in: cubic-bezier(0.4, 0, 1, 1);
+            --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+            /* Radius */
+            --radius-md: 6px;
+            --radius-lg: 8px;
         }
 
         * {
@@ -32,7 +66,7 @@
 
         body {
             font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-            background: var(--color-bg-subtle);
+            background: var(--color-bg-muted);
             color: var(--color-text-primary);
             line-height: 1.6;
         }
@@ -40,73 +74,119 @@
         .container {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 2rem;
+            padding: var(--space-8);
+        }
+
+        /* Header */
+        .page-header {
+            text-align: center;
+            margin-bottom: var(--space-8);
         }
 
         h1 {
-            text-align: center;
-            margin-bottom: 0.5rem;
-            font-size: 2rem;
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-bottom: var(--space-2);
         }
 
         .subtitle {
-            text-align: center;
             color: var(--color-text-secondary);
-            margin-bottom: 3rem;
+            font-size: 0.9375rem;
+            margin-bottom: var(--space-4);
         }
 
+        /* Context banner explaining purpose */
+        .context-banner {
+            background: var(--color-accent-subtle);
+            border: 1px solid var(--color-accent);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4) var(--space-5);
+            margin-bottom: var(--space-8);
+            display: flex;
+            align-items: flex-start;
+            gap: var(--space-3);
+        }
+
+        .context-banner i {
+            color: var(--color-accent);
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .context-banner p {
+            font-size: 0.875rem;
+            color: var(--color-text-secondary);
+            line-height: 1.5;
+        }
+
+        .context-banner code {
+            background: rgba(37, 99, 235, 0.1);
+            padding: 0.125em 0.375em;
+            border-radius: 4px;
+            font-family: "JetBrains Mono", monospace;
+            font-size: 0.8125rem;
+        }
+
+        /* Grid */
         .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--space-6);
         }
 
+        /* Card */
         .card {
             background: var(--color-bg-base);
-            border-radius: 16px;
-            padding: 2rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-radius: var(--radius-lg);
+            padding: var(--space-6);
             border: 1px solid var(--color-border);
             display: flex;
             flex-direction: column;
+            transition: border-color var(--duration-fast) var(--ease-out);
+        }
+
+        .card:hover {
+            border-color: var(--color-border-strong);
         }
 
         .card h3 {
             text-align: center;
-            margin-bottom: 0.5rem;
-            font-size: 1.125rem;
+            margin-bottom: var(--space-2);
+            font-size: 1rem;
+            font-weight: 600;
         }
 
         .card > p {
             text-align: center;
             color: var(--color-text-muted);
-            font-size: 0.875rem;
-            margin-bottom: 1.5rem;
+            font-size: 0.8125rem;
+            margin-bottom: var(--space-5);
         }
 
         .demo-area {
-            height: 180px;
+            height: 160px;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: var(--color-bg-subtle);
-            border-radius: 12px;
-            margin-bottom: 1rem;
+            background: var(--color-bg-muted);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-4);
         }
 
         .label {
             text-align: center;
-            font-size: 0.75rem;
+            font-size: 0.6875rem;
             color: var(--color-text-muted);
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            margin-bottom: 1rem;
+            font-weight: 500;
+            margin-bottom: var(--space-4);
         }
 
         .design-intent {
             background: linear-gradient(135deg, var(--color-accent-subtle), #f5f3ff);
-            border-radius: 8px;
-            padding: 0.875rem 1rem;
+            border-radius: var(--radius-md);
+            padding: var(--space-4);
             font-size: 0.8125rem;
             color: var(--color-text-secondary);
             line-height: 1.5;
@@ -119,26 +199,37 @@
             font-weight: 600;
         }
 
-        /* ========================================
-           Option 1: Current (Pulse + Ring)
-           ======================================== */
+        /* ==========================================================================
+           Reduced Motion Support (DESIGNGUIDE.md Section 8.3)
+           ========================================================================== */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* ==========================================================================
+           Animation 1: Current (Pulse + Ring) - The existing ai-orb
+           ========================================================================== */
         .orb-current {
-            width: 100px;
-            height: 100px;
+            width: 80px;
+            height: 80px;
             border-radius: 50%;
             background: radial-gradient(circle at 30% 30%, var(--color-accent-subtle), var(--color-accent));
             box-shadow: 0 0 40px var(--color-accent-glow), inset 0 0 20px rgba(255, 255, 255, 0.5);
             position: relative;
-            animation: pulse-current 2s infinite ease-in-out;
+            animation: pulse-current 2s infinite var(--ease-in-out);
         }
 
         .orb-current::after {
             content: '';
             position: absolute;
-            top: -10px;
-            left: -10px;
-            right: -10px;
-            bottom: -10px;
+            top: -8px;
+            left: -8px;
+            right: -8px;
+            bottom: -8px;
             border-radius: 50%;
             border: 2px solid var(--color-accent-tertiary);
             opacity: 0.5;
@@ -147,7 +238,7 @@
 
         @keyframes pulse-current {
             0%, 100% { transform: scale(0.95); box-shadow: 0 0 30px var(--color-accent-glow); }
-            50% { transform: scale(1.05); box-shadow: 0 0 60px var(--color-accent); }
+            50% { transform: scale(1.05); box-shadow: 0 0 50px var(--color-accent); }
         }
 
         @keyframes spin {
@@ -155,12 +246,12 @@
             to { transform: rotate(360deg); }
         }
 
-        /* ========================================
-           Option 2: Data Processing Rings
-           ======================================== */
+        /* ==========================================================================
+           Animation 2: Data Processing Rings
+           ========================================================================== */
         .orb-rings {
-            width: 100px;
-            height: 100px;
+            width: 80px;
+            height: 80px;
             position: relative;
         }
 
@@ -179,20 +270,20 @@
         }
 
         .orb-rings .ring-2 {
-            width: 75%;
-            height: 75%;
-            top: 12.5%;
-            left: 12.5%;
+            width: 70%;
+            height: 70%;
+            top: 15%;
+            left: 15%;
             border-top-color: var(--color-accent-secondary);
             border-left-color: var(--color-accent-secondary);
             animation: spin 1s linear infinite reverse;
         }
 
         .orb-rings .ring-3 {
-            width: 50%;
-            height: 50%;
-            top: 25%;
-            left: 25%;
+            width: 40%;
+            height: 40%;
+            top: 30%;
+            left: 30%;
             border-bottom-color: var(--color-accent-tertiary);
             border-right-color: var(--color-accent-tertiary);
             animation: spin 0.75s linear infinite;
@@ -200,13 +291,13 @@
 
         .orb-rings .core {
             position: absolute;
-            width: 20%;
-            height: 20%;
-            top: 40%;
-            left: 40%;
+            width: 16%;
+            height: 16%;
+            top: 42%;
+            left: 42%;
             background: var(--color-accent);
             border-radius: 50%;
-            animation: pulse-core 1s ease-in-out infinite;
+            animation: pulse-core 1s var(--ease-in-out) infinite;
         }
 
         @keyframes pulse-core {
@@ -214,12 +305,12 @@
             50% { transform: scale(1.3); opacity: 0.7; }
         }
 
-        /* ========================================
-           Option 3: Radar Sweep
-           ======================================== */
+        /* ==========================================================================
+           Animation 3: Radar Sweep
+           ========================================================================== */
         .orb-radar {
-            width: 100px;
-            height: 100px;
+            width: 80px;
+            height: 80px;
             border-radius: 50%;
             background: var(--color-bg-raised);
             border: 2px solid var(--color-accent);
@@ -244,12 +335,12 @@
             position: absolute;
             top: 50%;
             left: 50%;
-            width: 8px;
-            height: 8px;
+            width: 6px;
+            height: 6px;
             background: var(--color-accent);
             border-radius: 50%;
             transform: translate(-50%, -50%);
-            box-shadow: 0 0 10px var(--color-accent);
+            box-shadow: 0 0 8px var(--color-accent);
         }
 
         .orb-radar .circle {
@@ -277,61 +368,67 @@
             to { transform: rotate(360deg); }
         }
 
-        /* ========================================
-           Option 4: Spinning Gears (SVG)
-           ======================================== */
+        /* ==========================================================================
+           Animation 4: Spinning Gears (Lucide Icons)
+           ========================================================================== */
         .orb-gears {
-            width: 140px;
-            height: 100px;
+            width: 120px;
+            height: 80px;
             position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .gear-svg {
+        .orb-gears .gear {
             position: absolute;
-            animation: spin linear infinite;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .gear-svg-1 {
-            width: 70px;
-            height: 70px;
+        .orb-gears .gear-1 {
             left: 0;
-            top: 15px;
-            animation-duration: 3s;
+            top: 10px;
             color: var(--color-accent);
+            animation: spin 3s linear infinite;
         }
 
-        .gear-svg-2 {
-            width: 55px;
-            height: 55px;
-            right: 5px;
-            top: 5px;
-            animation-duration: 2.36s;
-            animation-direction: reverse;
+        .orb-gears .gear-1 i {
+            width: 48px;
+            height: 48px;
+        }
+
+        .orb-gears .gear-2 {
+            right: 8px;
+            top: 0;
             color: var(--color-accent-secondary);
+            animation: spin 2.4s linear infinite reverse;
         }
 
-        .gear-svg-3 {
+        .orb-gears .gear-2 i {
             width: 40px;
             height: 40px;
-            right: 25px;
+        }
+
+        .orb-gears .gear-3 {
+            right: 20px;
             bottom: 0;
-            animation-duration: 3.27s;
             color: var(--color-accent-tertiary);
+            animation: spin 3.2s linear infinite;
         }
 
-        .gear-svg svg {
-            width: 100%;
-            height: 100%;
-            fill: currentColor;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+        .orb-gears .gear-3 i {
+            width: 32px;
+            height: 32px;
         }
 
-        /* ========================================
-           Option 5: Segmented Loader
-           ======================================== */
+        /* ==========================================================================
+           Animation 5: Segmented Loader
+           ========================================================================== */
         .orb-segments {
-            width: 100px;
-            height: 100px;
+            width: 80px;
+            height: 80px;
             position: relative;
         }
 
@@ -340,27 +437,27 @@
             width: 100%;
             height: 100%;
             border-radius: 50%;
-            border: 4px solid transparent;
+            border: 3px solid transparent;
         }
 
         .segment-1 {
             border-top-color: var(--color-accent);
-            animation: segment-spin 1.5s ease-in-out infinite;
+            animation: segment-spin 1.5s var(--ease-in-out) infinite;
         }
 
         .segment-2 {
             border-right-color: var(--color-accent-secondary);
-            animation: segment-spin 1.5s ease-in-out infinite 0.2s;
+            animation: segment-spin 1.5s var(--ease-in-out) infinite 0.2s;
         }
 
         .segment-3 {
             border-bottom-color: var(--color-accent-tertiary);
-            animation: segment-spin 1.5s ease-in-out infinite 0.4s;
+            animation: segment-spin 1.5s var(--ease-in-out) infinite 0.4s;
         }
 
         .segment-4 {
             border-left-color: var(--color-accent);
-            animation: segment-spin 1.5s ease-in-out infinite 0.6s;
+            animation: segment-spin 1.5s var(--ease-in-out) infinite 0.6s;
         }
 
         @keyframes segment-spin {
@@ -369,17 +466,17 @@
             100% { transform: rotate(360deg); opacity: 0.3; }
         }
 
-        /* ========================================
-           Option 6: Binary Pulse Grid
-           ======================================== */
+        /* ==========================================================================
+           Animation 6: Binary Pulse Grid
+           ========================================================================== */
         .orb-grid {
-            width: 100px;
-            height: 100px;
+            width: 80px;
+            height: 80px;
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             grid-template-rows: repeat(5, 1fr);
-            gap: 4px;
-            padding: 10px;
+            gap: 3px;
+            padding: 8px;
         }
 
         .orb-grid .dot {
@@ -387,7 +484,7 @@
             height: 100%;
             background: var(--color-accent);
             border-radius: 50%;
-            animation: grid-pulse 2s ease-in-out infinite;
+            animation: grid-pulse 2s var(--ease-in-out) infinite;
         }
 
         .orb-grid .dot:nth-child(1) { animation-delay: 0s; }
@@ -421,26 +518,26 @@
             50% { transform: scale(1); opacity: 1; }
         }
 
-        /* ========================================
-           Option 7: Orbiting Particles
-           ======================================== */
+        /* ==========================================================================
+           Animation 7: Orbiting Particles
+           ========================================================================== */
         .orb-particles {
-            width: 100px;
-            height: 100px;
+            width: 80px;
+            height: 80px;
             position: relative;
         }
 
         .orb-particles .center {
             position: absolute;
-            width: 20px;
-            height: 20px;
+            width: 16px;
+            height: 16px;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             background: var(--color-accent);
             border-radius: 50%;
-            box-shadow: 0 0 20px var(--color-accent);
-            animation: center-pulse 1.5s ease-in-out infinite;
+            box-shadow: 0 0 16px var(--color-accent);
+            animation: center-pulse 1.5s var(--ease-in-out) infinite;
         }
 
         .orb-particles .orbit {
@@ -457,8 +554,8 @@
 
         .orb-particles .particle {
             position: absolute;
-            width: 8px;
-            height: 8px;
+            width: 6px;
+            height: 6px;
             border-radius: 50%;
         }
 
@@ -487,23 +584,23 @@
             50% { transform: translate(-50%, -50%) scale(1.2); }
         }
 
-        /* ========================================
-           Option 8: Hexagon Morph
-           ======================================== */
+        /* ==========================================================================
+           Animation 8: Morphing Shape
+           ========================================================================== */
         .orb-hexagon {
-            width: 100px;
-            height: 100px;
+            width: 80px;
+            height: 80px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
         .orb-hexagon .shape {
-            width: 70px;
-            height: 70px;
+            width: 56px;
+            height: 56px;
             background: linear-gradient(135deg, var(--color-accent), var(--color-accent-secondary));
-            animation: morph 4s ease-in-out infinite, spin 8s linear infinite;
-            box-shadow: 0 0 30px var(--color-accent-glow);
+            animation: morph 4s var(--ease-in-out) infinite, spin 8s linear infinite;
+            box-shadow: 0 0 24px var(--color-accent-glow);
         }
 
         @keyframes morph {
@@ -513,30 +610,30 @@
             75% { border-radius: 70% 30% 30% 70% / 70% 70% 30% 30%; }
         }
 
-        /* ========================================
-           Option 9: Circuit Pulse
-           ======================================== */
+        /* ==========================================================================
+           Animation 9: Circuit Pulse
+           ========================================================================== */
         .orb-circuit {
-            width: 100px;
-            height: 100px;
+            width: 80px;
+            height: 80px;
             position: relative;
         }
 
         .orb-circuit .node {
             position: absolute;
-            width: 12px;
-            height: 12px;
+            width: 10px;
+            height: 10px;
             background: var(--color-accent);
             border-radius: 50%;
-            animation: node-pulse 1.5s ease-in-out infinite;
+            animation: node-pulse 1.5s var(--ease-in-out) infinite;
         }
 
         .orb-circuit .node-center {
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 16px;
-            height: 16px;
+            width: 14px;
+            height: 14px;
             background: var(--color-accent-secondary);
             animation-delay: 0s;
         }
@@ -554,7 +651,7 @@
 
         .orb-circuit .line-v {
             width: 2px;
-            height: 30%;
+            height: 28%;
             left: 50%;
             transform: translateX(-50%);
         }
@@ -564,7 +661,7 @@
 
         .orb-circuit .line-h {
             height: 2px;
-            width: 30%;
+            width: 28%;
             top: 50%;
             transform: translateY(-50%);
         }
@@ -573,27 +670,27 @@
         .orb-circuit .line-h-right { right: 18%; }
 
         @keyframes node-pulse {
-            0%, 100% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 5px var(--color-accent); }
-            50% { transform: translate(-50%, -50%) scale(1.3); box-shadow: 0 0 15px var(--color-accent); }
+            0%, 100% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 4px var(--color-accent); }
+            50% { transform: translate(-50%, -50%) scale(1.3); box-shadow: 0 0 12px var(--color-accent); }
         }
 
-        /* ========================================
-           Option 10: Waveform
-           ======================================== */
+        /* ==========================================================================
+           Animation 10: Waveform
+           ========================================================================== */
         .orb-waveform {
-            width: 120px;
-            height: 60px;
+            width: 100px;
+            height: 50px;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 4px;
+            gap: 3px;
         }
 
         .orb-waveform .bar {
-            width: 6px;
+            width: 5px;
             background: linear-gradient(to top, var(--color-accent), var(--color-accent-secondary));
-            border-radius: 3px;
-            animation: wave 1s ease-in-out infinite;
+            border-radius: 2px;
+            animation: wave 1s var(--ease-in-out) infinite;
         }
 
         .orb-waveform .bar:nth-child(1) { animation-delay: 0s; }
@@ -607,23 +704,17 @@
         .orb-waveform .bar:nth-child(9) { animation-delay: 0s; }
 
         @keyframes wave {
-            0%, 100% { height: 15px; }
-            50% { height: 50px; }
+            0%, 100% { height: 12px; }
+            50% { height: 40px; }
         }
 
-        /* ========================================
-           Option 11: DNA Helix
-           ======================================== */
+        /* ==========================================================================
+           Animation 11: DNA Helix
+           ========================================================================== */
         .orb-dna {
-            width: 60px;
-            height: 100px;
+            width: 50px;
+            height: 80px;
             position: relative;
-        }
-
-        .orb-dna .strand {
-            position: absolute;
-            width: 100%;
-            height: 100%;
         }
 
         .orb-dna .dot-pair {
@@ -637,34 +728,34 @@
         .orb-dna .dot-pair::before,
         .orb-dna .dot-pair::after {
             content: '';
-            width: 10px;
-            height: 10px;
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
         }
 
         .orb-dna .dot-pair::before { background: var(--color-accent); }
         .orb-dna .dot-pair::after { background: var(--color-accent-secondary); }
 
-        .orb-dna .dot-pair-1 { top: 0; animation: dna-wave 2s ease-in-out infinite; }
-        .orb-dna .dot-pair-2 { top: 20%; animation: dna-wave 2s ease-in-out infinite 0.25s; }
-        .orb-dna .dot-pair-3 { top: 40%; animation: dna-wave 2s ease-in-out infinite 0.5s; }
-        .orb-dna .dot-pair-4 { top: 60%; animation: dna-wave 2s ease-in-out infinite 0.75s; }
-        .orb-dna .dot-pair-5 { top: 80%; animation: dna-wave 2s ease-in-out infinite 1s; }
+        .orb-dna .dot-pair-1 { top: 0; animation: dna-wave 2s var(--ease-in-out) infinite; }
+        .orb-dna .dot-pair-2 { top: 20%; animation: dna-wave 2s var(--ease-in-out) infinite 0.25s; }
+        .orb-dna .dot-pair-3 { top: 40%; animation: dna-wave 2s var(--ease-in-out) infinite 0.5s; }
+        .orb-dna .dot-pair-4 { top: 60%; animation: dna-wave 2s var(--ease-in-out) infinite 0.75s; }
+        .orb-dna .dot-pair-5 { top: 80%; animation: dna-wave 2s var(--ease-in-out) infinite 1s; }
 
         .orb-dna .connector {
             position: absolute;
             height: 2px;
             background: var(--color-accent-tertiary);
             opacity: 0.5;
-            left: 10px;
-            right: 10px;
+            left: 8px;
+            right: 8px;
         }
 
-        .orb-dna .connector-1 { top: 5px; animation: connector-fade 2s ease-in-out infinite; }
-        .orb-dna .connector-2 { top: 25px; animation: connector-fade 2s ease-in-out infinite 0.25s; }
-        .orb-dna .connector-3 { top: 45px; animation: connector-fade 2s ease-in-out infinite 0.5s; }
-        .orb-dna .connector-4 { top: 65px; animation: connector-fade 2s ease-in-out infinite 0.75s; }
-        .orb-dna .connector-5 { top: 85px; animation: connector-fade 2s ease-in-out infinite 1s; }
+        .orb-dna .connector-1 { top: 4px; animation: connector-fade 2s var(--ease-in-out) infinite; }
+        .orb-dna .connector-2 { top: 20px; animation: connector-fade 2s var(--ease-in-out) infinite 0.25s; }
+        .orb-dna .connector-3 { top: 36px; animation: connector-fade 2s var(--ease-in-out) infinite 0.5s; }
+        .orb-dna .connector-4 { top: 52px; animation: connector-fade 2s var(--ease-in-out) infinite 0.75s; }
+        .orb-dna .connector-5 { top: 68px; animation: connector-fade 2s var(--ease-in-out) infinite 1s; }
 
         @keyframes dna-wave {
             0%, 100% { transform: scaleX(1); }
@@ -672,16 +763,16 @@
         }
 
         @keyframes connector-fade {
-            0%, 100% { opacity: 0.2; width: 40px; }
-            50% { opacity: 0.8; width: 20px; }
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 0.8; }
         }
 
-        /* ========================================
-           Option 12: 3D Cube Rotation
-           ======================================== */
+        /* ==========================================================================
+           Animation 12: 3D Cube
+           ========================================================================== */
         .orb-cube-container {
-            width: 100px;
-            height: 100px;
+            width: 80px;
+            height: 80px;
             perspective: 200px;
             display: flex;
             align-items: center;
@@ -689,8 +780,8 @@
         }
 
         .orb-cube {
-            width: 50px;
-            height: 50px;
+            width: 40px;
+            height: 40px;
             position: relative;
             transform-style: preserve-3d;
             animation: cube-rotate 4s linear infinite;
@@ -698,40 +789,40 @@
 
         .orb-cube .face {
             position: absolute;
-            width: 50px;
-            height: 50px;
+            width: 40px;
+            height: 40px;
             border: 2px solid var(--color-accent);
-            background: rgba(37, 99, 235, 0.1);
+            background: rgba(37, 99, 235, 0.08);
         }
 
-        .orb-cube .front { transform: translateZ(25px); }
-        .orb-cube .back { transform: rotateY(180deg) translateZ(25px); border-color: var(--color-accent-secondary); }
-        .orb-cube .right { transform: rotateY(90deg) translateZ(25px); border-color: var(--color-accent-tertiary); }
-        .orb-cube .left { transform: rotateY(-90deg) translateZ(25px); border-color: var(--color-accent-secondary); }
-        .orb-cube .top { transform: rotateX(90deg) translateZ(25px); border-color: var(--color-accent-tertiary); }
-        .orb-cube .bottom { transform: rotateX(-90deg) translateZ(25px); }
+        .orb-cube .front { transform: translateZ(20px); }
+        .orb-cube .back { transform: rotateY(180deg) translateZ(20px); border-color: var(--color-accent-secondary); }
+        .orb-cube .right { transform: rotateY(90deg) translateZ(20px); border-color: var(--color-accent-tertiary); }
+        .orb-cube .left { transform: rotateY(-90deg) translateZ(20px); border-color: var(--color-accent-secondary); }
+        .orb-cube .top { transform: rotateX(90deg) translateZ(20px); border-color: var(--color-accent-tertiary); }
+        .orb-cube .bottom { transform: rotateX(-90deg) translateZ(20px); }
 
         @keyframes cube-rotate {
             from { transform: rotateX(0deg) rotateY(0deg); }
             to { transform: rotateX(360deg) rotateY(360deg); }
         }
 
-        /* ========================================
-           Option 13: Typing Dots
-           ======================================== */
+        /* ==========================================================================
+           Animation 13: Typing Dots
+           ========================================================================== */
         .orb-typing {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 6px;
         }
 
         .orb-typing .dot {
-            width: 16px;
-            height: 16px;
+            width: 12px;
+            height: 12px;
             border-radius: 50%;
             background: var(--color-accent);
-            animation: typing-bounce 1.4s ease-in-out infinite;
+            animation: typing-bounce 1.4s var(--ease-in-out) infinite;
         }
 
         .orb-typing .dot:nth-child(1) { animation-delay: 0s; }
@@ -740,22 +831,16 @@
 
         @keyframes typing-bounce {
             0%, 60%, 100% { transform: translateY(0); }
-            30% { transform: translateY(-20px); }
+            30% { transform: translateY(-16px); }
         }
 
-        /* ========================================
-           Option 14: Infinity Loop
-           ======================================== */
+        /* ==========================================================================
+           Animation 14: Infinity Loop
+           ========================================================================== */
         .orb-infinity {
-            width: 120px;
-            height: 60px;
+            width: 100px;
+            height: 50px;
             position: relative;
-        }
-
-        .orb-infinity .path {
-            position: absolute;
-            width: 100%;
-            height: 100%;
         }
 
         .orb-infinity svg {
@@ -766,32 +851,32 @@
         .orb-infinity .infinity-line {
             fill: none;
             stroke: var(--color-border);
-            stroke-width: 4;
+            stroke-width: 3;
             stroke-linecap: round;
         }
 
         .orb-infinity .infinity-glow {
             fill: none;
             stroke: url(#infinity-gradient);
-            stroke-width: 4;
+            stroke-width: 3;
             stroke-linecap: round;
-            stroke-dasharray: 200;
-            stroke-dashoffset: 200;
-            animation: infinity-trace 3s ease-in-out infinite;
+            stroke-dasharray: 180;
+            stroke-dashoffset: 180;
+            animation: infinity-trace 3s var(--ease-in-out) infinite;
         }
 
         @keyframes infinity-trace {
-            0% { stroke-dashoffset: 200; }
+            0% { stroke-dashoffset: 180; }
             50% { stroke-dashoffset: 0; }
-            100% { stroke-dashoffset: -200; }
+            100% { stroke-dashoffset: -180; }
         }
 
-        /* ========================================
-           Option 15: Heartbeat Pulse
-           ======================================== */
+        /* ==========================================================================
+           Animation 15: Heartbeat
+           ========================================================================== */
         .orb-heartbeat {
-            width: 140px;
-            height: 60px;
+            width: 120px;
+            height: 50px;
             position: relative;
             overflow: hidden;
         }
@@ -804,28 +889,28 @@
         .orb-heartbeat .line {
             fill: none;
             stroke: var(--color-accent);
-            stroke-width: 3;
+            stroke-width: 2;
             stroke-linecap: round;
             stroke-linejoin: round;
-            stroke-dasharray: 300;
-            stroke-dashoffset: 300;
-            animation: heartbeat-draw 2s ease-in-out infinite;
+            stroke-dasharray: 250;
+            stroke-dashoffset: 250;
+            animation: heartbeat-draw 2s var(--ease-in-out) infinite;
         }
 
         .orb-heartbeat .glow {
             position: absolute;
-            width: 8px;
-            height: 8px;
+            width: 6px;
+            height: 6px;
             background: var(--color-accent);
             border-radius: 50%;
             top: 50%;
             transform: translateY(-50%);
-            box-shadow: 0 0 12px var(--color-accent);
-            animation: heartbeat-dot 2s ease-in-out infinite;
+            box-shadow: 0 0 10px var(--color-accent);
+            animation: heartbeat-dot 2s var(--ease-in-out) infinite;
         }
 
         @keyframes heartbeat-draw {
-            0%, 100% { stroke-dashoffset: 300; }
+            0%, 100% { stroke-dashoffset: 250; }
             50% { stroke-dashoffset: 0; }
         }
 
@@ -834,134 +919,113 @@
             100% { left: 100%; opacity: 0; }
         }
 
-        /* ========================================
-           Option 16: Hourglass
-           ======================================== */
+        /* ==========================================================================
+           Animation 16: Hourglass (Lucide Icon)
+           ========================================================================== */
         .orb-hourglass {
-            width: 60px;
-            height: 100px;
-            position: relative;
+            width: 48px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-accent);
         }
 
-        .orb-hourglass svg {
-            width: 100%;
-            height: 100%;
-        }
-
-        .orb-hourglass .frame {
-            fill: none;
-            stroke: var(--color-accent);
-            stroke-width: 3;
-        }
-
-        .orb-hourglass .sand-top,
-        .orb-hourglass .sand-bottom {
-            fill: var(--color-accent-secondary);
-        }
-
-        .orb-hourglass .sand-stream {
-            fill: var(--color-accent-tertiary);
-        }
-
-        .hourglass-group {
-            animation: hourglass-flip 4s ease-in-out infinite;
-            transform-origin: center center;
+        .orb-hourglass i {
+            width: 48px;
+            height: 48px;
+            animation: hourglass-flip 2s var(--ease-in-out) infinite;
         }
 
         @keyframes hourglass-flip {
-            0%, 45% { transform: rotate(0deg); }
-            50%, 95% { transform: rotate(180deg); }
+            0%, 40% { transform: rotate(0deg); }
+            50%, 90% { transform: rotate(180deg); }
             100% { transform: rotate(360deg); }
         }
 
-        /* ========================================
-           Option 17: Neural Network
-           ======================================== */
+        /* ==========================================================================
+           Animation 17: Neural Network (Lucide Brain Icon)
+           ========================================================================== */
         .orb-neural {
-            width: 120px;
-            height: 100px;
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             position: relative;
         }
 
-        .orb-neural .neuron {
+        .orb-neural .brain-icon {
+            color: var(--color-accent);
+            animation: brain-pulse 2s var(--ease-in-out) infinite;
+        }
+
+        .orb-neural .brain-icon i {
+            width: 48px;
+            height: 48px;
+        }
+
+        .orb-neural .spark {
             position: absolute;
-            width: 14px;
-            height: 14px;
-            background: var(--color-accent);
+            width: 4px;
+            height: 4px;
+            background: var(--color-accent-secondary);
             border-radius: 50%;
-            animation: neuron-pulse 2s ease-in-out infinite;
+            animation: spark-float 2s var(--ease-in-out) infinite;
         }
 
-        .orb-neural .layer-1 .neuron { background: var(--color-accent); }
-        .orb-neural .layer-2 .neuron { background: var(--color-accent-secondary); }
-        .orb-neural .layer-3 .neuron { background: var(--color-accent-tertiary); }
+        .orb-neural .spark-1 { top: 10%; left: 20%; animation-delay: 0s; }
+        .orb-neural .spark-2 { top: 20%; right: 15%; animation-delay: 0.3s; }
+        .orb-neural .spark-3 { bottom: 25%; left: 15%; animation-delay: 0.6s; }
+        .orb-neural .spark-4 { bottom: 15%; right: 20%; animation-delay: 0.9s; background: var(--color-accent-tertiary); }
 
-        .orb-neural .n1 { left: 0; top: 20%; animation-delay: 0s; }
-        .orb-neural .n2 { left: 0; top: 50%; animation-delay: 0.1s; }
-        .orb-neural .n3 { left: 0; top: 80%; animation-delay: 0.2s; }
-
-        .orb-neural .n4 { left: 43%; top: 10%; animation-delay: 0.3s; }
-        .orb-neural .n5 { left: 43%; top: 40%; animation-delay: 0.4s; }
-        .orb-neural .n6 { left: 43%; top: 70%; animation-delay: 0.5s; }
-        .orb-neural .n7 { left: 43%; top: 100%; animation-delay: 0.6s; }
-
-        .orb-neural .n8 { right: 0; top: 30%; animation-delay: 0.7s; }
-        .orb-neural .n9 { right: 0; top: 70%; animation-delay: 0.8s; }
-
-        .orb-neural svg {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            top: 0;
-            left: 0;
+        @keyframes brain-pulse {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 4px var(--color-accent-glow)); }
+            50% { transform: scale(1.05); filter: drop-shadow(0 0 12px var(--color-accent)); }
         }
 
-        .orb-neural .connection {
-            stroke: var(--color-border);
-            stroke-width: 1;
-            fill: none;
-        }
-
-        .orb-neural .signal {
-            fill: var(--color-accent);
-            animation: signal-travel 2s ease-in-out infinite;
-        }
-
-        @keyframes neuron-pulse {
-            0%, 100% { transform: scale(1); box-shadow: 0 0 5px currentColor; }
-            50% { transform: scale(1.2); box-shadow: 0 0 15px currentColor; }
-        }
-
-        @keyframes signal-travel {
-            0% { opacity: 0; }
-            50% { opacity: 1; }
-            100% { opacity: 0; }
+        @keyframes spark-float {
+            0%, 100% { opacity: 0; transform: scale(0.5); }
+            50% { opacity: 1; transform: scale(1.5); }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>AI Loading Animation Options</h1>
-        <p class="subtitle">Compare different animation styles for the AI processing indicator</p>
+        <div class="page-header">
+            <h1>AI Loading Animation Options</h1>
+            <p class="subtitle">Design study for the AI processing indicator</p>
+        </div>
+
+        <!-- Context Banner -->
+        <div class="context-banner">
+            <i data-lucide="info" style="width: 20px; height: 20px;"></i>
+            <p>
+                This page explores animation alternatives to replace the current <code>.ai-orb</code> component
+                used in the AI Loading Overlay (<code>index.html:606</code>). The goal is to find an animation
+                that communicates AI processing while aligning with the design principles in DESIGNGUIDE.md:
+                subtle, purposeful, and respectful of reduced-motion preferences.
+            </p>
+        </div>
 
         <div class="grid">
-            <!-- Option 1: Current -->
+            <!-- 1. Current (Pulse + Ring) -->
             <div class="card">
                 <h3>1. Pulse + Ring</h3>
-                <p>Organic pulsing orb with orbiting ring accent</p>
+                <p>Current implementation - organic pulsing orb</p>
                 <div class="demo-area">
                     <div class="orb-current"></div>
                 </div>
                 <div class="label">Organic / Calm</div>
                 <div class="design-intent">
-                    <strong>Intent:</strong> Conveys a living, breathing intelligence. The gentle pulse suggests contemplation and care, while the orbiting ring hints at constant awareness.
+                    <strong>Intent:</strong> Conveys a living, breathing intelligence. The gentle pulse suggests contemplation, while the orbiting ring hints at constant awareness.
                 </div>
             </div>
 
-            <!-- Option 2: Data Processing Rings -->
+            <!-- 2. Data Processing Rings -->
             <div class="card">
-                <h3>2. Data Processing Rings</h3>
-                <p>Multiple concentric rings at different speeds</p>
+                <h3>2. Processing Rings</h3>
+                <p>Concentric rings at different speeds</p>
                 <div class="demo-area">
                     <div class="orb-rings">
                         <div class="ring ring-1"></div>
@@ -976,7 +1040,7 @@
                 </div>
             </div>
 
-            <!-- Option 3: Radar Sweep -->
+            <!-- 3. Radar Sweep -->
             <div class="card">
                 <h3>3. Radar Sweep</h3>
                 <p>Scanning motion with gradient trail</p>
@@ -988,43 +1052,31 @@
                 </div>
                 <div class="label">Searching / Scanning</div>
                 <div class="design-intent">
-                    <strong>Intent:</strong> Ideal for search-related tasks. Communicates active exploration of data, like sonar finding relevant information in a sea of possibilities.
+                    <strong>Intent:</strong> Ideal for search tasks. Communicates active exploration, like sonar finding relevant information in a sea of data.
                 </div>
             </div>
 
-            <!-- Option 4: Spinning Gears (SVG) -->
+            <!-- 4. Spinning Gears (Lucide Icons) -->
             <div class="card">
                 <h3>4. Spinning Gears</h3>
-                <p>Interlocking mechanical gears in motion</p>
+                <p>Interlocking Lucide cog icons</p>
                 <div class="demo-area">
                     <div class="orb-gears">
-                        <div class="gear-svg gear-svg-1">
-                            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M50 10 L54 10 L56 18 L60 16 L64 12 L68 16 L64 20 L66 24 L74 22 L76 26 L74 30 L78 34 L86 32 L88 36 L82 40 L84 44 L90 46 L90 50 L84 52 L86 56 L92 60 L90 64 L84 62 L82 66 L88 72 L84 76 L78 70 L74 74 L76 82 L72 84 L68 76 L64 78 L66 86 L62 88 L58 80 L54 82 L54 90 L50 90 L50 82 L46 80 L42 88 L38 86 L40 78 L36 76 L32 84 L28 82 L30 74 L26 70 L18 76 L14 72 L22 66 L20 62 L12 64 L10 60 L18 56 L16 52 L10 50 L10 46 L16 44 L14 40 L8 36 L12 32 L20 38 L24 34 L22 26 L26 24 L30 32 L34 28 L32 20 L36 18 L40 26 L44 24 L46 16 L50 18 L50 10 Z M50 35 A15 15 0 1 0 50 65 A15 15 0 1 0 50 35 Z" fill="currentColor"/>
-                            </svg>
-                        </div>
-                        <div class="gear-svg gear-svg-2">
-                            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M50 10 L54 10 L56 18 L60 16 L64 12 L68 16 L64 20 L66 24 L74 22 L76 26 L74 30 L78 34 L86 32 L88 36 L82 40 L84 44 L90 46 L90 50 L84 52 L86 56 L92 60 L90 64 L84 62 L82 66 L88 72 L84 76 L78 70 L74 74 L76 82 L72 84 L68 76 L64 78 L66 86 L62 88 L58 80 L54 82 L54 90 L50 90 L50 82 L46 80 L42 88 L38 86 L40 78 L36 76 L32 84 L28 82 L30 74 L26 70 L18 76 L14 72 L22 66 L20 62 L12 64 L10 60 L18 56 L16 52 L10 50 L10 46 L16 44 L14 40 L8 36 L12 32 L20 38 L24 34 L22 26 L26 24 L30 32 L34 28 L32 20 L36 18 L40 26 L44 24 L46 16 L50 18 L50 10 Z M50 35 A15 15 0 1 0 50 65 A15 15 0 1 0 50 35 Z" fill="currentColor"/>
-                            </svg>
-                        </div>
-                        <div class="gear-svg gear-svg-3">
-                            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M50 10 L54 10 L56 18 L60 16 L64 12 L68 16 L64 20 L66 24 L74 22 L76 26 L74 30 L78 34 L86 32 L88 36 L82 40 L84 44 L90 46 L90 50 L84 52 L86 56 L92 60 L90 64 L84 62 L82 66 L88 72 L84 76 L78 70 L74 74 L76 82 L72 84 L68 76 L64 78 L66 86 L62 88 L58 80 L54 82 L54 90 L50 90 L50 82 L46 80 L42 88 L38 86 L40 78 L36 76 L32 84 L28 82 L30 74 L26 70 L18 76 L14 72 L22 66 L20 62 L12 64 L10 60 L18 56 L16 52 L10 50 L10 46 L16 44 L14 40 L8 36 L12 32 L20 38 L24 34 L22 26 L26 24 L30 32 L34 28 L32 20 L36 18 L40 26 L44 24 L46 16 L50 18 L50 10 Z M50 35 A15 15 0 1 0 50 65 A15 15 0 1 0 50 35 Z" fill="currentColor"/>
-                            </svg>
-                        </div>
+                        <div class="gear gear-1"><i data-lucide="cog"></i></div>
+                        <div class="gear gear-2"><i data-lucide="cog"></i></div>
+                        <div class="gear gear-3"><i data-lucide="cog"></i></div>
                     </div>
                 </div>
                 <div class="label">Mechanical / Computing</div>
                 <div class="design-intent">
-                    <strong>Intent:</strong> Represents the machinery of thought. Interlocking gears convey precision, reliability, and the complex orchestration of multiple processes working together.
+                    <strong>Intent:</strong> Represents the machinery of thought. Interlocking gears convey precision, reliability, and multiple processes working together.
                 </div>
             </div>
 
-            <!-- Option 5: Segmented Loader -->
+            <!-- 5. Segmented Loader -->
             <div class="card">
                 <h3>5. Segmented Loader</h3>
-                <p>Staggered spinning segments with varied timing</p>
+                <p>Staggered spinning segments</p>
                 <div class="demo-area">
                     <div class="orb-segments">
                         <div class="segment segment-1"></div>
@@ -1035,14 +1087,14 @@
                 </div>
                 <div class="label">Progress / Steps</div>
                 <div class="design-intent">
-                    <strong>Intent:</strong> Suggests progress through distinct phases. Each segment represents a step in the process, creating anticipation while showing work in motion.
+                    <strong>Intent:</strong> Suggests progress through distinct phases. Each segment represents a processing step, creating anticipation.
                 </div>
             </div>
 
-            <!-- Option 6: Binary Pulse Grid -->
+            <!-- 6. Binary Pulse Grid -->
             <div class="card">
                 <h3>6. Binary Pulse Grid</h3>
-                <p>Pulsing dot matrix with radiating wave pattern</p>
+                <p>Pulsing dot matrix with wave pattern</p>
                 <div class="demo-area">
                     <div class="orb-grid">
                         <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
@@ -1054,14 +1106,14 @@
                 </div>
                 <div class="label">Data / Matrix</div>
                 <div class="design-intent">
-                    <strong>Intent:</strong> Evokes binary data and pixel-level processing. The ripple effect from center outward suggests information radiating from a core intelligence.
+                    <strong>Intent:</strong> Evokes binary data and pixel-level processing. The ripple from center outward suggests information radiating from a core intelligence.
                 </div>
             </div>
 
-            <!-- Option 7: Orbiting Particles -->
+            <!-- 7. Orbiting Particles -->
             <div class="card">
                 <h3>7. Orbiting Particles</h3>
-                <p>Particles circling a pulsing central core</p>
+                <p>Particles circling a central core</p>
                 <div class="demo-area">
                     <div class="orb-particles">
                         <div class="center"></div>
@@ -1072,14 +1124,14 @@
                 </div>
                 <div class="label">Atomic / Neural</div>
                 <div class="design-intent">
-                    <strong>Intent:</strong> Inspired by atomic structure and neural activity. Conveys energy, potential, and the dynamic nature of intelligent thought processes.
+                    <strong>Intent:</strong> Inspired by atomic structure. Conveys energy, potential, and the dynamic nature of intelligent thought processes.
                 </div>
             </div>
 
-            <!-- Option 8: Hexagon Morph -->
+            <!-- 8. Morphing Shape -->
             <div class="card">
                 <h3>8. Morphing Shape</h3>
-                <p>Smooth shape transformation with slow rotation</p>
+                <p>Smooth shape transformation</p>
                 <div class="demo-area">
                     <div class="orb-hexagon">
                         <div class="shape"></div>
@@ -1087,14 +1139,14 @@
                 </div>
                 <div class="label">Fluid / Adaptive</div>
                 <div class="design-intent">
-                    <strong>Intent:</strong> Represents adaptability and transformation. The ever-changing form suggests an AI that molds itself to understand and respond appropriately.
+                    <strong>Intent:</strong> Represents adaptability and transformation. The ever-changing form suggests an AI that molds itself to each task.
                 </div>
             </div>
 
-            <!-- Option 9: Circuit Pulse -->
+            <!-- 9. Circuit Pulse -->
             <div class="card">
                 <h3>9. Circuit Pulse</h3>
-                <p>Connected nodes with synchronized pulsing signals</p>
+                <p>Connected nodes with pulsing signals</p>
                 <div class="demo-area">
                     <div class="orb-circuit">
                         <div class="line line-v line-v-top"></div>
@@ -1110,14 +1162,14 @@
                 </div>
                 <div class="label">Network / Connected</div>
                 <div class="design-intent">
-                    <strong>Intent:</strong> Visualizes a network of interconnected thoughts. The central hub coordinates peripheral nodes, representing how AI synthesizes information from multiple sources.
+                    <strong>Intent:</strong> Visualizes interconnected thoughts. The central hub coordinates nodes, representing how AI synthesizes information.
                 </div>
             </div>
 
-            <!-- Option 10: Waveform -->
+            <!-- 10. Waveform -->
             <div class="card">
                 <h3>10. Audio Waveform</h3>
-                <p>Equalizer-style animated bars with gradient</p>
+                <p>Equalizer-style animated bars</p>
                 <div class="demo-area">
                     <div class="orb-waveform">
                         <div class="bar"></div>
@@ -1133,14 +1185,14 @@
                 </div>
                 <div class="label">Processing / Active</div>
                 <div class="design-intent">
-                    <strong>Intent:</strong> Perfect for voice or audio-related AI. Suggests active listening and response generation, like a visual heartbeat of conversation.
+                    <strong>Intent:</strong> Perfect for voice or audio AI. Suggests active listening and response generation, like a visual heartbeat of conversation.
                 </div>
             </div>
 
-            <!-- Option 11: DNA Helix -->
+            <!-- 11. DNA Helix -->
             <div class="card">
                 <h3>11. DNA Helix</h3>
-                <p>Double helix with connected oscillating pairs</p>
+                <p>Double helix with connected pairs</p>
                 <div class="demo-area">
                     <div class="orb-dna">
                         <div class="connector connector-1"></div>
@@ -1157,14 +1209,14 @@
                 </div>
                 <div class="label">Bio / Transformation</div>
                 <div class="design-intent">
-                    <strong>Intent:</strong> Represents the building blocks of intelligence. The DNA metaphor suggests learning, evolution, and the organic foundation of AI understanding.
+                    <strong>Intent:</strong> Represents building blocks of intelligence. DNA metaphor suggests learning, evolution, and organic AI understanding.
                 </div>
             </div>
 
-            <!-- Option 12: 3D Cube -->
+            <!-- 12. 3D Cube -->
             <div class="card">
                 <h3>12. 3D Rotating Cube</h3>
-                <p>Wireframe cube with depth and multi-axis rotation</p>
+                <p>Wireframe cube with depth</p>
                 <div class="demo-area">
                     <div class="orb-cube-container">
                         <div class="orb-cube">
@@ -1179,11 +1231,11 @@
                 </div>
                 <div class="label">3D / Dimensional</div>
                 <div class="design-intent">
-                    <strong>Intent:</strong> Represents multi-dimensional thinking. The cube shows all perspectives simultaneously, suggesting comprehensive analysis from every angle.
+                    <strong>Intent:</strong> Represents multi-dimensional thinking. Shows all perspectives simultaneously, suggesting comprehensive analysis.
                 </div>
             </div>
 
-            <!-- Option 13: Typing Dots -->
+            <!-- 13. Typing Dots -->
             <div class="card">
                 <h3>13. Typing Indicator</h3>
                 <p>Classic chat-style bouncing dots</p>
@@ -1196,17 +1248,17 @@
                 </div>
                 <div class="label">Chat / Conversational</div>
                 <div class="design-intent">
-                    <strong>Intent:</strong> Familiar messaging pattern that users instantly recognize. Creates anticipation and human-like presence, as if someone is composing a thoughtful reply.
+                    <strong>Intent:</strong> Familiar messaging pattern users instantly recognize. Creates anticipation and human-like presence, as if composing a reply.
                 </div>
             </div>
 
-            <!-- Option 14: Infinity Loop -->
+            <!-- 14. Infinity Loop -->
             <div class="card">
                 <h3>14. Infinity Loop</h3>
-                <p>Continuous flowing path with gradient trace</p>
+                <p>Continuous flowing path</p>
                 <div class="demo-area">
                     <div class="orb-infinity">
-                        <svg viewBox="0 0 120 60" xmlns="http://www.w3.org/2000/svg">
+                        <svg viewBox="0 0 100 50" xmlns="http://www.w3.org/2000/svg">
                             <defs>
                                 <linearGradient id="infinity-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
                                     <stop offset="0%" style="stop-color: var(--color-accent)"/>
@@ -1214,115 +1266,74 @@
                                     <stop offset="100%" style="stop-color: var(--color-accent-tertiary)"/>
                                 </linearGradient>
                             </defs>
-                            <path class="infinity-line" d="M30 30 C30 10, 10 10, 10 30 C10 50, 30 50, 30 30 C30 10, 50 10, 50 30 L70 30 C70 10, 90 10, 90 30 C90 50, 70 50, 70 30 C70 10, 90 10, 90 30 C90 50, 110 50, 110 30 C110 10, 90 10, 90 30"/>
-                            <path class="infinity-glow" d="M30 30 C30 10, 10 10, 10 30 C10 50, 30 50, 30 30 C30 10, 50 10, 50 30 L70 30 C70 10, 90 10, 90 30 C90 50, 70 50, 70 30 C70 10, 90 10, 90 30 C90 50, 110 50, 110 30 C110 10, 90 10, 90 30"/>
+                            <path class="infinity-line" d="M25 25 C25 10, 10 10, 10 25 C10 40, 25 40, 25 25 C25 10, 40 10, 50 25 C60 40, 75 40, 75 25 C75 10, 60 10, 50 25 C40 40, 25 40, 25 25"/>
+                            <path class="infinity-glow" d="M25 25 C25 10, 10 10, 10 25 C10 40, 25 40, 25 25 C25 10, 40 10, 50 25 C60 40, 75 40, 75 25 C75 10, 60 10, 50 25 C40 40, 25 40, 25 25"/>
                         </svg>
                     </div>
                 </div>
                 <div class="label">Continuous / Endless</div>
                 <div class="design-intent">
-                    <strong>Intent:</strong> Symbolizes unlimited potential and continuous processing. The infinity form suggests boundless capability and the cyclical nature of learning.
+                    <strong>Intent:</strong> Symbolizes unlimited potential and continuous processing. The infinity form suggests boundless capability.
                 </div>
             </div>
 
-            <!-- Option 15: Heartbeat Pulse -->
+            <!-- 15. Heartbeat -->
             <div class="card">
                 <h3>15. Heartbeat Monitor</h3>
-                <p>ECG-style pulse line with traveling indicator</p>
+                <p>ECG-style pulse line</p>
                 <div class="demo-area">
                     <div class="orb-heartbeat">
-                        <svg viewBox="0 0 140 60" xmlns="http://www.w3.org/2000/svg">
-                            <path class="line" d="M0 30 L30 30 L40 30 L50 10 L60 50 L70 20 L80 40 L90 30 L140 30"/>
+                        <svg viewBox="0 0 120 50" xmlns="http://www.w3.org/2000/svg">
+                            <path class="line" d="M0 25 L25 25 L35 25 L45 8 L55 42 L65 15 L75 35 L85 25 L120 25"/>
                         </svg>
                         <div class="glow"></div>
                     </div>
                 </div>
                 <div class="label">Vital / Alive</div>
                 <div class="design-intent">
-                    <strong>Intent:</strong> Gives AI a sense of life and vitality. The heartbeat metaphor creates emotional connection, suggesting the system is alive and responsive.
+                    <strong>Intent:</strong> Gives AI a sense of life. The heartbeat creates emotional connection, suggesting the system is alive and responsive.
                 </div>
             </div>
 
-            <!-- Option 16: Hourglass -->
+            <!-- 16. Hourglass (Lucide) -->
             <div class="card">
                 <h3>16. Hourglass Timer</h3>
-                <p>Classic time symbol with flip animation</p>
+                <p>Lucide hourglass with flip animation</p>
                 <div class="demo-area">
                     <div class="orb-hourglass">
-                        <svg viewBox="0 0 60 100" xmlns="http://www.w3.org/2000/svg">
-                            <g class="hourglass-group">
-                                <path class="frame" d="M10 5 L50 5 L50 10 L35 45 L35 55 L50 90 L50 95 L10 95 L10 90 L25 55 L25 45 L10 10 Z"/>
-                                <path class="sand-top" d="M15 15 L45 15 L32 40 L28 40 Z">
-                                    <animate attributeName="d"
-                                        values="M15 15 L45 15 L32 40 L28 40 Z;M25 35 L35 35 L32 40 L28 40 Z;M15 15 L45 15 L32 40 L28 40 Z"
-                                        dur="4s" repeatCount="indefinite"/>
-                                </path>
-                                <rect class="sand-stream" x="28" y="45" width="4" height="10">
-                                    <animate attributeName="opacity" values="1;1;0;0;1" dur="4s" repeatCount="indefinite"/>
-                                </rect>
-                                <path class="sand-bottom" d="M28 60 L32 60 L45 85 L15 85 Z">
-                                    <animate attributeName="d"
-                                        values="M28 60 L32 60 L30 62 L30 62 Z;M28 60 L32 60 L45 85 L15 85 Z;M28 60 L32 60 L30 62 L30 62 Z"
-                                        dur="4s" repeatCount="indefinite"/>
-                                </path>
-                            </g>
-                        </svg>
+                        <i data-lucide="hourglass"></i>
                     </div>
                 </div>
                 <div class="label">Time / Patience</div>
                 <div class="design-intent">
-                    <strong>Intent:</strong> Acknowledges that quality takes time. The hourglass sets expectations while its elegant form suggests the process is worthwhile waiting for.
+                    <strong>Intent:</strong> Acknowledges that quality takes time. Sets expectations while suggesting the process is worthwhile waiting for.
                 </div>
             </div>
 
-            <!-- Option 17: Neural Network -->
+            <!-- 17. Neural Network (Lucide Brain) -->
             <div class="card">
-                <h3>17. Neural Network</h3>
-                <p>Connected neurons with signal propagation</p>
+                <h3>17. Neural Brain</h3>
+                <p>Lucide brain icon with spark effects</p>
                 <div class="demo-area">
                     <div class="orb-neural">
-                        <svg viewBox="0 0 120 100">
-                            <line class="connection" x1="14" y1="27" x2="58" y2="17"/>
-                            <line class="connection" x1="14" y1="27" x2="58" y2="47"/>
-                            <line class="connection" x1="14" y1="27" x2="58" y2="77"/>
-                            <line class="connection" x1="14" y1="57" x2="58" y2="17"/>
-                            <line class="connection" x1="14" y1="57" x2="58" y2="47"/>
-                            <line class="connection" x1="14" y1="57" x2="58" y2="77"/>
-                            <line class="connection" x1="14" y1="57" x2="58" y2="107"/>
-                            <line class="connection" x1="14" y1="87" x2="58" y2="47"/>
-                            <line class="connection" x1="14" y1="87" x2="58" y2="77"/>
-                            <line class="connection" x1="14" y1="87" x2="58" y2="107"/>
-                            <line class="connection" x1="58" y1="17" x2="106" y2="37"/>
-                            <line class="connection" x1="58" y1="17" x2="106" y2="77"/>
-                            <line class="connection" x1="58" y1="47" x2="106" y2="37"/>
-                            <line class="connection" x1="58" y1="47" x2="106" y2="77"/>
-                            <line class="connection" x1="58" y1="77" x2="106" y2="37"/>
-                            <line class="connection" x1="58" y1="77" x2="106" y2="77"/>
-                            <line class="connection" x1="58" y1="107" x2="106" y2="77"/>
-                        </svg>
-                        <div class="layer-1">
-                            <div class="neuron n1"></div>
-                            <div class="neuron n2"></div>
-                            <div class="neuron n3"></div>
-                        </div>
-                        <div class="layer-2">
-                            <div class="neuron n4"></div>
-                            <div class="neuron n5"></div>
-                            <div class="neuron n6"></div>
-                            <div class="neuron n7"></div>
-                        </div>
-                        <div class="layer-3">
-                            <div class="neuron n8"></div>
-                            <div class="neuron n9"></div>
-                        </div>
+                        <div class="brain-icon"><i data-lucide="brain"></i></div>
+                        <div class="spark spark-1"></div>
+                        <div class="spark spark-2"></div>
+                        <div class="spark spark-3"></div>
+                        <div class="spark spark-4"></div>
                     </div>
                 </div>
                 <div class="label">AI / Intelligence</div>
                 <div class="design-intent">
-                    <strong>Intent:</strong> Directly represents AI architecture. Shows how information flows through layers of processing, making the invisible visible and technical approachable.
+                    <strong>Intent:</strong> Directly represents AI architecture. The brain icon with sparks shows active thinking and neural activity.
                 </div>
             </div>
         </div>
     </div>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+    </script>
 </body>
 </html>
