@@ -10,99 +10,137 @@ This document defines the conceptual data model for Tender Scout, designed for i
 
 ### Entity Relationship Diagram
 
-```
-┌─────────────────┐       ┌─────────────────┐       ┌─────────────────┐
-│      users      │       │    companies    │       │     tenders     │
-│─────────────────│       │─────────────────│       │─────────────────│
-│ id (PK)         │       │ id (PK)         │       │ id (PK)         │
-│ email           │       │ name            │       │ title           │
-│ created_at      │       │ uid             │       │ authority       │
-│ updated_at      │       │ city            │       │ description     │
-└────────┬────────┘       │ address         │       │ price_min       │
-         │                │ company_type    │       │ price_max       │
-         │                │ created_at      │       │ deadline        │
-         │                └────────┬────────┘       │ status          │
-         │                         │                │ region          │
-         │                         │                │ source          │
-         ▼                         ▼                │ source_url      │
-┌─────────────────────────────────────────┐        │ created_at      │
-│            user_profiles                │        └────────┬────────┘
-│─────────────────────────────────────────│                 │
-│ id (PK)                                 │                 │
-│ user_id (FK → users)                    │                 │
-│ company_id (FK → companies)             │                 │
-│ name                                    │                 │
-│ role                                    │                 │
-│ is_default                              │                 │
-│ created_at                              │                 │
-└────────┬────────────────────────────────┘                 │
-         │                                                  │
-         ▼                                                  │
-┌─────────────────────────────────────────┐                 │
-│           search_profiles               │                 │
-│─────────────────────────────────────────│                 │
-│ id (PK)                                 │                 │
-│ user_profile_id (FK → user_profiles)    │                 │
-│ industry                                │                 │
-│ company_size                            │                 │
-│ keywords (array)                        │                 │
-│ exclude_keywords (array)                │                 │
-│ regions (array)                         │                 │
-│ created_at                              │                 │
-│ updated_at                              │                 │
-└────────┬────────────────────────────────┘                 │
-         │                                                  │
-         │    ┌─────────────────────────────────────────────┘
-         │    │
-         ▼    ▼
-┌─────────────────────────────────────────┐
-│          user_tender_actions            │
-│─────────────────────────────────────────│
-│ id (PK)                                 │
-│ user_profile_id (FK → user_profiles)    │
-│ tender_id (FK → tenders)                │
-│ bookmarked                              │
-│ applied                                 │
-│ hidden                                  │
-│ match_score                             │
-│ created_at                              │
-│ updated_at                              │
-└─────────────────────────────────────────┘
+```mermaid
+erDiagram
+    %% Core Entities
+    users {
+        uuid id PK
+        varchar email UK
+        timestamptz created_at
+        timestamptz updated_at
+    }
 
-┌─────────────────┐       ┌─────────────────┐
-│    cpv_codes    │       │    npk_codes    │
-│─────────────────│       │─────────────────│
-│ code (PK)       │       │ code (PK)       │
-│ label_de        │       │ name_de         │
-│ label_fr        │       │ name_fr         │
-│ label_it        │       │ name_it         │
-│ label_en        │       │ parent_code     │
-│ parent_code     │       └─────────────────┘
-└─────────────────┘
+    companies {
+        uuid id PK
+        varchar name
+        varchar uid UK "nullable"
+        varchar city
+        varchar address "nullable"
+        varchar company_type
+        jsonb zefix_data "nullable"
+        timestamptz created_at
+    }
 
-┌─────────────────────────────────────────┐
-│       search_profile_cpv_codes          │
-│─────────────────────────────────────────│
-│ search_profile_id (FK)                  │
-│ cpv_code (FK)                           │
-│ (composite PK)                          │
-└─────────────────────────────────────────┘
+    user_profiles {
+        uuid id PK
+        uuid user_id FK
+        uuid company_id FK
+        varchar name
+        varchar role
+        boolean is_default
+        timestamptz created_at
+    }
 
-┌─────────────────────────────────────────┐
-│       search_profile_npk_codes          │
-│─────────────────────────────────────────│
-│ search_profile_id (FK)                  │
-│ npk_code (FK)                           │
-│ (composite PK)                          │
-└─────────────────────────────────────────┘
+    search_profiles {
+        uuid id PK
+        uuid user_profile_id FK
+        varchar industry
+        varchar company_size
+        text[] keywords
+        text[] exclude_keywords
+        text[] regions
+        boolean ai_generated
+        timestamptz created_at
+        timestamptz updated_at
+    }
 
-┌─────────────────────────────────────────┐
-│           tender_cpv_codes              │
-│─────────────────────────────────────────│
-│ tender_id (FK)                          │
-│ cpv_code (FK)                           │
-│ (composite PK)                          │
-└─────────────────────────────────────────┘
+    tenders {
+        uuid id PK
+        varchar external_id
+        varchar source
+        varchar source_url
+        varchar title
+        varchar authority
+        varchar authority_type
+        text description
+        decimal price_min
+        decimal price_max
+        varchar currency
+        timestamptz deadline
+        timestamptz publication_date
+        varchar status
+        varchar region
+        varchar language
+        jsonb raw_data
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    user_tender_actions {
+        uuid id PK
+        uuid user_profile_id FK
+        uuid tender_id FK
+        boolean bookmarked
+        boolean applied
+        boolean hidden
+        integer match_score
+        text notes
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    %% Classification Tables
+    cpv_codes {
+        varchar code PK
+        varchar label_de
+        varchar label_fr
+        varchar label_it
+        varchar label_en
+        varchar parent_code FK "nullable"
+    }
+
+    npk_codes {
+        varchar code PK
+        varchar name_de
+        varchar name_fr
+        varchar name_it
+        varchar parent_code FK "nullable"
+    }
+
+    %% Junction Tables
+    search_profile_cpv_codes {
+        uuid search_profile_id PK,FK
+        varchar cpv_code PK,FK
+    }
+
+    search_profile_npk_codes {
+        uuid search_profile_id PK,FK
+        varchar npk_code PK,FK
+    }
+
+    tender_cpv_codes {
+        uuid tender_id PK,FK
+        varchar cpv_code PK,FK
+    }
+
+    %% Relationships
+    users ||--o{ user_profiles : "has many"
+    companies ||--o{ user_profiles : "has many"
+    user_profiles ||--|| search_profiles : "has one"
+    user_profiles ||--o{ user_tender_actions : "tracks"
+    tenders ||--o{ user_tender_actions : "receives"
+
+    search_profiles ||--o{ search_profile_cpv_codes : "includes"
+    cpv_codes ||--o{ search_profile_cpv_codes : "selected in"
+
+    search_profiles ||--o{ search_profile_npk_codes : "includes"
+    npk_codes ||--o{ search_profile_npk_codes : "selected in"
+
+    tenders ||--o{ tender_cpv_codes : "classified by"
+    cpv_codes ||--o{ tender_cpv_codes : "classifies"
+
+    cpv_codes ||--o{ cpv_codes : "parent of"
+    npk_codes ||--o{ npk_codes : "parent of"
 ```
 
 ---
