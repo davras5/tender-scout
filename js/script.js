@@ -875,7 +875,86 @@ document.addEventListener('click', (e) => {
 
 // Profile settings - open wizard to edit search profile
 function openProfileSettings() {
-    // Always open the wizard so users can edit their search profile
+    // Ensure we have recommendations data for the current profile
+    if (!state.recommendations && state.company) {
+        // Determine recommendations based on company name
+        const name = state.company.name || '';
+        let rec = AI_RECOMMENDATIONS.Müller; // default fallback
+
+        if (name.includes("Hans")) rec = AI_RECOMMENDATIONS.Hans;
+        else if (name.includes("Tech")) rec = AI_RECOMMENDATIONS.Tech;
+        else if (name.includes("Green")) rec = AI_RECOMMENDATIONS.Green;
+        else if (name.includes("Alpha")) rec = AI_RECOMMENDATIONS.Alpha;
+
+        // Clone to state
+        state.recommendations = JSON.parse(JSON.stringify(rec));
+    }
+
+    // Populate the AI review view with current data
+    const rec = state.recommendations;
+    if (rec) {
+        // Company name
+        const nameEl = document.getElementById('ai-company-name');
+        if (nameEl) nameEl.textContent = state.company?.name || 'Unbekannt';
+
+        // Industry
+        const industryEl = document.getElementById('ai-industry');
+        if (industryEl) industryEl.textContent = rec.industry;
+
+        // Size
+        const sizeEl = document.getElementById('ai-size');
+        if (sizeEl) sizeEl.textContent = rec.size;
+
+        // Keywords
+        const keywordsContainer = document.getElementById('ai-keywords');
+        if (keywordsContainer) {
+            const positive = rec.keywords.map(k =>
+                `<span class="badge badge-green mr-1 mb-1">+ ${escapeHtml(k)}</span>`
+            ).join('');
+            const negative = rec.excludeKeywords.map(k =>
+                `<span class="badge badge-red mr-1 mb-1">- ${escapeHtml(k)}</span>`
+            ).join('');
+            keywordsContainer.innerHTML = positive + negative;
+        }
+
+        // NPK Codes
+        const npkSection = document.getElementById('ai-npk-section');
+        const npkContainer = document.getElementById('ai-npk-codes');
+        if (npkSection && npkContainer) {
+            if (rec.npk && rec.npk.length > 0) {
+                npkSection.style.display = 'block';
+                npkContainer.innerHTML = rec.npk.map(code =>
+                    `<div class="flex items-center gap-2"><svg class="text-accent" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <span>${escapeHtml(code)}</span></div>`
+                ).join('');
+            } else {
+                npkSection.style.display = 'none';
+            }
+        }
+
+        // Regions
+        const regionsContainer = document.getElementById('ai-regions');
+        if (regionsContainer && rec.regions) {
+            regionsContainer.innerHTML = rec.regions.map(r =>
+                `<span class="badge badge-blue mr-1 mb-1">${escapeHtml(r)}</span>`
+            ).join('');
+        }
+
+        // CPV Codes
+        const cpvContainer = document.getElementById('ai-cpv-codes');
+        if (cpvContainer && rec.cpv) {
+            cpvContainer.innerHTML = rec.cpv.map(code =>
+                `<div class="flex items-center gap-2"><svg class="text-accent" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <span>${escapeHtml(code)}</span></div>`
+            ).join('');
+        }
+    }
+
+    // Show content directly (skip loading animation)
+    const overlay = document.getElementById('ai-loading-overlay');
+    const content = document.getElementById('ai-results-content');
+    if (overlay) overlay.classList.add('hidden');
+    if (content) content.classList.remove('hidden');
+
+    // Navigate to the AI review view
     navigateTo(VIEWS.AI_REVIEW);
 }
 

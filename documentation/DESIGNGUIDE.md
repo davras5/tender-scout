@@ -851,12 +851,14 @@ Or use a single `main.css` with `@import` statements:
   --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
   
   /* ========== Z-Index ========== */
-  
-  --z-dropdown: 100;
-  --z-sticky: 200;
-  --z-modal-backdrop: 300;
-  --z-modal: 400;
-  --z-toast: 500;
+
+  --z-base: 1;           /* Content above pseudo-elements */
+  --z-raised: 10;        /* Floating cards, overlapping elements */
+  --z-dropdown: 100;     /* Dropdown menus, popovers */
+  --z-sticky: 200;       /* Sticky headers, sidebars */
+  --z-modal-backdrop: 300; /* Modal overlay background */
+  --z-modal: 400;        /* Modal dialogs */
+  --z-toast: 500;        /* Toast notifications (topmost) */
 }
 
 /* ========== Dark Mode ========== */
