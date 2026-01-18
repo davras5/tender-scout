@@ -7,10 +7,11 @@
 
   /* Background */
   --color-bg-base: #ffffff;
-  --color-bg-raised: #f1f5f9;
-  --color-bg-muted: #e2e8f0;
+  --color-bg-raised: #f8fafc;
+  --color-bg-muted: #f1f5f9;
   --color-bg-subtle: #f8fafc;
   --color-bg-blur: rgba(255, 255, 255, 0.85);
+  --color-bg-overlay: rgba(15, 23, 42, 0.6);
 
   /* Borders (improved contrast) */
   --color-border: #94a3b8;
@@ -19,8 +20,8 @@
 
   /* Text */
   --color-text-primary: #0f172a;
-  --color-text-secondary: #334155;
-  --color-text-muted: #475569;
+  --color-text-secondary: #475569;
+  --color-text-muted: #64748b;
   --color-text-inverse: #ffffff;
 
   /* Brand / Accent */
@@ -29,9 +30,12 @@
   --color-accent-dark: #1e40af;
   --color-accent-subtle: #eff6ff;
   --color-accent-glow: rgba(37, 99, 235, 0.12);
+  --color-accent-border: rgba(37, 99, 235, 0.2);
+  --color-accent-shadow: rgba(37, 99, 235, 0.1);
 
   /* Secondary accent (violet/purple) */
   --color-accent-secondary: #8b5cf6;
+  --color-accent-secondary-glow: rgba(139, 92, 246, 0.08);
   --color-accent-tertiary: #06b6d4;
 
   /* Gradient colors */
@@ -45,6 +49,7 @@
   --color-warning: #ea580c;
   --color-warning-bg: #ffedd5;
   --color-error: #dc2626;
+  --color-error-hover: #b91c1c;
   --color-error-bg: #fee2e2;
   --color-info: #2563eb;
   --color-info-bg: #dbeafe;
@@ -197,6 +202,7 @@
   --color-bg-muted: #1e293b;
   --color-bg-subtle: #0f172a;
   --color-bg-blur: rgba(10, 15, 26, 0.85);
+  --color-bg-overlay: rgba(0, 0, 0, 0.7);
 
   /* Borders (improved contrast) */
   --color-border: #475569;
@@ -214,7 +220,10 @@
   --color-accent-dark: #2563eb;
   --color-accent-subtle: rgba(59, 130, 246, 0.15);
   --color-accent-glow: rgba(59, 130, 246, 0.25);
+  --color-accent-border: rgba(59, 130, 246, 0.3);
+  --color-accent-shadow: rgba(59, 130, 246, 0.15);
   --color-accent-secondary: #a78bfa;
+  --color-accent-secondary-glow: rgba(167, 139, 250, 0.12);
   --color-accent-tertiary: #22d3ee;
 
   /* Status (darker backgrounds for dark mode) */
@@ -223,6 +232,7 @@
   --color-warning: #f97316;
   --color-warning-bg: rgba(249, 115, 22, 0.15);
   --color-error: #ef4444;
+  --color-error-hover: #dc2626;
   --color-error-bg: rgba(239, 68, 68, 0.15);
   --color-info: #3b82f6;
   --color-info-bg: rgba(59, 130, 246, 0.15);

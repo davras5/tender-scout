@@ -738,24 +738,31 @@ Or use a single `main.css` with `@import` statements:
   --color-bg-base: #ffffff;
   --color-bg-raised: #f8fafc;
   --color-bg-muted: #f1f5f9;
-  --color-bg-overlay: rgba(15, 23, 42, 0.5);
-  
+  --color-bg-overlay: rgba(15, 23, 42, 0.6);
+
   /* Borders */
   --color-border: #e2e8f0;
   --color-border-strong: #cbd5e1;
-  
+
   /* Text */
   --color-text-primary: #0f172a;
   --color-text-secondary: #475569;
   --color-text-muted: #64748b;
   --color-text-disabled: #94a3b8;
   --color-text-inverse: #ffffff;
-  
+
   /* Brand */
   --color-accent: #2563eb;
   --color-accent-hover: #1d4ed8;
   --color-accent-active: #1e40af;
   --color-accent-subtle: #dbeafe;
+  --color-accent-border: rgba(37, 99, 235, 0.2);
+  --color-accent-shadow: rgba(37, 99, 235, 0.1);
+
+  /* Secondary accents */
+  --color-accent-secondary: #8b5cf6;
+  --color-accent-secondary-glow: rgba(139, 92, 246, 0.08);
+  --color-accent-tertiary: #06b6d4;
   
   /* Status: Tenders */
   --color-status-open: #16a34a;
@@ -773,6 +780,7 @@ Or use a single `main.css` with `@import` statements:
   --color-success: #16a34a;
   --color-warning: #ea580c;
   --color-error: #dc2626;
+  --color-error-hover: #b91c1c;
   --color-info: #2563eb;
   
   /* ========== Typography ========== */

@@ -978,7 +978,7 @@ textarea.input-md {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(15, 23, 42, 0.6);
+    background: var(--color-bg-overlay);
     backdrop-filter: blur(var(--blur-sm));
     z-index: var(--z-modal-backdrop);
     display: flex;
@@ -1335,7 +1335,7 @@ textarea.input-md {
     right: -10%;
     width: 500px;
     height: 500px;
-    background: radial-gradient(circle, rgba(139, 92, 246, 0.08) 0%, transparent 70%);
+    background: radial-gradient(circle, var(--color-accent-secondary-glow) 0%, transparent 70%);
     pointer-events: none;
 }
 
@@ -1358,9 +1358,9 @@ textarea.input-md {
     font-weight: var(--weight-semibold);
     border-radius: var(--radius-full);
     margin-bottom: var(--space-6);
-    border: var(--border-width) solid rgba(37, 99, 235, 0.2);
+    border: var(--border-width) solid var(--color-accent-border);
     transition: all var(--duration-normal) var(--ease-out);
-    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
+    box-shadow: 0 2px 8px var(--color-accent-shadow);
     animation: fadeInUp var(--duration-entrance) var(--ease-out) both;
     animation-delay: 100ms;
 }
@@ -2589,7 +2589,7 @@ textarea.input-md {
 }
 
 .btn-danger:hover {
-    background: #b91c1c;
+    background: var(--color-error-hover);
 }
 
 /* Divider utility */
