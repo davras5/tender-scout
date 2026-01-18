@@ -500,7 +500,7 @@ h6 {
 .btn-sm {
     height: var(--size-btn-sm);
     padding: 0 var(--space-3);
-    font-size: var(--text-xs);
+    font-size: var(--text-sm);
 }
 
 .btn-lg {
@@ -548,6 +548,13 @@ h6 {
     transform: translateY(-2px);
     box-shadow: var(--shadow-card-hover);
     border-color: var(--color-accent);
+}
+
+/* Card content overflow handling */
+.card h3,
+.card .text-h3 {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 /* --- Forms --- */
@@ -718,8 +725,8 @@ textarea.input-md {
 }
 
 .navbar-logo-icon {
-    width: 32px;
-    height: 32px;
+    width: var(--size-icon-box-sm);
+    height: var(--size-icon-box-sm);
     background: var(--color-accent);
     border-radius: var(--radius-md);
     display: flex;
@@ -1099,6 +1106,11 @@ textarea.input-md {
     gap: var(--space-6);
 }
 
+/* Prevent grid children from overflowing */
+.tender-grid > * {
+    min-width: 0;
+}
+
 @media (min-width: 768px) {
     .tender-grid {
         grid-template-columns: repeat(2, 1fr);
@@ -1121,6 +1133,7 @@ textarea.input-md {
 /* Tender Action Buttons */
 .tender-actions {
     display: flex;
+    flex-wrap: wrap;
     gap: var(--space-2);
     padding-top: var(--space-3);
     border-top: var(--border-width) solid var(--color-border-subtle);
