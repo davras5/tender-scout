@@ -49,6 +49,8 @@ erDiagram
         text[] keywords
         text[] exclude_keywords
         text[] regions
+        jsonb cpv_codes "array of codes"
+        jsonb npk_codes "array of codes"
         boolean ai_generated
         timestamptz created_at
         timestamptz updated_at
@@ -71,6 +73,7 @@ erDiagram
         varchar status
         varchar region
         varchar language
+        jsonb cpv_codes "array of codes"
         jsonb raw_data
         timestamptz created_at
         timestamptz updated_at
@@ -107,37 +110,12 @@ erDiagram
         varchar parent_code FK "nullable"
     }
 
-    %% Junction Tables
-    search_profile_cpv_codes {
-        uuid search_profile_id PK,FK
-        varchar cpv_code PK,FK
-    }
-
-    search_profile_npk_codes {
-        uuid search_profile_id PK,FK
-        varchar npk_code PK,FK
-    }
-
-    tender_cpv_codes {
-        uuid tender_id PK,FK
-        varchar cpv_code PK,FK
-    }
-
     %% Relationships
     users ||--o{ user_profiles : "has many"
     companies ||--o{ user_profiles : "has many"
     user_profiles ||--|| search_profiles : "has one"
     user_profiles ||--o{ user_tender_actions : "tracks"
     tenders ||--o{ user_tender_actions : "receives"
-
-    search_profiles ||--o{ search_profile_cpv_codes : "includes"
-    cpv_codes ||--o{ search_profile_cpv_codes : "selected in"
-
-    search_profiles ||--o{ search_profile_npk_codes : "includes"
-    npk_codes ||--o{ search_profile_npk_codes : "selected in"
-
-    tenders ||--o{ tender_cpv_codes : "classified by"
-    cpv_codes ||--o{ tender_cpv_codes : "classifies"
 ```
 
 ---
@@ -149,14 +127,11 @@ erDiagram
 | **users** | Core | User accounts managed by Supabase Auth |
 | **companies** | Core | Swiss companies identified via Zefix or manual entry |
 | **user_profiles** | Core | Links users to companies with role information |
-| **search_profiles** | Core | AI-generated or user-defined tender matching criteria |
-| **tenders** | Core | Public procurement opportunities from SIMAP/TED |
-| **user_tender_actions** | Core | Tracks user interactions (bookmark, apply, hide) |
+| **search_profiles** | Core | AI-generated or user-defined tender matching criteria (includes CPV/NPK codes as JSONB) |
+| **tenders** | Core | Public procurement opportunities from SIMAP/TED (includes CPV codes as JSONB) |
+| **user_tender_actions** | Core | Tracks user interactions and match scores |
 | **cpv_codes** | Lookup | EU Common Procurement Vocabulary (hierarchical) |
 | **npk_codes** | Lookup | Swiss construction standards (hierarchical) |
-| **search_profile_cpv_codes** | Junction | Links search profiles to CPV codes (N:M) |
-| **search_profile_npk_codes** | Junction | Links search profiles to NPK codes (N:M) |
-| **tender_cpv_codes** | Junction | Links tenders to CPV classifications (N:M) |
 
 ---
 
@@ -233,13 +208,15 @@ AI-generated or user-defined search criteria for tender matching.
 | keywords         | TEXT[]      | Positive matching keywords           |
 | exclude_keywords | TEXT[]      | Negative/exclusion keywords          |
 | regions          | TEXT[]      | Target regions (cantons/countries)   |
+| cpv_codes        | JSONB       | Selected CPV codes `["45210000", ...]` |
+| npk_codes        | JSONB       | Selected NPK codes `["211", ...]`    |
 | ai_generated     | BOOLEAN     | Whether AI created this profile      |
 | created_at       | TIMESTAMPTZ | Record creation timestamp            |
 | updated_at       | TIMESTAMPTZ | Last modification timestamp          |
 
 **Notes:**
 - One-to-one relationship with user_profiles (each profile has one search configuration)
-- CPV and NPK codes stored in junction tables for proper normalization
+- CPV/NPK codes stored as JSONB arrays for simpler reads and atomic updates
 
 ---
 
@@ -265,6 +242,7 @@ Public procurement opportunities from SIMAP, TED, and other sources.
 | status         | VARCHAR     | 'open', 'closing_soon', 'closed'     |
 | region         | VARCHAR     | Primary region/canton                |
 | language       | VARCHAR     | Primary language (de, fr, it, en)    |
+| cpv_codes      | JSONB       | CPV classification codes `["45210000", ...]` |
 | raw_data       | JSONB       | Original API response                |
 | created_at     | TIMESTAMPTZ | Record creation timestamp            |
 | updated_at     | TIMESTAMPTZ | Last sync timestamp                  |
@@ -272,7 +250,7 @@ Public procurement opportunities from SIMAP, TED, and other sources.
 **Notes:**
 - `external_id` + `source` should be unique (prevents duplicate imports)
 - `raw_data` preserves original data for debugging and future parsing improvements
-- CPV codes stored in junction table
+- CPV codes stored as JSONB array for simpler matching queries
 
 ---
 
@@ -331,34 +309,6 @@ Swiss construction standards (Normpositionen-Katalog).
 
 ---
 
-### Junction Tables
-
-#### search_profile_cpv_codes
-Links search profiles to their selected CPV codes.
-
-| Attribute         | Type        |
-|-------------------|-------------|
-| search_profile_id | UUID (FK)   |
-| cpv_code          | VARCHAR (FK)|
-
-#### search_profile_npk_codes
-Links search profiles to their selected NPK codes.
-
-| Attribute         | Type        |
-|-------------------|-------------|
-| search_profile_id | UUID (FK)   |
-| npk_code          | VARCHAR (FK)|
-
-#### tender_cpv_codes
-Links tenders to their CPV classification codes.
-
-| Attribute  | Type        |
-|------------|-------------|
-| tender_id  | UUID (FK)   |
-| cpv_code   | VARCHAR (FK)|
-
----
-
 ## Relationships Summary
 
 | Relationship                      | Type        | Description                              |
@@ -368,9 +318,8 @@ Links tenders to their CPV classification codes.
 | user_profiles → search_profiles   | 1:1         | Each profile has one search config       |
 | user_profiles → user_tender_actions| 1:N        | Profile tracks many tender interactions  |
 | tenders → user_tender_actions     | 1:N         | Tender can be acted on by many profiles  |
-| search_profiles ↔ cpv_codes       | N:M         | Many-to-many via junction table          |
-| search_profiles ↔ npk_codes       | N:M         | Many-to-many via junction table          |
-| tenders ↔ cpv_codes               | N:M         | Many-to-many via junction table          |
+
+**Note:** CPV/NPK codes are stored as JSONB arrays within `search_profiles` and `tenders` rather than via junction tables. This simplifies reads and enables atomic updates. The lookup tables (`cpv_codes`, `npk_codes`) are used for code validation and label display.
 
 ---
 
@@ -410,9 +359,56 @@ cpv_codes, npk_codes: true (public read)
 - Tender attachments in `tender-documents` bucket (future)
 
 ### Edge Functions
-- `calculate-match-score`: Compute tender-profile match scores
 - `sync-simap`: Fetch new tenders from SIMAP API
 - `sync-ted`: Fetch new tenders from TED API
+
+---
+
+## Matching Algorithm
+
+### Overview
+
+Match scores are calculated by a **Python batch job** that runs:
+1. When a user completes their search profile
+2. Daily, when new tenders are synced from SIMAP/TED
+
+### Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│              Daily Matching Job (Python)                │
+├─────────────────────────────────────────────────────────┤
+│  1. Fetch new/updated tenders from Supabase             │
+│  2. Fetch all active search_profiles                    │
+│  3. For each (profile, tender) pair:                    │
+│     → Calculate match_score (0-100)                     │
+│     → Upsert into user_tender_actions                   │
+│  4. Optionally trigger notifications                    │
+└─────────────────────────────────────────────────────────┘
+                           │
+                           ▼
+                    ┌─────────────┐
+                    │  Supabase   │
+                    │  PostgreSQL │
+                    └─────────────┘
+```
+
+### Matching Criteria
+
+| Criterion | Weight | Logic |
+|-----------|--------|-------|
+| CPV code overlap | 40% | Intersection of profile and tender CPV codes |
+| Keyword matches | 25% | Profile keywords found in tender title/description |
+| Region match | 20% | Tender region in profile's target regions |
+| Exclusion penalty | -15% | Deduct if exclude_keywords found |
+
+### Why Python?
+
+- Easier to experiment with scoring algorithms
+- Access to NLP libraries (spaCy, scikit-learn) for future improvements
+- Can run locally for testing
+- Scheduled via cron, GitHub Actions, or cloud scheduler
+- Uses `supabase-py` client for database access
 
 ---
 
@@ -427,15 +423,13 @@ cpv_codes, npk_codes: true (public read)
    User selects → user_profiles created
 
 3. AI Profile Generation
-   Company data → AI analysis → search_profiles
-   User edits → search_profile_cpv_codes, search_profile_npk_codes
+   Company data → AI analysis → search_profiles (with cpv_codes, npk_codes)
 
-4. Tender Sync (Background Job)
-   SIMAP/TED APIs → tenders, tender_cpv_codes
+4. Tender Sync (Daily Job)
+   SIMAP/TED APIs → tenders (with cpv_codes)
 
-5. Tender Matching
-   search_profiles + tenders → match_score calculation
-   Results displayed in dashboard
+5. Tender Matching (Daily Job)
+   Python script: search_profiles × tenders → user_tender_actions.match_score
 
 6. User Actions
    Bookmark/Apply/Hide → user_tender_actions
@@ -461,4 +455,5 @@ cpv_codes, npk_codes: true (public read)
 
 | Date       | Version | Changes                    |
 |------------|---------|----------------------------|
+| 2026-01-18 | 0.2     | Replace junction tables with JSONB arrays; add matching algorithm section |
 | 2026-01-18 | 0.1     | Initial conceptual model   |
