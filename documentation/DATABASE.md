@@ -1049,40 +1049,6 @@ sequenceDiagram
 
 ---
 
-## Expert Review
-
-### Strengths
-
-| Area | Assessment |
-|------|------------|
-| **Schema simplicity** | Clean 9-table design; JSONB arrays reduce complexity |
-| **Supabase fit** | Good use of Auth, RLS, Realtime capabilities |
-| **Separation of concerns** | User data, tenders, and matching cleanly separated |
-| **Audit trail** | `created_at`/`updated_at` on all tables |
-| **Multilingual support** | Labels in DE/FR/IT/EN for lookup tables |
-
-### Concerns & Resolutions
-
-| # | Concern | Status | Resolution |
-|---|---------|--------|------------|
-| 1 | Scalability of matching | ✅ Addressed | Added `last_matched_at` to `search_profiles` for incremental matching |
-| 2 | Missing indexes | ✅ Addressed | Added comprehensive Indexes section with GIN, composite, and partial indexes |
-| 3 | JSONB data integrity | ⚠️ Documented | Validate in application layer; trade-off for schema simplicity |
-| 4 | Status management | ✅ Addressed | Added `status_changed_at` to `tenders`; auto-transition via scheduled job |
-| 5 | Missing `updated_at` | ✅ Addressed | Added `updated_at` to `companies` and `user_profiles` |
-| 6 | NPK matching unclear | ✅ Addressed | Documented: NPK matched via CPV→NPK mapping in matching algorithm |
-| 7 | No soft delete | ✅ Addressed | Added `deleted_at` to `companies`, `user_profiles`, and `tenders` |
-
-### Remaining Considerations
-
-#### JSONB Validation Trade-off
-CPV/NPK codes in JSONB arrays are **not** FK-validated against lookup tables. This is an intentional trade-off:
-- **Pro:** Simpler schema, faster writes, atomic updates
-- **Con:** Invalid codes won't be caught by database
-- **Mitigation:** Validate in application layer before insert; use lookup tables for autocomplete
-
----
-
 ## Difficulty Estimation
 
 ### Implementation Complexity by Component
