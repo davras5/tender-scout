@@ -1191,45 +1191,29 @@ textarea.input-md {
 }
 
 /* ========================================
-   AI Animation
+   AI Animation - Conveyor Bars
    ======================================== */
-.ai-orb {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    background: radial-gradient(circle at 30% 30%, var(--color-accent-subtle), var(--color-accent));
-    box-shadow: 0 0 40px var(--color-accent-glow), inset 0 0 20px rgba(255, 255, 255, 0.5);
-    position: relative;
-    animation: pulse 2s infinite ease-in-out;
+.conveyor-bars {
+    height: 100px;
+    aspect-ratio: 1.2;
+    --c: no-repeat repeating-linear-gradient(90deg, var(--color-accent) 0 20%, transparent 0 40%);
+    background:
+        var(--c) 50% 0,
+        var(--c) 50% 100%;
+    background-size: calc(500%/6) 50%;
+    animation: conveyor 1s infinite linear;
 }
 
-.ai-orb::after {
-    content: '';
-    position: absolute;
-    top: -10px;
-    left: -10px;
-    right: -10px;
-    bottom: -10px;
-    border-radius: 50%;
-    border: 2px solid var(--color-accent-tertiary);
-    opacity: 0.5;
-    animation: spin 4s infinite linear;
+@keyframes conveyor {
+    33%  { background-position: 0 0, 100% 100%; }
+    66%  { background-position: 0 100%, 100% 0; }
+    100% { background-position: 50% 100%, 50% 0; }
 }
 
-@keyframes pulse {
-    0% {
-        transform: scale(0.95);
-        box-shadow: 0 0 30px var(--color-accent-glow);
-    }
-
-    50% {
-        transform: scale(1.05);
-        box-shadow: 0 0 60px var(--color-accent);
-    }
-
-    100% {
-        transform: scale(0.95);
-        box-shadow: 0 0 30px var(--color-accent-glow);
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .conveyor-bars {
+        animation-duration: 3s;
     }
 }
 
