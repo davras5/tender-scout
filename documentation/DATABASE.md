@@ -299,9 +299,12 @@ Links users to companies with role information. A user can have multiple profile
 | deleted_at   | TIMESTAMPTZ | Soft delete timestamp, nullable      |
 
 **Constraints:**
-- Unique constraint on (user_id, company_id)
+- Unique constraint on (user_id, company_id) - intentionally limits users to one profile per company
 - Only one `is_default = true` per user_id
 - Soft delete via `deleted_at` - filter with `WHERE deleted_at IS NULL`
+
+**Design Decision:**
+One profile per company simplifies the data model and matches the typical use case: a user represents their company in tender searches. For consultants managing multiple companies, each company is a separate profile with its own search criteria.
 
 ---
 
@@ -376,18 +379,18 @@ Public procurement opportunities from SIMAP, TED, and other sources.
 
 Tracks user interactions with tenders (bookmark, apply, hide).
 
-| Attribute       | Type        | Description                          |
-|-----------------|-------------|--------------------------------------|
-| id              | UUID (PK)   | Unique identifier                    |
-| user_profile_id | UUID (FK)   | Reference to user_profiles           |
-| tender_id       | UUID (FK)   | Reference to tenders                 |
-| bookmarked      | BOOLEAN     | User bookmarked this tender          |
-| applied         | BOOLEAN     | User marked as applied               |
-| hidden          | BOOLEAN     | User hid this tender                 |
-| match_score     | INTEGER     | Calculated match percentage (0-100)  |
-| notes           | TEXT        | User's private notes                 |
-| created_at      | TIMESTAMPTZ | First interaction timestamp          |
-| updated_at      | TIMESTAMPTZ | Last action timestamp                |
+| Attribute       | Type        | Default | Description                          |
+|-----------------|-------------|---------|--------------------------------------|
+| id              | UUID (PK)   | gen_random_uuid() | Unique identifier              |
+| user_profile_id | UUID (FK)   | -       | Reference to user_profiles           |
+| tender_id       | UUID (FK)   | -       | Reference to tenders                 |
+| bookmarked      | BOOLEAN     | false   | User bookmarked this tender          |
+| applied         | BOOLEAN     | false   | User marked as applied               |
+| hidden          | BOOLEAN     | false   | User hid this tender                 |
+| match_score     | INTEGER     | NULL    | Calculated match percentage (0-100)  |
+| notes           | TEXT        | NULL    | User's private notes                 |
+| created_at      | TIMESTAMPTZ | NOW()   | First interaction timestamp          |
+| updated_at      | TIMESTAMPTZ | NOW()   | Last action timestamp                |
 
 **Constraints:**
 - Unique constraint on (user_profile_id, tender_id)
@@ -520,6 +523,10 @@ user_profiles: auth.uid() = user_id
 -- Users can only see/modify their own subscription
 subscriptions: auth.uid() = user_id
 
+-- Companies are readable by all authenticated users, modifiable by linked users
+companies (SELECT): auth.role() = 'authenticated'
+companies (UPDATE): id IN (SELECT company_id FROM user_profiles WHERE user_id = auth.uid())
+
 -- Users can only see/modify their own search profiles
 search_profiles: user_profile_id IN (SELECT id FROM user_profiles WHERE user_id = auth.uid())
 
@@ -545,6 +552,15 @@ cpv_codes, npk_codes: true (public read)
 #### Edge Functions
 - `sync-simap`: Fetch new tenders from SIMAP API
 - `sync-ted`: Fetch new tenders from TED API
+
+#### Scheduled Jobs (Cron)
+
+| Job | Schedule | Description |
+|-----|----------|-------------|
+| `sync-tenders` | Daily 06:00 | Run `sync-simap` and `sync-ted` |
+| `update-tender-status` | Daily 00:00 | Transition tenders: `open` → `closing_soon` (7 days before deadline) → `closed` (past deadline) |
+| `check-trial-expiration` | Daily 00:00 | Downgrade expired trials: set `plan='free'`, `status='active'` where `trial_ends_at < NOW()` |
+| `run-matching` | Daily 07:00 | Execute Python matching job for all profiles × new tenders |
 
 ---
 
@@ -656,6 +672,11 @@ score = (cpv_score × 0.40) + (keyword_score × 0.25) + (region_score × 0.20) +
 score = max(0, min(100, score))
 ```
 
+**Minimum Profile Requirements:**
+- Profiles without CPV codes can only score max 45 pts (keywords 25 + region 20), below the 50 threshold
+- To receive matches, profiles should have at least one CPV code or NPK code
+- UI should enforce: require CPV selection before profile is considered "complete"
+
 ### Pseudocode
 
 ```python
@@ -702,6 +723,20 @@ def calculate_match_score(profile: SearchProfile, tender: Tender) -> int:
 | **Full sync** | Daily cron | All profiles × all open tenders | Once per day |
 | **Incremental** | New tender webhook | All profiles × new tender | Per tender |
 | **Profile update** | User saves profile | Single profile × all open tenders | On demand |
+
+### Thresholds & Behavior
+
+| Threshold | Value | Behavior |
+|-----------|-------|----------|
+| **Match threshold** | ≥ 50 | Scores below 50 are not stored in `user_tender_actions` |
+| **Notification threshold** | ≥ 75 | Scores ≥ 75 trigger email/push notification for new matches |
+| **High match badge** | ≥ 80 | UI displays "High Match" badge on tender cards |
+
+**Score Recalculation (Profile Update):**
+- When a user updates their search profile, all matches are recalculated
+- Existing records are **updated** with new scores (not deleted)
+- If new score drops below 50: record is **kept** but `match_score` is updated
+- User's bookmarks/applied/hidden flags are preserved regardless of score changes
 
 ### Why Python?
 
@@ -917,6 +952,7 @@ flowchart LR
 
 | Date       | Version | Changes                    |
 |------------|---------|----------------------------|
+| 2026-01-18 | 0.9     | QA round 2: add companies RLS, scheduled jobs table, minimum profile requirements, boolean defaults, notification/recalculation behavior, profile-per-company design decision |
 | 2026-01-18 | 0.8     | QA fixes: clarify free tier limits company profiles, add external_id+source unique constraint, add subscriptions RLS, document trial expiration job, add Stripe to data flow, clarify manual tender actions |
 | 2026-01-18 | 0.7     | Add subscriptions table for Stripe billing (free/pro tiers, 14-day trial) |
 | 2026-01-18 | 0.6     | Restructure document: separate Conceptual, Logical, and Physical data models |
