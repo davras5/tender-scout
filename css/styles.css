@@ -2411,6 +2411,15 @@ textarea.input-md {
     display: flex;
     flex-direction: column;
     gap: var(--space-6);
+    min-width: 0; /* Prevent flex item overflow */
+}
+
+/* Mobile: Ensure cards don't overflow */
+@media (max-width: 480px) {
+    .settings-content .card {
+        padding: var(--space-4);
+        overflow-x: hidden;
+    }
 }
 
 .settings-panel {
@@ -2588,6 +2597,36 @@ textarea.input-md {
     padding: var(--space-4);
     background: var(--color-bg-muted);
     border-radius: var(--radius-md);
+}
+
+/* Mobile: Stack team members and wrap header */
+@media (max-width: 480px) {
+    .settings-team-member {
+        flex-wrap: wrap;
+        gap: var(--space-3);
+    }
+
+    .settings-team-member .badge {
+        order: 3;
+    }
+
+    .settings-team-member .btn {
+        order: 4;
+        margin-left: auto;
+    }
+
+    /* Header with button - stack on mobile */
+    #settings-team .card > .flex.justify-between,
+    .settings-panel .card > .flex.justify-between {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-3);
+    }
+
+    #settings-team .card > .flex.justify-between .btn,
+    .settings-panel .card > .flex.justify-between .btn {
+        width: 100%;
+    }
 }
 
 .settings-avatar {
