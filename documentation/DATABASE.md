@@ -369,46 +369,163 @@ cpv_codes, npk_codes: true (public read)
 ### Overview
 
 Match scores are calculated by a **Python batch job** that runs:
-1. When a user completes their search profile
-2. Daily, when new tenders are synced from SIMAP/TED
+1. **On-demand:** When a user completes or updates their search profile
+2. **Scheduled:** Daily, when new tenders are synced from SIMAP/TED
 
 ### Architecture
 
+```mermaid
+flowchart TB
+    subgraph Triggers
+        T1[/"Daily Schedule (cron)"/]
+        T2[/"Profile Created/Updated"/]
+        T3[/"New Tenders Synced"/]
+    end
+
+    subgraph Python["Python Matching Job"]
+        direction TB
+        Start([Start]) --> FetchTenders
+        FetchTenders[Fetch tenders from Supabase<br/>filter: status = 'open'] --> FetchProfiles
+        FetchProfiles[Fetch all active<br/>search_profiles] --> Loop
+
+        Loop{For each<br/>profile × tender} --> Calculate
+        Calculate[Calculate match_score] --> Threshold
+        Threshold{score >= 50?}
+        Threshold -->|Yes| Upsert[Upsert to<br/>user_tender_actions]
+        Threshold -->|No| Skip[Skip low matches]
+        Upsert --> More
+        Skip --> More
+        More{More pairs?}
+        More -->|Yes| Loop
+        More -->|No| Notify
+        Notify[Trigger notifications<br/>for high matches] --> End([End])
+    end
+
+    subgraph Supabase["Supabase PostgreSQL"]
+        DB_Tenders[(tenders)]
+        DB_Profiles[(search_profiles)]
+        DB_Actions[(user_tender_actions)]
+    end
+
+    T1 --> Start
+    T2 --> Start
+    T3 --> Start
+
+    FetchTenders -.->|SELECT| DB_Tenders
+    FetchProfiles -.->|SELECT| DB_Profiles
+    Upsert -.->|UPSERT| DB_Actions
 ```
-┌─────────────────────────────────────────────────────────┐
-│              Daily Matching Job (Python)                │
-├─────────────────────────────────────────────────────────┤
-│  1. Fetch new/updated tenders from Supabase             │
-│  2. Fetch all active search_profiles                    │
-│  3. For each (profile, tender) pair:                    │
-│     → Calculate match_score (0-100)                     │
-│     → Upsert into user_tender_actions                   │
-│  4. Optionally trigger notifications                    │
-└─────────────────────────────────────────────────────────┘
-                           │
-                           ▼
-                    ┌─────────────┐
-                    │  Supabase   │
-                    │  PostgreSQL │
-                    └─────────────┘
+
+### Score Calculation Flow
+
+```mermaid
+flowchart LR
+    subgraph Inputs
+        P[Search Profile]
+        T[Tender]
+    end
+
+    subgraph Scoring["Score Components"]
+        direction TB
+        CPV[CPV Overlap<br/>weight: 40%]
+        KW[Keyword Match<br/>weight: 25%]
+        REG[Region Match<br/>weight: 20%]
+        NPK[NPK Overlap<br/>weight: 15%]
+        EX[Exclusion Check<br/>penalty: -20%]
+    end
+
+    subgraph Output
+        Score[Final Score<br/>0-100]
+    end
+
+    P --> CPV
+    P --> KW
+    P --> REG
+    P --> NPK
+    P --> EX
+    T --> CPV
+    T --> KW
+    T --> REG
+    T --> NPK
+    T --> EX
+
+    CPV --> Score
+    KW --> Score
+    REG --> Score
+    NPK --> Score
+    EX --> Score
 ```
 
 ### Matching Criteria
 
-| Criterion | Weight | Logic |
-|-----------|--------|-------|
-| CPV code overlap | 40% | Intersection of profile and tender CPV codes |
-| Keyword matches | 25% | Profile keywords found in tender title/description |
-| Region match | 20% | Tender region in profile's target regions |
-| Exclusion penalty | -15% | Deduct if exclude_keywords found |
+| Criterion | Weight | Logic | Example |
+|-----------|--------|-------|---------|
+| **CPV overlap** | 40% | `len(profile ∩ tender) / len(profile)` | Profile has 5 CPV, tender matches 3 → 60% × 40 = 24 pts |
+| **Keyword match** | 25% | Keywords found in title/description | 4 of 6 keywords found → 67% × 25 = 17 pts |
+| **Region match** | 20% | Tender region in profile regions | Exact match → 100% × 20 = 20 pts |
+| **NPK overlap** | 15% | Same as CPV, for construction | 2 of 4 NPK match → 50% × 15 = 8 pts |
+| **Exclusion penalty** | -20% | Any exclude_keyword found | 1 exclusion found → -20 pts |
+
+**Score formula:**
+```
+score = (cpv_score × 0.40) + (keyword_score × 0.25) + (region_score × 0.20) + (npk_score × 0.15) - exclusion_penalty
+score = max(0, min(100, score))
+```
+
+### Pseudocode
+
+```python
+def calculate_match_score(profile: SearchProfile, tender: Tender) -> int:
+    score = 0
+
+    # CPV overlap (40%)
+    if profile.cpv_codes and tender.cpv_codes:
+        overlap = set(profile.cpv_codes) & set(tender.cpv_codes)
+        cpv_ratio = len(overlap) / len(profile.cpv_codes)
+        score += cpv_ratio * 40
+
+    # Keyword matching (25%)
+    text = f"{tender.title} {tender.description}".lower()
+    if profile.keywords:
+        matches = sum(1 for kw in profile.keywords if kw.lower() in text)
+        kw_ratio = matches / len(profile.keywords)
+        score += kw_ratio * 25
+
+    # Region match (20%)
+    if tender.region in profile.regions:
+        score += 20
+
+    # NPK overlap (15%) - construction tenders only
+    if profile.npk_codes and tender.cpv_codes:
+        # Map CPV to NPK or check NPK directly
+        npk_overlap = calculate_npk_overlap(profile, tender)
+        score += npk_overlap * 15
+
+    # Exclusion penalty (-20%)
+    if profile.exclude_keywords:
+        for ex in profile.exclude_keywords:
+            if ex.lower() in text:
+                score -= 20
+                break
+
+    return max(0, min(100, int(score)))
+```
+
+### Execution Modes
+
+| Mode | Trigger | Scope | Frequency |
+|------|---------|-------|-----------|
+| **Full sync** | Daily cron | All profiles × all open tenders | Once per day |
+| **Incremental** | New tender webhook | All profiles × new tender | Per tender |
+| **Profile update** | User saves profile | Single profile × all open tenders | On demand |
 
 ### Why Python?
 
-- Easier to experiment with scoring algorithms
-- Access to NLP libraries (spaCy, scikit-learn) for future improvements
-- Can run locally for testing
-- Scheduled via cron, GitHub Actions, or cloud scheduler
-- Uses `supabase-py` client for database access
+- **Experimentation:** Easy to tweak scoring weights and logic
+- **NLP potential:** spaCy, scikit-learn for smarter keyword matching
+- **Local testing:** Run against test data without deployment
+- **Scheduling:** cron, GitHub Actions, or cloud scheduler (Cloud Run, Lambda)
+- **Supabase integration:** `supabase-py` client for database access
 
 ---
 
@@ -455,5 +572,6 @@ Match scores are calculated by a **Python batch job** that runs:
 
 | Date       | Version | Changes                    |
 |------------|---------|----------------------------|
+| 2026-01-18 | 0.3     | Add detailed Mermaid flowcharts for matching algorithm |
 | 2026-01-18 | 0.2     | Replace junction tables with JSONB arrays; add matching algorithm section |
 | 2026-01-18 | 0.1     | Initial conceptual model   |
