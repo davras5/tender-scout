@@ -876,7 +876,7 @@ document.addEventListener('click', (e) => {
 // Profile settings - open wizard to edit search profile
 function openProfileSettings() {
     // Always open the wizard so users can edit their search profile
-    navigateTo(VIEWS.COMPANY_SEARCH);
+    navigateTo(VIEWS.AI_REVIEW);
 }
 
 window.toggleSortDropdown = toggleSortDropdown;
