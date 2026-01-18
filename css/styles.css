@@ -1881,8 +1881,7 @@ textarea.input-md {
 @media (min-width: 640px) {
     .stats-grid {
         flex-direction: row;
-        justify-content: center;
-        gap: var(--space-8);
+        gap: 0;
     }
 }
 
@@ -1908,7 +1907,6 @@ textarea.input-md {
 @media (min-width: 640px) {
     .stat {
         flex: 1;
-        max-width: 200px;
         padding: var(--space-4) var(--space-6);
     }
 
