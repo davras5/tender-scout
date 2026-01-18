@@ -138,10 +138,25 @@ erDiagram
 
     tenders ||--o{ tender_cpv_codes : "classified by"
     cpv_codes ||--o{ tender_cpv_codes : "classifies"
-
-    cpv_codes ||--o{ cpv_codes : "parent of"
-    npk_codes ||--o{ npk_codes : "parent of"
 ```
+
+---
+
+### Entity Overview
+
+| Entity | Type | Description |
+|--------|------|-------------|
+| **users** | Core | User accounts managed by Supabase Auth |
+| **companies** | Core | Swiss companies identified via Zefix or manual entry |
+| **user_profiles** | Core | Links users to companies with role information |
+| **search_profiles** | Core | AI-generated or user-defined tender matching criteria |
+| **tenders** | Core | Public procurement opportunities from SIMAP/TED |
+| **user_tender_actions** | Core | Tracks user interactions (bookmark, apply, hide) |
+| **cpv_codes** | Lookup | EU Common Procurement Vocabulary (hierarchical) |
+| **npk_codes** | Lookup | Swiss construction standards (hierarchical) |
+| **search_profile_cpv_codes** | Junction | Links search profiles to CPV codes (N:M) |
+| **search_profile_npk_codes** | Junction | Links search profiles to NPK codes (N:M) |
+| **tender_cpv_codes** | Junction | Links tenders to CPV classifications (N:M) |
 
 ---
 
