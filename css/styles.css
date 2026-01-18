@@ -1046,6 +1046,15 @@ textarea.input-md {
     animation: fadeIn var(--duration-slow) var(--ease-out) forwards;
 }
 
+/* Centered view variant - for login, simple forms, etc. */
+.view.view--centered.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 73px);
+    padding: var(--space-6);
+}
+
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -1070,14 +1079,6 @@ textarea.input-md {
 }
 
 /* Auth Form */
-#view-auth {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: calc(100vh - 73px);
-    padding: var(--space-6);
-}
-
 .auth-container {
     max-width: 400px;
     width: 100%;
