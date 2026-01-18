@@ -1385,6 +1385,29 @@ textarea.input-md {
     gap: var(--space-4);
 }
 
+/* Tender Detail Header - Mobile responsive */
+@media (max-width: 480px) {
+    #tender-detail-content > .flex.justify-between.items-start {
+        flex-direction: column-reverse;
+        gap: var(--space-4);
+    }
+
+    #tender-detail-content > .flex.justify-between.items-start > .text-center {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        text-align: left;
+    }
+
+    #tender-detail-content > .flex.justify-between.items-start > .text-center .text-display {
+        font-size: var(--text-2xl);
+    }
+
+    #tender-detail-content .text-display {
+        font-size: var(--text-xl);
+    }
+}
+
 /* Tender Action Buttons */
 .tender-actions {
     display: flex;
