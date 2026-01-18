@@ -1148,11 +1148,12 @@ textarea.input-md {
 }
 
 @media (max-width: 480px) {
-    /* Even more compact pills on small screens */
+    /* Compact pills on small screens - maintain 40px min touch target */
     #filter-tabs > div:first-child .btn-sm {
-        padding: 0 var(--space-2);
-        height: 32px;
-        font-size: var(--text-xs);
+        padding: 0 var(--space-3);
+        height: 40px;
+        min-width: 44px;
+        font-size: var(--text-sm);
     }
 }
 
@@ -3036,5 +3037,176 @@ textarea.input-md {
         padding: var(--space-4);
         flex-wrap: wrap;
         gap: var(--space-2);
+    }
+}
+
+/* ========================================
+   Mobile UX Improvements (Design Review)
+   ======================================== */
+
+/* 1. Navbar actions - prevent crowding on very small screens */
+@media (max-width: 374px) {
+    .navbar-actions {
+        gap: var(--space-2);
+    }
+
+    .navbar-actions .btn {
+        padding: var(--space-2) var(--space-3);
+        font-size: var(--text-xs);
+    }
+
+    .lang-dropdown-btn {
+        padding: var(--space-1) var(--space-2);
+        font-size: var(--text-xs);
+    }
+
+    .theme-toggle {
+        width: 36px;
+        height: 36px;
+    }
+}
+
+/* 2. Modal - better sizing on small screens */
+@media (max-width: 480px) {
+    .modal {
+        width: 94%;
+        max-width: 400px;
+        margin: var(--space-4);
+    }
+}
+
+@media (max-width: 374px) {
+    .modal {
+        width: 96%;
+        max-width: none;
+        border-radius: var(--radius-lg);
+    }
+
+    .modal-body,
+    .modal-header {
+        padding: var(--space-3);
+    }
+}
+
+/* 3. Settings nav - horizontal scroll instead of wrapping */
+@media (max-width: 767px) {
+    .settings-nav {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        padding-bottom: var(--space-2);
+    }
+
+    .settings-nav::-webkit-scrollbar {
+        display: none;
+    }
+
+    .settings-nav-item {
+        flex-shrink: 0;
+        white-space: nowrap;
+    }
+}
+
+/* 4. Detail stats grid - force single column on very small screens */
+@media (max-width: 374px) {
+    .detail-stats {
+        grid-template-columns: 1fr;
+        gap: var(--space-2);
+    }
+
+    .detail-stats .card {
+        padding: var(--space-2);
+    }
+
+    .detail-stats .text-h3 {
+        font-size: var(--text-lg);
+    }
+}
+
+/* 5. Team member list - improved mobile layout */
+@media (max-width: 480px) {
+    .settings-team-member {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-2);
+    }
+
+    .settings-team-member > .flex-1 {
+        width: 100%;
+    }
+
+    .settings-team-member .badge {
+        order: 0;
+        align-self: flex-start;
+    }
+
+    .settings-team-member .btn {
+        order: 0;
+        width: 100%;
+        margin-left: 0;
+        margin-top: var(--space-2);
+    }
+
+    .settings-avatar {
+        width: 36px;
+        height: 36px;
+        font-size: var(--text-xs);
+    }
+}
+
+/* 6. Breadcrumb - percentage-based truncation */
+@media (max-width: 480px) {
+    .breadcrumb-item.is-truncate {
+        max-width: 35vw;
+    }
+}
+
+@media (max-width: 374px) {
+    .breadcrumb-item.is-truncate {
+        max-width: 25vw;
+    }
+
+    .breadcrumb {
+        font-size: var(--text-xs);
+    }
+}
+
+/* 7. Tender action buttons - ensure icon visibility and touch targets */
+@media (max-width: 480px) {
+    .tender-action {
+        min-width: 44px;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .tender-action svg {
+        width: 18px;
+        height: 18px;
+    }
+}
+
+/* 8. Auth container - better fit on small screens */
+@media (max-width: 420px) {
+    .auth-container {
+        max-width: 100%;
+        padding: var(--space-4);
+    }
+
+    .auth-container .card {
+        padding: var(--space-4);
+    }
+}
+
+/* 9. Improve focus visibility for accessibility */
+@media (max-width: 768px) {
+    .btn:focus-visible,
+    .tender-action:focus-visible,
+    .settings-nav-item:focus-visible {
+        outline: 2px solid var(--color-accent);
+        outline-offset: 2px;
     }
 }
