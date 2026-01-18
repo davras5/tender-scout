@@ -1867,15 +1867,16 @@ textarea.input-md {
 }
 
 .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--space-8);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
 }
 
-@media (min-width: 768px) {
+@media (min-width: 640px) {
     .stats-grid {
-        grid-template-columns: repeat(3, 1fr);
-        gap: var(--space-6);
+        flex-direction: row;
+        justify-content: center;
+        gap: var(--space-8);
     }
 }
 
@@ -1885,10 +1886,29 @@ textarea.input-md {
     padding: var(--space-4) 0;
 }
 
-@media (min-width: 768px) {
+/* Mobile: horizontal divider below each stat */
+.stat:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60%;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--color-border), transparent);
+}
+
+/* Tablet+: vertical divider to the right */
+@media (min-width: 640px) {
+    .stat {
+        flex: 1;
+        max-width: 200px;
+        padding: var(--space-4) var(--space-6);
+    }
+
     .stat:not(:last-child)::after {
-        content: "";
-        position: absolute;
+        bottom: auto;
+        left: auto;
         right: 0;
         top: 50%;
         transform: translateY(-50%);
@@ -1905,7 +1925,7 @@ textarea.input-md {
     letter-spacing: var(--tracking-tight);
 }
 
-@media (min-width: 768px) {
+@media (min-width: 640px) {
     .stat-value { font-size: var(--text-3xl); }
 }
 
