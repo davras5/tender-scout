@@ -46,7 +46,7 @@ Users ──┬── Subscriptions (1:1)
 
 - A **User** has one **Subscription** (free tier with 14-day Pro trial, or paid Pro)
 - A **User** can have multiple **User Profiles** (one per company)
-- **Free tier:** Limited to 1 search profile | **Pro tier:** Unlimited
+- **Free tier:** Limited to 1 company profile | **Pro tier:** Unlimited company profiles
 - Each **User Profile** has one **Search Profile** (matching criteria)
 - **Tenders** are matched to **Search Profiles** via the matching algorithm
 - Results stored in **User Tender Actions** with match scores
@@ -233,8 +233,8 @@ Tracks Stripe subscription status for billing and feature entitlements.
 
 **Subscription Tiers:**
 
-| Tier | Search Profiles | Trial | Price |
-|------|-----------------|-------|-------|
+| Tier | Company Profiles | Trial | Price |
+|------|------------------|-------|-------|
 | **Free** | 1 | - | CHF 0 |
 | **Pro** | Unlimited | 14 days | TBD |
 
@@ -244,6 +244,11 @@ Tracks Stripe subscription status for billing and feature entitlements.
 - After trial ends without payment: `plan='free'`, `status='active'`
 - Stripe webhooks update this table on subscription changes
 - Feature limits enforced in application layer based on `plan`
+
+**Trial Expiration Handling:**
+- Scheduled job runs daily to check `trial_ends_at < NOW()` where `status='trialing'`
+- Expired trials without active Stripe subscription: set `plan='free'`, `status='active'`
+- Users with excess company profiles after downgrade: profiles remain but are read-only until upgraded
 
 **Stripe Webhook Events:**
 - `customer.subscription.created` → Insert/update subscription
@@ -325,6 +330,7 @@ AI-generated or user-defined search criteria for tender matching.
 - CPV/NPK codes stored as JSONB arrays for simpler reads and atomic updates
 - `last_matched_at` tracks freshness for incremental matching optimization
 - NPK codes are Swiss construction-specific; matched via CPV→NPK mapping (see Matching Algorithm)
+- `industry` and `company_size` are reserved for future matching enhancements (e.g., authority_type filtering, tender size matching)
 
 ---
 
@@ -386,6 +392,11 @@ Tracks user interactions with tenders (bookmark, apply, hide).
 **Constraints:**
 - Unique constraint on (user_profile_id, tender_id)
 
+**Notes:**
+- Records are created by matching algorithm with `match_score` populated
+- Users can manually bookmark/apply/hide tenders not in their matches; `match_score` will be `NULL` for these
+- Manual interactions create new records or update existing algorithm-generated ones
+
 ---
 
 #### 8. cpv_codes
@@ -434,7 +445,8 @@ Swiss construction standards (Normpositionen-Katalog).
 
 **Notes:**
 - CPV/NPK codes stored as JSONB arrays (not junction tables) for simpler reads and atomic updates
-- Subscription limits (free: 1 search profile, pro: unlimited) enforced in application layer
+- Subscription limits (free: 1 company profile, pro: unlimited) enforced in application layer
+- Each company profile has exactly one search profile (1:1 relationship)
 
 ---
 
@@ -452,6 +464,7 @@ Implementation details for PostgreSQL/Supabase deployment.
 
 ```sql
 -- Tender queries (dashboard, filtering)
+CREATE UNIQUE INDEX idx_tenders_external_source ON tenders(external_id, source);
 CREATE INDEX idx_tenders_status_deadline ON tenders(status, deadline)
     WHERE deleted_at IS NULL;
 CREATE INDEX idx_tenders_region ON tenders(region)
@@ -503,6 +516,9 @@ CREATE INDEX idx_npk_parent ON npk_codes(parent_code);
 ```sql
 -- Users can only see their own profiles
 user_profiles: auth.uid() = user_id
+
+-- Users can only see/modify their own subscription
+subscriptions: auth.uid() = user_id
 
 -- Users can only see/modify their own search profiles
 search_profiles: user_profile_id IN (SELECT id FROM user_profiles WHERE user_id = auth.uid())
@@ -706,6 +722,7 @@ sequenceDiagram
     participant Frontend
     participant Auth as Supabase Auth
     participant DB as Supabase DB
+    participant Stripe
     participant Zefix as Zefix API
     participant AI as AI Service
     participant Sync as Sync Job
@@ -718,6 +735,9 @@ sequenceDiagram
         User->>Frontend: Sign up
         Frontend->>Auth: Create account
         Auth->>DB: Insert user
+        Frontend->>Stripe: Create customer
+        Stripe-->>Frontend: Customer ID
+        Frontend->>DB: Insert subscription (trialing)
         Auth-->>Frontend: Session token
     end
 
@@ -766,6 +786,17 @@ sequenceDiagram
         User->>Frontend: Bookmark/Apply/Hide
         Frontend->>DB: Update user_tender_actions
     end
+
+    %% Subscription Upgrade (Optional)
+    rect rgb(255, 245, 238)
+        Note over User,Stripe: 7. Subscription Upgrade
+        User->>Frontend: Click upgrade
+        Frontend->>Stripe: Create checkout session
+        Stripe-->>User: Redirect to checkout
+        User->>Stripe: Complete payment
+        Stripe->>Frontend: Webhook: subscription.created
+        Frontend->>DB: Update subscription (active)
+    end
 ```
 
 ---
@@ -776,7 +807,7 @@ sequenceDiagram
 
 | Area | Assessment |
 |------|------------|
-| **Schema simplicity** | Clean 8-table design; JSONB arrays reduce complexity |
+| **Schema simplicity** | Clean 9-table design; JSONB arrays reduce complexity |
 | **Supabase fit** | Good use of Auth, RLS, Realtime capabilities |
 | **Separation of concerns** | User data, tenders, and matching cleanly separated |
 | **Audit trail** | `created_at`/`updated_at` on all tables |
@@ -886,6 +917,7 @@ flowchart LR
 
 | Date       | Version | Changes                    |
 |------------|---------|----------------------------|
+| 2026-01-18 | 0.8     | QA fixes: clarify free tier limits company profiles, add external_id+source unique constraint, add subscriptions RLS, document trial expiration job, add Stripe to data flow, clarify manual tender actions |
 | 2026-01-18 | 0.7     | Add subscriptions table for Stripe billing (free/pro tiers, 14-day trial) |
 | 2026-01-18 | 0.6     | Restructure document: separate Conceptual, Logical, and Physical data models |
 | 2026-01-18 | 0.5     | Address expert review: add indexes, soft delete, status management, updated_at fields |
