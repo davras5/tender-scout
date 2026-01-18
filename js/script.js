@@ -265,6 +265,19 @@ function hideFieldError(elementId) {
 }
 
 /**
+ * Handles SSO login button clicks (placeholder for future implementation)
+ * @param {string} provider - The SSO provider ('google', 'whatsapp', etc.)
+ */
+function handleSSOLogin(provider) {
+    const providerNames = {
+        google: 'Google',
+        whatsapp: 'WhatsApp'
+    };
+    const displayName = providerNames[provider] || provider;
+    alert(`Demo: ${displayName} SSO wird in Kürze verfügbar sein.`);
+}
+
+/**
  * Handles login form submission with validation
  * @param {Event} event - The form submit event
  * @returns {boolean} - False to prevent default form submission
