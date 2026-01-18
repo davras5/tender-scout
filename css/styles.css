@@ -1118,6 +1118,31 @@ textarea.input-md {
     .mobile-menu-toggle {
         display: flex;
     }
+
+    /* Filter tabs responsive layout */
+    #filter-tabs {
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--space-3);
+    }
+
+    #filter-tabs > div:first-child {
+        width: 100%;
+        padding-bottom: var(--space-2);
+    }
+
+    #filter-tabs > div:last-child {
+        justify-content: flex-end;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Smaller filter buttons on very small screens */
+    #filter-tabs .btn-sm {
+        padding: 0 var(--space-2);
+        font-size: var(--text-xs);
+        height: 32px;
+    }
 }
 
 /* --- Modal --- */
