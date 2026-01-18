@@ -1216,6 +1216,18 @@ textarea.input-md {
     gap: var(--space-4);
 }
 
+@media (max-width: 480px) {
+    .modal-footer {
+        flex-direction: column-reverse;
+        gap: var(--space-2);
+        padding: var(--space-4);
+    }
+
+    .modal-footer .btn {
+        width: 100%;
+    }
+}
+
 /* ========================================
    View Transitions
    ======================================== */
@@ -1383,6 +1395,17 @@ textarea.input-md {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: var(--space-4);
+}
+
+@media (max-width: 375px) {
+    .detail-stats {
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-3);
+    }
+
+    .detail-stats .card {
+        padding: var(--space-3);
+    }
 }
 
 /* Tender Detail Header - Mobile responsive */
@@ -2495,6 +2518,18 @@ textarea.input-md {
     border: var(--border-width) solid var(--color-border-subtle);
 }
 
+@media (max-width: 480px) {
+    .settings-payment-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-3);
+    }
+
+    .settings-payment-card > button {
+        width: 100%;
+    }
+}
+
 .settings-card-icon {
     display: flex;
     align-items: center;
@@ -2524,6 +2559,21 @@ textarea.input-md {
     border: var(--border-width) solid var(--color-border-subtle);
 }
 
+@media (max-width: 480px) {
+    .settings-invoice-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-3);
+    }
+
+    .settings-invoice-item > div:last-child {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+}
+
 /* Toggle Switch */
 .settings-toggle-list {
     display: flex;
@@ -2539,6 +2589,21 @@ textarea.input-md {
     padding: var(--space-4);
     background: var(--color-bg-muted);
     border-radius: var(--radius-md);
+}
+
+@media (max-width: 480px) {
+    .settings-toggle-item {
+        flex-wrap: wrap;
+        gap: var(--space-3);
+    }
+
+    .settings-toggle-item > div {
+        flex: 1 1 calc(100% - 60px);
+    }
+
+    .settings-toggle-item .toggle {
+        flex-shrink: 0;
+    }
 }
 
 .toggle {
@@ -2913,4 +2978,63 @@ textarea.input-md {
     border-top: var(--border-width) solid var(--color-border-subtle);
     padding-top: var(--space-4);
     margin-top: var(--space-4);
+}
+
+/* ========================================
+   Additional Mobile Responsive Fixes
+   ======================================== */
+
+/* AI Review card headers - prevent button crowding */
+@media (max-width: 375px) {
+    #view-ai-review .card > .flex.justify-between.items-center {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-2);
+    }
+
+    #view-ai-review .card > .flex.justify-between.items-center .btn {
+        align-self: flex-start;
+    }
+}
+
+/* Footer legal links - flex wrap on mobile */
+@media (max-width: 480px) {
+    .footer-legal {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: var(--space-3);
+    }
+
+    .footer-legal a {
+        font-size: var(--text-xs);
+    }
+}
+
+/* Breadcrumbs - better truncation on very small screens */
+@media (max-width: 375px) {
+    .breadcrumb {
+        font-size: var(--text-xs);
+        gap: var(--space-1);
+    }
+
+    .breadcrumb-item.is-truncate {
+        max-width: 100px;
+    }
+}
+
+/* Pricing cards - reduce padding on mobile */
+@media (max-width: 480px) {
+    .pricing-card {
+        padding: var(--space-5);
+    }
+
+    .modal-body {
+        padding: var(--space-4);
+    }
+
+    .modal-header {
+        padding: var(--space-4);
+        flex-wrap: wrap;
+        gap: var(--space-2);
+    }
 }
