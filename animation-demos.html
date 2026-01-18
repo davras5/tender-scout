@@ -127,6 +127,32 @@
             font-size: 0.8125rem;
         }
 
+        /* Section Headers */
+        .section-header {
+            margin: var(--space-8) 0 var(--space-6);
+            padding-bottom: var(--space-3);
+            border-bottom: 2px solid var(--color-border);
+        }
+
+        .section-header h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--color-text-primary);
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .section-header h2 i {
+            color: var(--color-accent);
+        }
+
+        .section-header p {
+            color: var(--color-text-muted);
+            font-size: 0.875rem;
+            margin-top: var(--space-1);
+        }
+
         /* Grid */
         .grid {
             display: grid;
@@ -147,6 +173,11 @@
 
         .card:hover {
             border-color: var(--color-border-strong);
+        }
+
+        .card.featured {
+            border-color: var(--color-accent);
+            box-shadow: 0 0 0 1px var(--color-accent-subtle);
         }
 
         .card h3 {
@@ -211,19 +242,940 @@
         }
 
         /* ==========================================================================
-           Animation 1: Current (Pulse + Ring) - The existing ai-orb
+           Common Keyframes
            ========================================================================== */
-        .orb-current {
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        /* ==========================================================================
+           1. SCOUT BOT - Friendly robot scout with scanning antenna
+           ========================================================================== */
+        .scout-bot {
+            width: 80px;
+            height: 100px;
+            position: relative;
+        }
+
+        .scout-bot .head {
+            width: 50px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--color-accent), var(--color-accent-hover));
+            border-radius: 12px 12px 8px 8px;
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 4px 12px var(--color-accent-glow);
+        }
+
+        .scout-bot .eye {
+            width: 10px;
+            height: 10px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 12px;
+            animation: blink 3s ease-in-out infinite;
+        }
+
+        .scout-bot .eye-left { left: 10px; }
+        .scout-bot .eye-right { right: 10px; }
+
+        .scout-bot .eye::after {
+            content: '';
+            width: 4px;
+            height: 4px;
+            background: var(--color-text-primary);
+            border-radius: 50%;
+            position: absolute;
+            top: 3px;
+            left: 3px;
+        }
+
+        .scout-bot .antenna {
+            width: 3px;
+            height: 20px;
+            background: var(--color-accent-secondary);
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 2px;
+        }
+
+        .scout-bot .antenna::after {
+            content: '';
+            width: 10px;
+            height: 10px;
+            background: var(--color-accent-tertiary);
+            border-radius: 50%;
+            position: absolute;
+            top: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: antenna-pulse 1.5s ease-in-out infinite;
+            box-shadow: 0 0 12px var(--color-accent-tertiary);
+        }
+
+        .scout-bot .body {
+            width: 40px;
+            height: 30px;
+            background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
+            border-radius: 6px;
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 2px solid var(--color-accent);
+        }
+
+        .scout-bot .scan-wave {
+            position: absolute;
+            top: 5px;
+            left: 50%;
+            width: 100px;
+            height: 100px;
+            transform: translateX(-50%);
+            pointer-events: none;
+        }
+
+        .scout-bot .scan-wave::before,
+        .scout-bot .scan-wave::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border: 2px solid var(--color-accent-tertiary);
+            border-radius: 50%;
+            opacity: 0;
+            animation: scan-expand 2s ease-out infinite;
+        }
+
+        .scout-bot .scan-wave::after {
+            animation-delay: 1s;
+        }
+
+        @keyframes blink {
+            0%, 90%, 100% { transform: scaleY(1); }
+            95% { transform: scaleY(0.1); }
+        }
+
+        @keyframes antenna-pulse {
+            0%, 100% { transform: translateX(-50%) scale(1); box-shadow: 0 0 8px var(--color-accent-tertiary); }
+            50% { transform: translateX(-50%) scale(1.3); box-shadow: 0 0 20px var(--color-accent-tertiary); }
+        }
+
+        @keyframes scan-expand {
+            0% { transform: scale(0.3); opacity: 0.8; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+
+        /* ==========================================================================
+           2. BINOCULARS - Classic scouting with lens sweep
+           ========================================================================== */
+        .binoculars {
+            width: 100px;
+            height: 80px;
+            position: relative;
+        }
+
+        .binoculars .barrel {
+            width: 35px;
+            height: 50px;
+            background: linear-gradient(135deg, #334155, #1e293b);
+            border-radius: 20px 20px 8px 8px;
+            position: absolute;
+            top: 15px;
+        }
+
+        .binoculars .barrel-left { left: 8px; }
+        .binoculars .barrel-right { right: 8px; }
+
+        .binoculars .lens {
+            width: 30px;
+            height: 30px;
+            background: radial-gradient(circle at 30% 30%, var(--color-accent-subtle), var(--color-accent));
+            border-radius: 50%;
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 3px solid #1e293b;
+            overflow: hidden;
+        }
+
+        .binoculars .barrel-left .lens::after,
+        .binoculars .barrel-right .lens::after {
+            content: '';
+            position: absolute;
+            width: 150%;
+            height: 8px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+            top: 50%;
+            left: -25%;
+            transform: translateY(-50%) rotate(-45deg);
+            animation: lens-sweep 2s ease-in-out infinite;
+        }
+
+        .binoculars .barrel-right .lens::after {
+            animation-delay: 0.3s;
+        }
+
+        .binoculars .bridge {
+            width: 20px;
+            height: 10px;
+            background: #334155;
+            position: absolute;
+            top: 35px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 4px;
+        }
+
+        .binoculars .focus-ring {
+            width: 12px;
+            height: 8px;
+            background: var(--color-accent);
+            position: absolute;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 2px;
+            animation: focus-adjust 3s ease-in-out infinite;
+        }
+
+        @keyframes lens-sweep {
+            0%, 100% { transform: translateY(-50%) rotate(-45deg) translateX(-100%); }
+            50% { transform: translateY(-50%) rotate(-45deg) translateX(100%); }
+        }
+
+        @keyframes focus-adjust {
+            0%, 100% { transform: translateX(-50%) scaleX(1); }
+            50% { transform: translateX(-50%) scaleX(1.3); }
+        }
+
+        /* ==========================================================================
+           3. COMPASS NAVIGATION - Finding the right direction
+           ========================================================================== */
+        .compass {
+            width: 80px;
+            height: 80px;
+            position: relative;
+        }
+
+        .compass .ring {
+            width: 100%;
+            height: 100%;
+            border: 3px solid var(--color-accent);
+            border-radius: 50%;
+            position: absolute;
+            background: var(--color-bg-base);
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.1), 0 4px 12px var(--color-accent-glow);
+        }
+
+        .compass .directions {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--color-text-muted);
+        }
+
+        .compass .dir {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .compass .dir-n { top: 6px; color: var(--color-accent); font-weight: 700; }
+        .compass .dir-s { bottom: 6px; }
+        .compass .dir-e { top: 50%; right: 6px; transform: translateY(-50%); left: auto; }
+        .compass .dir-w { top: 50%; left: 6px; transform: translateY(-50%); }
+
+        .compass .needle {
+            position: absolute;
+            width: 6px;
+            height: 50px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation: compass-seek 4s ease-in-out infinite;
+        }
+
+        .compass .needle::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 0;
+            border-left: 3px solid transparent;
+            border-right: 3px solid transparent;
+            border-bottom: 22px solid #dc2626;
+        }
+
+        .compass .needle::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 0;
+            border-left: 3px solid transparent;
+            border-right: 3px solid transparent;
+            border-top: 22px solid #cbd5e1;
+        }
+
+        .compass .center-dot {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: var(--color-accent);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 8px var(--color-accent);
+            z-index: 2;
+        }
+
+        @keyframes compass-seek {
+            0%, 100% { transform: translate(-50%, -50%) rotate(-30deg); }
+            25% { transform: translate(-50%, -50%) rotate(15deg); }
+            50% { transform: translate(-50%, -50%) rotate(-10deg); }
+            75% { transform: translate(-50%, -50%) rotate(5deg); }
+        }
+
+        /* ==========================================================================
+           4. RADAR SWEEP (Enhanced)
+           ========================================================================== */
+        .radar {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--color-bg-raised) 0%, var(--color-bg-muted) 100%);
+            border: 3px solid var(--color-accent);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 20px var(--color-accent-glow);
+        }
+
+        .radar .grid-line {
+            position: absolute;
+            border: 1px solid var(--color-border);
+            border-radius: 50%;
+        }
+
+        .radar .grid-1 { width: 30%; height: 30%; top: 35%; left: 35%; }
+        .radar .grid-2 { width: 60%; height: 60%; top: 20%; left: 20%; }
+
+        .radar .crosshair-h,
+        .radar .crosshair-v {
+            position: absolute;
+            background: var(--color-border);
+        }
+
+        .radar .crosshair-h {
+            width: 100%;
+            height: 1px;
+            top: 50%;
+        }
+
+        .radar .crosshair-v {
+            width: 1px;
+            height: 100%;
+            left: 50%;
+        }
+
+        .radar .sweep {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 50%;
+            height: 50%;
+            background: conic-gradient(from 0deg, transparent 0deg, var(--color-accent) 20deg, transparent 40deg);
+            transform-origin: 0 0;
+            animation: spin 2s linear infinite;
+        }
+
+        .radar .blip {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: var(--color-accent-tertiary);
+            border-radius: 50%;
+            animation: blip-fade 2s ease-out infinite;
+            box-shadow: 0 0 8px var(--color-accent-tertiary);
+        }
+
+        .radar .blip-1 { top: 25%; left: 60%; animation-delay: 0.2s; }
+        .radar .blip-2 { top: 40%; left: 75%; animation-delay: 0.8s; }
+        .radar .blip-3 { top: 65%; left: 55%; animation-delay: 1.4s; }
+
+        .radar .center {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: var(--color-accent);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 10px var(--color-accent);
+        }
+
+        @keyframes blip-fade {
+            0%, 20% { opacity: 0; transform: scale(0); }
+            30% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0.5); }
+        }
+
+        /* ==========================================================================
+           5. DOCUMENT SCANNER - Processing tender documents
+           ========================================================================== */
+        .doc-scanner {
+            width: 70px;
+            height: 90px;
+            position: relative;
+        }
+
+        .doc-scanner .document {
+            width: 100%;
+            height: 100%;
+            background: var(--color-bg-base);
+            border: 2px solid var(--color-border);
+            border-radius: 4px;
+            position: relative;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .doc-scanner .doc-line {
+            position: absolute;
+            left: 10%;
+            right: 10%;
+            height: 3px;
+            background: var(--color-border);
+            border-radius: 2px;
+        }
+
+        .doc-scanner .doc-line:nth-child(1) { top: 15%; width: 60%; }
+        .doc-scanner .doc-line:nth-child(2) { top: 28%; }
+        .doc-scanner .doc-line:nth-child(3) { top: 41%; width: 70%; }
+        .doc-scanner .doc-line:nth-child(4) { top: 54%; width: 50%; }
+        .doc-scanner .doc-line:nth-child(5) { top: 67%; }
+
+        .doc-scanner .scan-line {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, var(--color-accent), transparent);
+            box-shadow: 0 0 12px var(--color-accent);
+            animation: doc-scan 2s ease-in-out infinite;
+        }
+
+        .doc-scanner .highlight {
+            position: absolute;
+            left: 10%;
+            height: 8px;
+            background: var(--color-accent-subtle);
+            border-radius: 2px;
+            opacity: 0;
+            animation: highlight-appear 2s ease-in-out infinite;
+        }
+
+        .doc-scanner .highlight-1 { top: 26%; width: 40%; animation-delay: 0.3s; }
+        .doc-scanner .highlight-2 { top: 52%; width: 30%; animation-delay: 0.8s; }
+
+        @keyframes doc-scan {
+            0%, 100% { top: 5%; }
+            50% { top: 85%; }
+        }
+
+        @keyframes highlight-appear {
+            0%, 30%, 100% { opacity: 0; }
+            40%, 80% { opacity: 1; }
+        }
+
+        /* ==========================================================================
+           6. MAGNIFYING GLASS - Searching for opportunities
+           ========================================================================== */
+        .magnifier {
+            width: 80px;
+            height: 80px;
+            position: relative;
+            animation: magnifier-move 3s ease-in-out infinite;
+        }
+
+        .magnifier .glass {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--color-accent);
+            border-radius: 50%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: rgba(37, 99, 235, 0.05);
+            box-shadow: 0 4px 12px var(--color-accent-glow);
+        }
+
+        .magnifier .glass::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.8), transparent 50%);
+        }
+
+        .magnifier .handle {
+            width: 8px;
+            height: 30px;
+            background: linear-gradient(135deg, #334155, #1e293b);
+            position: absolute;
+            bottom: 0;
+            right: 5px;
+            transform: rotate(-45deg);
+            border-radius: 4px;
+        }
+
+        .magnifier .search-target {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: var(--color-accent-tertiary);
+            border-radius: 50%;
+            top: 18px;
+            left: 18px;
+            animation: target-pulse 1s ease-in-out infinite;
+            box-shadow: 0 0 8px var(--color-accent-tertiary);
+        }
+
+        @keyframes magnifier-move {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(5px, -5px) rotate(-5deg); }
+            50% { transform: translate(0, 5px) rotate(5deg); }
+            75% { transform: translate(-5px, 0) rotate(-3deg); }
+        }
+
+        @keyframes target-pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0.6; }
+        }
+
+        /* ==========================================================================
+           7. SATELLITE VIEW - Orbital scanning
+           ========================================================================== */
+        .satellite {
+            width: 100px;
+            height: 80px;
+            position: relative;
+        }
+
+        .satellite .sat-body {
+            width: 24px;
+            height: 16px;
+            background: linear-gradient(135deg, #e2e8f0, #94a3b8);
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 3px;
+            animation: sat-orbit 4s ease-in-out infinite;
+        }
+
+        .satellite .panel {
+            width: 22px;
+            height: 8px;
+            background: linear-gradient(135deg, var(--color-accent), var(--color-accent-hover));
+            position: absolute;
+            top: 4px;
+        }
+
+        .satellite .panel-left { left: -24px; border-radius: 2px; }
+        .satellite .panel-right { right: -24px; border-radius: 2px; }
+
+        .satellite .dish {
+            width: 10px;
+            height: 10px;
+            border: 2px solid #64748b;
+            border-radius: 50%;
+            position: absolute;
+            bottom: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-bottom-color: transparent;
+        }
+
+        .satellite .earth {
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle at 30% 30%, var(--color-accent-subtle), var(--color-accent));
+            border-radius: 50%;
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0.3;
+        }
+
+        .satellite .scan-beam {
+            position: absolute;
+            top: 40px;
+            left: 50%;
+            width: 40px;
+            height: 60px;
+            background: linear-gradient(180deg, var(--color-accent-tertiary) 0%, transparent 100%);
+            clip-path: polygon(40% 0%, 60% 0%, 100% 100%, 0% 100%);
+            transform: translateX(-50%);
+            opacity: 0.4;
+            animation: beam-sweep 3s ease-in-out infinite;
+        }
+
+        @keyframes sat-orbit {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(-8px); }
+        }
+
+        @keyframes beam-sweep {
+            0%, 100% { transform: translateX(-50%) skewX(-15deg); }
+            50% { transform: translateX(-50%) skewX(15deg); }
+        }
+
+        /* ==========================================================================
+           8. DATA MINING - Extracting insights from raw data
+           ========================================================================== */
+        .data-mining {
+            width: 100px;
+            height: 80px;
+            position: relative;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .data-mining .data-bar {
+            width: 12px;
+            background: linear-gradient(to top, var(--color-accent), var(--color-accent-secondary));
+            border-radius: 3px 3px 0 0;
+            animation: data-grow 2s ease-in-out infinite;
+        }
+
+        .data-mining .data-bar:nth-child(1) { animation-delay: 0s; }
+        .data-mining .data-bar:nth-child(2) { animation-delay: 0.15s; }
+        .data-mining .data-bar:nth-child(3) { animation-delay: 0.3s; }
+        .data-mining .data-bar:nth-child(4) { animation-delay: 0.45s; }
+        .data-mining .data-bar:nth-child(5) { animation-delay: 0.6s; }
+
+        .data-mining .sparkle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--color-accent-tertiary);
+            border-radius: 50%;
+            animation: sparkle-rise 1.5s ease-out infinite;
+        }
+
+        .data-mining .sparkle-1 { left: 20%; animation-delay: 0.2s; }
+        .data-mining .sparkle-2 { left: 50%; animation-delay: 0.6s; }
+        .data-mining .sparkle-3 { right: 20%; animation-delay: 1s; }
+
+        @keyframes data-grow {
+            0%, 100% { height: 20px; }
+            50% { height: 60px; }
+        }
+
+        @keyframes sparkle-rise {
+            0% { bottom: 10px; opacity: 0; }
+            50% { opacity: 1; }
+            100% { bottom: 80px; opacity: 0; }
+        }
+
+        /* ==========================================================================
+           9. TELESCOPE - Looking for opportunities
+           ========================================================================== */
+        .telescope {
+            width: 100px;
+            height: 60px;
+            position: relative;
+        }
+
+        .telescope .tube {
+            width: 70px;
+            height: 20px;
+            background: linear-gradient(180deg, #475569, #334155);
+            position: absolute;
+            left: 15px;
+            top: 20px;
+            border-radius: 4px 15px 15px 4px;
+            transform: rotate(-15deg);
+        }
+
+        .telescope .lens {
+            width: 24px;
+            height: 24px;
+            background: radial-gradient(circle at 30% 30%, var(--color-accent-subtle), var(--color-accent));
+            border-radius: 50%;
+            position: absolute;
+            right: -8px;
+            top: -2px;
+            border: 3px solid #1e293b;
+        }
+
+        .telescope .lens-flare {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: rgba(255,255,255,0.8);
+            border-radius: 50%;
+            top: 4px;
+            right: 4px;
+            animation: flare-pulse 2s ease-in-out infinite;
+        }
+
+        .telescope .tripod {
+            position: absolute;
+            bottom: 0;
+            left: 35px;
+        }
+
+        .telescope .tripod-leg {
+            width: 3px;
+            height: 25px;
+            background: #64748b;
+            position: absolute;
+            bottom: 0;
+            transform-origin: top center;
+        }
+
+        .telescope .tripod-leg:nth-child(1) { transform: rotate(-25deg); left: 0; }
+        .telescope .tripod-leg:nth-child(2) { transform: rotate(0deg); left: 15px; }
+        .telescope .tripod-leg:nth-child(3) { transform: rotate(25deg); left: 30px; }
+
+        .telescope .star {
+            position: absolute;
+            background: var(--color-accent-tertiary);
+            border-radius: 50%;
+            animation: star-twinkle 1.5s ease-in-out infinite;
+        }
+
+        .telescope .star-1 { width: 4px; height: 4px; top: 0; right: 10px; animation-delay: 0s; }
+        .telescope .star-2 { width: 3px; height: 3px; top: 8px; right: 0; animation-delay: 0.5s; }
+        .telescope .star-3 { width: 5px; height: 5px; top: 5px; right: 25px; animation-delay: 1s; }
+
+        @keyframes flare-pulse {
+            0%, 100% { opacity: 0.3; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        @keyframes star-twinkle {
+            0%, 100% { opacity: 0.3; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1); }
+        }
+
+        /* ==========================================================================
+           10. PROCESSING RINGS - Data layers
+           ========================================================================== */
+        .processing-rings {
+            width: 80px;
+            height: 80px;
+            position: relative;
+        }
+
+        .processing-rings .ring {
+            position: absolute;
+            border-radius: 50%;
+            border: 2px solid transparent;
+        }
+
+        .processing-rings .ring-1 {
+            width: 100%;
+            height: 100%;
+            border-top-color: var(--color-accent);
+            border-right-color: var(--color-accent);
+            animation: spin 1.5s linear infinite;
+        }
+
+        .processing-rings .ring-2 {
+            width: 70%;
+            height: 70%;
+            top: 15%;
+            left: 15%;
+            border-top-color: var(--color-accent-secondary);
+            border-left-color: var(--color-accent-secondary);
+            animation: spin 1s linear infinite reverse;
+        }
+
+        .processing-rings .ring-3 {
+            width: 40%;
+            height: 40%;
+            top: 30%;
+            left: 30%;
+            border-bottom-color: var(--color-accent-tertiary);
+            border-right-color: var(--color-accent-tertiary);
+            animation: spin 0.75s linear infinite;
+        }
+
+        .processing-rings .core {
+            position: absolute;
+            width: 16%;
+            height: 16%;
+            top: 42%;
+            left: 42%;
+            background: var(--color-accent);
+            border-radius: 50%;
+            animation: pulse 1s var(--ease-in-out) infinite;
+        }
+
+        /* ==========================================================================
+           11. TYPING INDICATOR - Composing response
+           ========================================================================== */
+        .typing-dots {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .typing-dots .dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--color-accent);
+            animation: typing-bounce 1.4s var(--ease-in-out) infinite;
+        }
+
+        .typing-dots .dot:nth-child(1) { animation-delay: 0s; }
+        .typing-dots .dot:nth-child(2) { animation-delay: 0.2s; background: var(--color-accent-secondary); }
+        .typing-dots .dot:nth-child(3) { animation-delay: 0.4s; background: var(--color-accent-tertiary); }
+
+        @keyframes typing-bounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-18px); }
+        }
+
+        /* ==========================================================================
+           12. SMART ASSISTANT BOT - Friendly AI helper
+           ========================================================================== */
+        .smart-bot {
+            width: 70px;
+            height: 80px;
+            position: relative;
+        }
+
+        .smart-bot .face {
+            width: 60px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--color-bg-base), var(--color-bg-raised));
+            border: 3px solid var(--color-accent);
+            border-radius: 20px 20px 25px 25px;
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 4px 12px var(--color-accent-glow);
+        }
+
+        .smart-bot .eye-container {
+            position: absolute;
+            top: 15px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .smart-bot .eye {
+            width: 12px;
+            height: 12px;
+            background: var(--color-accent);
+            border-radius: 50%;
+            animation: bot-look 4s ease-in-out infinite;
+        }
+
+        .smart-bot .mouth {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 8px;
+            border: 2px solid var(--color-accent);
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+        }
+
+        .smart-bot .ear {
+            position: absolute;
+            width: 8px;
+            height: 20px;
+            background: var(--color-accent);
+            border-radius: 4px;
+            top: 25px;
+        }
+
+        .smart-bot .ear-left { left: 0; }
+        .smart-bot .ear-right { right: 0; }
+
+        .smart-bot .thinking-bubble {
+            position: absolute;
+            top: 0;
+            right: 0;
+            display: flex;
+            gap: 3px;
+        }
+
+        .smart-bot .bubble {
+            background: var(--color-accent-tertiary);
+            border-radius: 50%;
+            animation: bubble-pop 2s ease-in-out infinite;
+        }
+
+        .smart-bot .bubble:nth-child(1) { width: 4px; height: 4px; animation-delay: 0s; }
+        .smart-bot .bubble:nth-child(2) { width: 6px; height: 6px; animation-delay: 0.2s; }
+        .smart-bot .bubble:nth-child(3) { width: 8px; height: 8px; animation-delay: 0.4s; }
+
+        @keyframes bot-look {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-3px); }
+            75% { transform: translateX(3px); }
+        }
+
+        @keyframes bubble-pop {
+            0%, 100% { opacity: 0.3; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        /* ==========================================================================
+           13. PULSE ORB - Current ai-orb implementation
+           ========================================================================== */
+        .pulse-orb {
             width: 80px;
             height: 80px;
             border-radius: 50%;
             background: radial-gradient(circle at 30% 30%, var(--color-accent-subtle), var(--color-accent));
             box-shadow: 0 0 40px var(--color-accent-glow), inset 0 0 20px rgba(255, 255, 255, 0.5);
             position: relative;
-            animation: pulse-current 2s infinite var(--ease-in-out);
+            animation: orb-pulse 2s infinite var(--ease-in-out);
         }
 
-        .orb-current::after {
+        .pulse-orb::after {
             content: '';
             position: absolute;
             top: -8px;
@@ -236,142 +1188,15 @@
             animation: spin 4s infinite linear;
         }
 
-        @keyframes pulse-current {
+        @keyframes orb-pulse {
             0%, 100% { transform: scale(0.95); box-shadow: 0 0 30px var(--color-accent-glow); }
             50% { transform: scale(1.05); box-shadow: 0 0 50px var(--color-accent); }
         }
 
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
         /* ==========================================================================
-           Animation 2: Data Processing Rings
+           14. GEARS - Mechanical processing
            ========================================================================== */
-        .orb-rings {
-            width: 80px;
-            height: 80px;
-            position: relative;
-        }
-
-        .orb-rings .ring {
-            position: absolute;
-            border-radius: 50%;
-            border: 2px solid transparent;
-        }
-
-        .orb-rings .ring-1 {
-            width: 100%;
-            height: 100%;
-            border-top-color: var(--color-accent);
-            border-right-color: var(--color-accent);
-            animation: spin 1.5s linear infinite;
-        }
-
-        .orb-rings .ring-2 {
-            width: 70%;
-            height: 70%;
-            top: 15%;
-            left: 15%;
-            border-top-color: var(--color-accent-secondary);
-            border-left-color: var(--color-accent-secondary);
-            animation: spin 1s linear infinite reverse;
-        }
-
-        .orb-rings .ring-3 {
-            width: 40%;
-            height: 40%;
-            top: 30%;
-            left: 30%;
-            border-bottom-color: var(--color-accent-tertiary);
-            border-right-color: var(--color-accent-tertiary);
-            animation: spin 0.75s linear infinite;
-        }
-
-        .orb-rings .core {
-            position: absolute;
-            width: 16%;
-            height: 16%;
-            top: 42%;
-            left: 42%;
-            background: var(--color-accent);
-            border-radius: 50%;
-            animation: pulse-core 1s var(--ease-in-out) infinite;
-        }
-
-        @keyframes pulse-core {
-            0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.3); opacity: 0.7; }
-        }
-
-        /* ==========================================================================
-           Animation 3: Radar Sweep
-           ========================================================================== */
-        .orb-radar {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            background: var(--color-bg-raised);
-            border: 2px solid var(--color-accent);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .orb-radar::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 50%;
-            height: 50%;
-            background: conic-gradient(from 0deg, transparent 0deg, var(--color-accent) 30deg, transparent 60deg);
-            transform-origin: 0 0;
-            animation: radar-sweep 2s linear infinite;
-        }
-
-        .orb-radar::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 6px;
-            height: 6px;
-            background: var(--color-accent);
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            box-shadow: 0 0 8px var(--color-accent);
-        }
-
-        .orb-radar .circle {
-            position: absolute;
-            border: 1px solid var(--color-border);
-            border-radius: 50%;
-        }
-
-        .orb-radar .circle-1 {
-            width: 33%;
-            height: 33%;
-            top: 33.5%;
-            left: 33.5%;
-        }
-
-        .orb-radar .circle-2 {
-            width: 66%;
-            height: 66%;
-            top: 17%;
-            left: 17%;
-        }
-
-        @keyframes radar-sweep {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        /* ==========================================================================
-           Animation 4: Spinning Gears (Lucide Icons)
-           ========================================================================== */
-        .orb-gears {
+        .gears {
             width: 120px;
             height: 80px;
             position: relative;
@@ -380,549 +1205,90 @@
             justify-content: center;
         }
 
-        .orb-gears .gear {
+        .gears .gear {
             position: absolute;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
-        .orb-gears .gear-1 {
+        .gears .gear-1 {
             left: 0;
             top: 10px;
             color: var(--color-accent);
             animation: spin 3s linear infinite;
         }
 
-        .orb-gears .gear-1 i {
-            width: 48px;
-            height: 48px;
-        }
+        .gears .gear-1 i { width: 48px; height: 48px; }
 
-        .orb-gears .gear-2 {
+        .gears .gear-2 {
             right: 8px;
             top: 0;
             color: var(--color-accent-secondary);
             animation: spin 2.4s linear infinite reverse;
         }
 
-        .orb-gears .gear-2 i {
-            width: 40px;
-            height: 40px;
-        }
+        .gears .gear-2 i { width: 40px; height: 40px; }
 
-        .orb-gears .gear-3 {
+        .gears .gear-3 {
             right: 20px;
             bottom: 0;
             color: var(--color-accent-tertiary);
             animation: spin 3.2s linear infinite;
         }
 
-        .orb-gears .gear-3 i {
-            width: 32px;
-            height: 32px;
-        }
+        .gears .gear-3 i { width: 32px; height: 32px; }
 
         /* ==========================================================================
-           Animation 5: Segmented Loader
+           15. NEURAL BRAIN - AI thinking
            ========================================================================== */
-        .orb-segments {
+        .neural-brain {
             width: 80px;
             height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             position: relative;
         }
 
-        .segment {
+        .neural-brain .brain-icon {
+            color: var(--color-accent);
+            animation: brain-think 2s var(--ease-in-out) infinite;
+        }
+
+        .neural-brain .brain-icon i {
+            width: 48px;
+            height: 48px;
+        }
+
+        .neural-brain .spark {
             position: absolute;
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            border: 3px solid transparent;
-        }
-
-        .segment-1 {
-            border-top-color: var(--color-accent);
-            animation: segment-spin 1.5s var(--ease-in-out) infinite;
-        }
-
-        .segment-2 {
-            border-right-color: var(--color-accent-secondary);
-            animation: segment-spin 1.5s var(--ease-in-out) infinite 0.2s;
-        }
-
-        .segment-3 {
-            border-bottom-color: var(--color-accent-tertiary);
-            animation: segment-spin 1.5s var(--ease-in-out) infinite 0.4s;
-        }
-
-        .segment-4 {
-            border-left-color: var(--color-accent);
-            animation: segment-spin 1.5s var(--ease-in-out) infinite 0.6s;
-        }
-
-        @keyframes segment-spin {
-            0% { transform: rotate(0deg); opacity: 0.3; }
-            50% { opacity: 1; }
-            100% { transform: rotate(360deg); opacity: 0.3; }
-        }
-
-        /* ==========================================================================
-           Animation 6: Binary Pulse Grid
-           ========================================================================== */
-        .orb-grid {
-            width: 80px;
-            height: 80px;
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            grid-template-rows: repeat(5, 1fr);
-            gap: 3px;
-            padding: 8px;
-        }
-
-        .orb-grid .dot {
-            width: 100%;
-            height: 100%;
-            background: var(--color-accent);
-            border-radius: 50%;
-            animation: grid-pulse 2s var(--ease-in-out) infinite;
-        }
-
-        .orb-grid .dot:nth-child(1) { animation-delay: 0s; }
-        .orb-grid .dot:nth-child(2) { animation-delay: 0.1s; }
-        .orb-grid .dot:nth-child(3) { animation-delay: 0.2s; }
-        .orb-grid .dot:nth-child(4) { animation-delay: 0.1s; }
-        .orb-grid .dot:nth-child(5) { animation-delay: 0s; }
-        .orb-grid .dot:nth-child(6) { animation-delay: 0.1s; }
-        .orb-grid .dot:nth-child(7) { animation-delay: 0.2s; background: var(--color-accent-secondary); }
-        .orb-grid .dot:nth-child(8) { animation-delay: 0.3s; background: var(--color-accent-secondary); }
-        .orb-grid .dot:nth-child(9) { animation-delay: 0.2s; background: var(--color-accent-secondary); }
-        .orb-grid .dot:nth-child(10) { animation-delay: 0.1s; }
-        .orb-grid .dot:nth-child(11) { animation-delay: 0.2s; }
-        .orb-grid .dot:nth-child(12) { animation-delay: 0.3s; background: var(--color-accent-secondary); }
-        .orb-grid .dot:nth-child(13) { animation-delay: 0.4s; background: var(--color-accent-tertiary); }
-        .orb-grid .dot:nth-child(14) { animation-delay: 0.3s; background: var(--color-accent-secondary); }
-        .orb-grid .dot:nth-child(15) { animation-delay: 0.2s; }
-        .orb-grid .dot:nth-child(16) { animation-delay: 0.1s; }
-        .orb-grid .dot:nth-child(17) { animation-delay: 0.2s; background: var(--color-accent-secondary); }
-        .orb-grid .dot:nth-child(18) { animation-delay: 0.3s; background: var(--color-accent-secondary); }
-        .orb-grid .dot:nth-child(19) { animation-delay: 0.2s; background: var(--color-accent-secondary); }
-        .orb-grid .dot:nth-child(20) { animation-delay: 0.1s; }
-        .orb-grid .dot:nth-child(21) { animation-delay: 0s; }
-        .orb-grid .dot:nth-child(22) { animation-delay: 0.1s; }
-        .orb-grid .dot:nth-child(23) { animation-delay: 0.2s; }
-        .orb-grid .dot:nth-child(24) { animation-delay: 0.1s; }
-        .orb-grid .dot:nth-child(25) { animation-delay: 0s; }
-
-        @keyframes grid-pulse {
-            0%, 100% { transform: scale(0.5); opacity: 0.3; }
-            50% { transform: scale(1); opacity: 1; }
-        }
-
-        /* ==========================================================================
-           Animation 7: Orbiting Particles
-           ========================================================================== */
-        .orb-particles {
-            width: 80px;
-            height: 80px;
-            position: relative;
-        }
-
-        .orb-particles .center {
-            position: absolute;
-            width: 16px;
-            height: 16px;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: var(--color-accent);
-            border-radius: 50%;
-            box-shadow: 0 0 16px var(--color-accent);
-            animation: center-pulse 1.5s var(--ease-in-out) infinite;
-        }
-
-        .orb-particles .orbit {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            animation: spin linear infinite;
-        }
-
-        .orb-particles .orbit-1 { animation-duration: 3s; }
-        .orb-particles .orbit-2 { animation-duration: 2s; animation-direction: reverse; }
-        .orb-particles .orbit-3 { animation-duration: 4s; }
-
-        .orb-particles .particle {
-            position: absolute;
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-        }
-
-        .orb-particles .orbit-1 .particle {
-            background: var(--color-accent);
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-
-        .orb-particles .orbit-2 .particle {
+            width: 4px;
+            height: 4px;
             background: var(--color-accent-secondary);
-            top: 50%;
-            right: 0;
-            transform: translateY(-50%);
-        }
-
-        .orb-particles .orbit-3 .particle {
-            background: var(--color-accent-tertiary);
-            bottom: 10%;
-            left: 10%;
-        }
-
-        @keyframes center-pulse {
-            0%, 100% { transform: translate(-50%, -50%) scale(1); }
-            50% { transform: translate(-50%, -50%) scale(1.2); }
-        }
-
-        /* ==========================================================================
-           Animation 8: Morphing Shape
-           ========================================================================== */
-        .orb-hexagon {
-            width: 80px;
-            height: 80px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .orb-hexagon .shape {
-            width: 56px;
-            height: 56px;
-            background: linear-gradient(135deg, var(--color-accent), var(--color-accent-secondary));
-            animation: morph 4s var(--ease-in-out) infinite, spin 8s linear infinite;
-            box-shadow: 0 0 24px var(--color-accent-glow);
-        }
-
-        @keyframes morph {
-            0%, 100% { border-radius: 50%; }
-            25% { border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; }
-            50% { border-radius: 10%; }
-            75% { border-radius: 70% 30% 30% 70% / 70% 70% 30% 30%; }
-        }
-
-        /* ==========================================================================
-           Animation 9: Circuit Pulse
-           ========================================================================== */
-        .orb-circuit {
-            width: 80px;
-            height: 80px;
-            position: relative;
-        }
-
-        .orb-circuit .node {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            background: var(--color-accent);
             border-radius: 50%;
-            animation: node-pulse 1.5s var(--ease-in-out) infinite;
+            animation: spark-float 2s var(--ease-in-out) infinite;
         }
 
-        .orb-circuit .node-center {
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 14px;
-            height: 14px;
-            background: var(--color-accent-secondary);
-            animation-delay: 0s;
+        .neural-brain .spark-1 { top: 10%; left: 20%; animation-delay: 0s; }
+        .neural-brain .spark-2 { top: 20%; right: 15%; animation-delay: 0.3s; }
+        .neural-brain .spark-3 { bottom: 25%; left: 15%; animation-delay: 0.6s; }
+        .neural-brain .spark-4 { bottom: 15%; right: 20%; animation-delay: 0.9s; background: var(--color-accent-tertiary); }
+
+        @keyframes brain-think {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 4px var(--color-accent-glow)); }
+            50% { transform: scale(1.05); filter: drop-shadow(0 0 12px var(--color-accent)); }
         }
 
-        .orb-circuit .node-1 { top: 10%; left: 50%; transform: translateX(-50%); animation-delay: 0.2s; }
-        .orb-circuit .node-2 { top: 50%; right: 10%; transform: translateY(-50%); animation-delay: 0.4s; }
-        .orb-circuit .node-3 { bottom: 10%; left: 50%; transform: translateX(-50%); animation-delay: 0.6s; }
-        .orb-circuit .node-4 { top: 50%; left: 10%; transform: translateY(-50%); animation-delay: 0.8s; }
-
-        .orb-circuit .line {
-            position: absolute;
-            background: var(--color-accent);
-            opacity: 0.3;
-        }
-
-        .orb-circuit .line-v {
-            width: 2px;
-            height: 28%;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-
-        .orb-circuit .line-v-top { top: 18%; }
-        .orb-circuit .line-v-bottom { bottom: 18%; }
-
-        .orb-circuit .line-h {
-            height: 2px;
-            width: 28%;
-            top: 50%;
-            transform: translateY(-50%);
-        }
-
-        .orb-circuit .line-h-left { left: 18%; }
-        .orb-circuit .line-h-right { right: 18%; }
-
-        @keyframes node-pulse {
-            0%, 100% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 4px var(--color-accent); }
-            50% { transform: translate(-50%, -50%) scale(1.3); box-shadow: 0 0 12px var(--color-accent); }
+        @keyframes spark-float {
+            0%, 100% { opacity: 0; transform: scale(0.5); }
+            50% { opacity: 1; transform: scale(1.5); }
         }
 
         /* ==========================================================================
-           Animation 10: Waveform
+           16. HOURGLASS - Time/patience
            ========================================================================== */
-        .orb-waveform {
-            width: 100px;
-            height: 50px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 3px;
-        }
-
-        .orb-waveform .bar {
-            width: 5px;
-            background: linear-gradient(to top, var(--color-accent), var(--color-accent-secondary));
-            border-radius: 2px;
-            animation: wave 1s var(--ease-in-out) infinite;
-        }
-
-        .orb-waveform .bar:nth-child(1) { animation-delay: 0s; }
-        .orb-waveform .bar:nth-child(2) { animation-delay: 0.1s; }
-        .orb-waveform .bar:nth-child(3) { animation-delay: 0.2s; }
-        .orb-waveform .bar:nth-child(4) { animation-delay: 0.3s; }
-        .orb-waveform .bar:nth-child(5) { animation-delay: 0.4s; }
-        .orb-waveform .bar:nth-child(6) { animation-delay: 0.3s; }
-        .orb-waveform .bar:nth-child(7) { animation-delay: 0.2s; }
-        .orb-waveform .bar:nth-child(8) { animation-delay: 0.1s; }
-        .orb-waveform .bar:nth-child(9) { animation-delay: 0s; }
-
-        @keyframes wave {
-            0%, 100% { height: 12px; }
-            50% { height: 40px; }
-        }
-
-        /* ==========================================================================
-           Animation 11: DNA Helix
-           ========================================================================== */
-        .orb-dna {
-            width: 50px;
-            height: 80px;
-            position: relative;
-        }
-
-        .orb-dna .dot-pair {
-            position: absolute;
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .orb-dna .dot-pair::before,
-        .orb-dna .dot-pair::after {
-            content: '';
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-        }
-
-        .orb-dna .dot-pair::before { background: var(--color-accent); }
-        .orb-dna .dot-pair::after { background: var(--color-accent-secondary); }
-
-        .orb-dna .dot-pair-1 { top: 0; animation: dna-wave 2s var(--ease-in-out) infinite; }
-        .orb-dna .dot-pair-2 { top: 20%; animation: dna-wave 2s var(--ease-in-out) infinite 0.25s; }
-        .orb-dna .dot-pair-3 { top: 40%; animation: dna-wave 2s var(--ease-in-out) infinite 0.5s; }
-        .orb-dna .dot-pair-4 { top: 60%; animation: dna-wave 2s var(--ease-in-out) infinite 0.75s; }
-        .orb-dna .dot-pair-5 { top: 80%; animation: dna-wave 2s var(--ease-in-out) infinite 1s; }
-
-        .orb-dna .connector {
-            position: absolute;
-            height: 2px;
-            background: var(--color-accent-tertiary);
-            opacity: 0.5;
-            left: 8px;
-            right: 8px;
-        }
-
-        .orb-dna .connector-1 { top: 4px; animation: connector-fade 2s var(--ease-in-out) infinite; }
-        .orb-dna .connector-2 { top: 20px; animation: connector-fade 2s var(--ease-in-out) infinite 0.25s; }
-        .orb-dna .connector-3 { top: 36px; animation: connector-fade 2s var(--ease-in-out) infinite 0.5s; }
-        .orb-dna .connector-4 { top: 52px; animation: connector-fade 2s var(--ease-in-out) infinite 0.75s; }
-        .orb-dna .connector-5 { top: 68px; animation: connector-fade 2s var(--ease-in-out) infinite 1s; }
-
-        @keyframes dna-wave {
-            0%, 100% { transform: scaleX(1); }
-            50% { transform: scaleX(0.3); }
-        }
-
-        @keyframes connector-fade {
-            0%, 100% { opacity: 0.2; }
-            50% { opacity: 0.8; }
-        }
-
-        /* ==========================================================================
-           Animation 12: 3D Cube
-           ========================================================================== */
-        .orb-cube-container {
-            width: 80px;
-            height: 80px;
-            perspective: 200px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .orb-cube {
-            width: 40px;
-            height: 40px;
-            position: relative;
-            transform-style: preserve-3d;
-            animation: cube-rotate 4s linear infinite;
-        }
-
-        .orb-cube .face {
-            position: absolute;
-            width: 40px;
-            height: 40px;
-            border: 2px solid var(--color-accent);
-            background: rgba(37, 99, 235, 0.08);
-        }
-
-        .orb-cube .front { transform: translateZ(20px); }
-        .orb-cube .back { transform: rotateY(180deg) translateZ(20px); border-color: var(--color-accent-secondary); }
-        .orb-cube .right { transform: rotateY(90deg) translateZ(20px); border-color: var(--color-accent-tertiary); }
-        .orb-cube .left { transform: rotateY(-90deg) translateZ(20px); border-color: var(--color-accent-secondary); }
-        .orb-cube .top { transform: rotateX(90deg) translateZ(20px); border-color: var(--color-accent-tertiary); }
-        .orb-cube .bottom { transform: rotateX(-90deg) translateZ(20px); }
-
-        @keyframes cube-rotate {
-            from { transform: rotateX(0deg) rotateY(0deg); }
-            to { transform: rotateX(360deg) rotateY(360deg); }
-        }
-
-        /* ==========================================================================
-           Animation 13: Typing Dots
-           ========================================================================== */
-        .orb-typing {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-        }
-
-        .orb-typing .dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: var(--color-accent);
-            animation: typing-bounce 1.4s var(--ease-in-out) infinite;
-        }
-
-        .orb-typing .dot:nth-child(1) { animation-delay: 0s; }
-        .orb-typing .dot:nth-child(2) { animation-delay: 0.2s; background: var(--color-accent-secondary); }
-        .orb-typing .dot:nth-child(3) { animation-delay: 0.4s; background: var(--color-accent-tertiary); }
-
-        @keyframes typing-bounce {
-            0%, 60%, 100% { transform: translateY(0); }
-            30% { transform: translateY(-16px); }
-        }
-
-        /* ==========================================================================
-           Animation 14: Infinity Loop
-           ========================================================================== */
-        .orb-infinity {
-            width: 100px;
-            height: 50px;
-            position: relative;
-        }
-
-        .orb-infinity svg {
-            width: 100%;
-            height: 100%;
-        }
-
-        .orb-infinity .infinity-line {
-            fill: none;
-            stroke: var(--color-border);
-            stroke-width: 3;
-            stroke-linecap: round;
-        }
-
-        .orb-infinity .infinity-glow {
-            fill: none;
-            stroke: url(#infinity-gradient);
-            stroke-width: 3;
-            stroke-linecap: round;
-            stroke-dasharray: 180;
-            stroke-dashoffset: 180;
-            animation: infinity-trace 3s var(--ease-in-out) infinite;
-        }
-
-        @keyframes infinity-trace {
-            0% { stroke-dashoffset: 180; }
-            50% { stroke-dashoffset: 0; }
-            100% { stroke-dashoffset: -180; }
-        }
-
-        /* ==========================================================================
-           Animation 15: Heartbeat
-           ========================================================================== */
-        .orb-heartbeat {
-            width: 120px;
-            height: 50px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .orb-heartbeat svg {
-            width: 100%;
-            height: 100%;
-        }
-
-        .orb-heartbeat .line {
-            fill: none;
-            stroke: var(--color-accent);
-            stroke-width: 2;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-            stroke-dasharray: 250;
-            stroke-dashoffset: 250;
-            animation: heartbeat-draw 2s var(--ease-in-out) infinite;
-        }
-
-        .orb-heartbeat .glow {
-            position: absolute;
-            width: 6px;
-            height: 6px;
-            background: var(--color-accent);
-            border-radius: 50%;
-            top: 50%;
-            transform: translateY(-50%);
-            box-shadow: 0 0 10px var(--color-accent);
-            animation: heartbeat-dot 2s var(--ease-in-out) infinite;
-        }
-
-        @keyframes heartbeat-draw {
-            0%, 100% { stroke-dashoffset: 250; }
-            50% { stroke-dashoffset: 0; }
-        }
-
-        @keyframes heartbeat-dot {
-            0% { left: 0; opacity: 1; }
-            100% { left: 100%; opacity: 0; }
-        }
-
-        /* ==========================================================================
-           Animation 16: Hourglass (Lucide Icon)
-           ========================================================================== */
-        .orb-hourglass {
+        .hourglass {
             width: 48px;
             height: 80px;
             display: flex;
@@ -931,7 +1297,7 @@
             color: var(--color-accent);
         }
 
-        .orb-hourglass i {
+        .hourglass i {
             width: 48px;
             height: 48px;
             animation: hourglass-flip 2s var(--ease-in-out) infinite;
@@ -944,49 +1310,47 @@
         }
 
         /* ==========================================================================
-           Animation 17: Neural Network (Lucide Brain Icon)
+           17. MAP PIN PULSE - Location discovery
            ========================================================================== */
-        .orb-neural {
+        .map-pulse {
             width: 80px;
             height: 80px;
+            position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
-            position: relative;
         }
 
-        .orb-neural .brain-icon {
+        .map-pulse .pin {
             color: var(--color-accent);
-            animation: brain-pulse 2s var(--ease-in-out) infinite;
+            z-index: 2;
+            animation: pin-bounce 2s var(--ease-in-out) infinite;
         }
 
-        .orb-neural .brain-icon i {
-            width: 48px;
-            height: 48px;
+        .map-pulse .pin i {
+            width: 40px;
+            height: 40px;
         }
 
-        .orb-neural .spark {
+        .map-pulse .ring {
             position: absolute;
-            width: 4px;
-            height: 4px;
-            background: var(--color-accent-secondary);
+            border: 2px solid var(--color-accent);
             border-radius: 50%;
-            animation: spark-float 2s var(--ease-in-out) infinite;
+            animation: ring-expand 2s ease-out infinite;
         }
 
-        .orb-neural .spark-1 { top: 10%; left: 20%; animation-delay: 0s; }
-        .orb-neural .spark-2 { top: 20%; right: 15%; animation-delay: 0.3s; }
-        .orb-neural .spark-3 { bottom: 25%; left: 15%; animation-delay: 0.6s; }
-        .orb-neural .spark-4 { bottom: 15%; right: 20%; animation-delay: 0.9s; background: var(--color-accent-tertiary); }
+        .map-pulse .ring-1 { width: 30px; height: 30px; animation-delay: 0s; }
+        .map-pulse .ring-2 { width: 30px; height: 30px; animation-delay: 0.5s; }
+        .map-pulse .ring-3 { width: 30px; height: 30px; animation-delay: 1s; }
 
-        @keyframes brain-pulse {
-            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 4px var(--color-accent-glow)); }
-            50% { transform: scale(1.05); filter: drop-shadow(0 0 12px var(--color-accent)); }
+        @keyframes pin-bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
         }
 
-        @keyframes spark-float {
-            0%, 100% { opacity: 0; transform: scale(0.5); }
-            50% { opacity: 1; transform: scale(1.5); }
+        @keyframes ring-expand {
+            0% { transform: scale(1); opacity: 0.8; }
+            100% { transform: scale(2.5); opacity: 0; }
         }
     </style>
 </head>
@@ -994,7 +1358,7 @@
     <div class="container">
         <div class="page-header">
             <h1>AI Loading Animation Options</h1>
-            <p class="subtitle">Design study for the AI processing indicator</p>
+            <p class="subtitle">Design study for the Tender Scout processing indicator</p>
         </div>
 
         <!-- Context Banner -->
@@ -1002,320 +1366,321 @@
             <i data-lucide="info" style="width: 20px; height: 20px;"></i>
             <p>
                 This page explores animation alternatives to replace the current <code>.ai-orb</code> component
-                used in the AI Loading Overlay (<code>index.html:606</code>). The goal is to find an animation
-                that communicates AI processing while aligning with the design principles in DESIGNGUIDE.md:
-                subtle, purposeful, and respectful of reduced-motion preferences.
+                used in the AI Loading Overlay (<code>index.html:606</code>). Animations are themed around
+                <strong>Tender Scout's</strong> brand identity: scouting, discovery, data analysis, and AI assistance.
             </p>
         </div>
 
+        <!-- SCOUT / DISCOVERY THEME -->
+        <div class="section-header">
+            <h2><i data-lucide="compass" style="width: 20px; height: 20px;"></i> Scout & Discovery</h2>
+            <p>Animations that evoke exploration, searching, and finding opportunities</p>
+        </div>
+
         <div class="grid">
-            <!-- 1. Current (Pulse + Ring) -->
-            <div class="card">
-                <h3>1. Pulse + Ring</h3>
-                <p>Current implementation - organic pulsing orb</p>
+            <!-- 1. Scout Bot -->
+            <div class="card featured">
+                <h3>1. Scout Bot</h3>
+                <p>Friendly robot scout with scanning antenna</p>
                 <div class="demo-area">
-                    <div class="orb-current"></div>
+                    <div class="scout-bot">
+                        <div class="scan-wave"></div>
+                        <div class="antenna"></div>
+                        <div class="head">
+                            <div class="eye eye-left"></div>
+                            <div class="eye eye-right"></div>
+                        </div>
+                        <div class="body"></div>
+                    </div>
                 </div>
-                <div class="label">Organic / Calm</div>
+                <div class="label">Mascot / Brand</div>
                 <div class="design-intent">
-                    <strong>Intent:</strong> Conveys a living, breathing intelligence. The gentle pulse suggests contemplation, while the orbiting ring hints at constant awareness.
+                    <strong>Intent:</strong> A friendly scout robot that could become the Tender Scout mascot. The scanning waves show active discovery while the character adds personality.
                 </div>
             </div>
 
-            <!-- 2. Data Processing Rings -->
+            <!-- 2. Binoculars -->
             <div class="card">
-                <h3>2. Processing Rings</h3>
-                <p>Concentric rings at different speeds</p>
+                <h3>2. Binoculars Scan</h3>
+                <p>Classic scouting imagery with lens sweep</p>
                 <div class="demo-area">
-                    <div class="orb-rings">
+                    <div class="binoculars">
+                        <div class="barrel barrel-left">
+                            <div class="lens"></div>
+                        </div>
+                        <div class="barrel barrel-right">
+                            <div class="lens"></div>
+                        </div>
+                        <div class="bridge"></div>
+                        <div class="focus-ring"></div>
+                    </div>
+                </div>
+                <div class="label">Scout / Search</div>
+                <div class="design-intent">
+                    <strong>Intent:</strong> Instantly recognizable scouting symbol. The lens sweep effect suggests actively scanning the horizon for tender opportunities.
+                </div>
+            </div>
+
+            <!-- 3. Compass -->
+            <div class="card">
+                <h3>3. Compass Navigation</h3>
+                <p>Finding the right direction</p>
+                <div class="demo-area">
+                    <div class="compass">
+                        <div class="ring"></div>
+                        <div class="directions">
+                            <span class="dir dir-n">N</span>
+                            <span class="dir dir-s">S</span>
+                            <span class="dir dir-e">E</span>
+                            <span class="dir dir-w">W</span>
+                        </div>
+                        <div class="needle"></div>
+                        <div class="center-dot"></div>
+                    </div>
+                </div>
+                <div class="label">Direction / Guidance</div>
+                <div class="design-intent">
+                    <strong>Intent:</strong> Navigation through the tender landscape. The seeking needle suggests the AI is calibrating to find the perfect match.
+                </div>
+            </div>
+
+            <!-- 4. Radar -->
+            <div class="card featured">
+                <h3>4. Radar Sweep</h3>
+                <p>Scanning with blip detection</p>
+                <div class="demo-area">
+                    <div class="radar">
+                        <div class="grid-line grid-1"></div>
+                        <div class="grid-line grid-2"></div>
+                        <div class="crosshair-h"></div>
+                        <div class="crosshair-v"></div>
+                        <div class="sweep"></div>
+                        <div class="blip blip-1"></div>
+                        <div class="blip blip-2"></div>
+                        <div class="blip blip-3"></div>
+                        <div class="center"></div>
+                    </div>
+                </div>
+                <div class="label">Detection / Scanning</div>
+                <div class="design-intent">
+                    <strong>Intent:</strong> Military-grade tender detection. Blips represent found opportunities, making the abstract process of searching concrete and visual.
+                </div>
+            </div>
+
+            <!-- 5. Telescope -->
+            <div class="card">
+                <h3>5. Telescope</h3>
+                <p>Looking for distant opportunities</p>
+                <div class="demo-area">
+                    <div class="telescope">
+                        <div class="star star-1"></div>
+                        <div class="star star-2"></div>
+                        <div class="star star-3"></div>
+                        <div class="tube">
+                            <div class="lens">
+                                <div class="lens-flare"></div>
+                            </div>
+                        </div>
+                        <div class="tripod">
+                            <div class="tripod-leg"></div>
+                            <div class="tripod-leg"></div>
+                            <div class="tripod-leg"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="label">Vision / Foresight</div>
+                <div class="design-intent">
+                    <strong>Intent:</strong> Looking beyond the obvious to find hidden opportunities. The twinkling stars represent undiscovered tenders waiting to be found.
+                </div>
+            </div>
+
+            <!-- 6. Magnifying Glass -->
+            <div class="card">
+                <h3>6. Magnifying Glass</h3>
+                <p>Searching through documents</p>
+                <div class="demo-area">
+                    <div class="magnifier">
+                        <div class="glass"></div>
+                        <div class="handle"></div>
+                        <div class="search-target"></div>
+                    </div>
+                </div>
+                <div class="label">Search / Detail</div>
+                <div class="design-intent">
+                    <strong>Intent:</strong> Focused searching and attention to detail. The pulsing target shows active discovery of relevant information.
+                </div>
+            </div>
+        </div>
+
+        <!-- DATA / PROCESSING THEME -->
+        <div class="section-header">
+            <h2><i data-lucide="database" style="width: 20px; height: 20px;"></i> Data & Processing</h2>
+            <p>Animations that represent data analysis, document processing, and computation</p>
+        </div>
+
+        <div class="grid">
+            <!-- 7. Document Scanner -->
+            <div class="card featured">
+                <h3>7. Document Scanner</h3>
+                <p>Processing tender documents</p>
+                <div class="demo-area">
+                    <div class="doc-scanner">
+                        <div class="document">
+                            <div class="doc-line"></div>
+                            <div class="doc-line"></div>
+                            <div class="doc-line"></div>
+                            <div class="doc-line"></div>
+                            <div class="doc-line"></div>
+                        </div>
+                        <div class="scan-line"></div>
+                        <div class="highlight highlight-1"></div>
+                        <div class="highlight highlight-2"></div>
+                    </div>
+                </div>
+                <div class="label">Document / Analysis</div>
+                <div class="design-intent">
+                    <strong>Intent:</strong> Directly represents the core function - scanning and analyzing tender documents. Highlights show key information being extracted.
+                </div>
+            </div>
+
+            <!-- 8. Data Mining -->
+            <div class="card">
+                <h3>8. Data Mining</h3>
+                <p>Extracting insights from raw data</p>
+                <div class="demo-area">
+                    <div class="data-mining">
+                        <div class="data-bar"></div>
+                        <div class="data-bar"></div>
+                        <div class="data-bar"></div>
+                        <div class="data-bar"></div>
+                        <div class="data-bar"></div>
+                        <div class="sparkle sparkle-1"></div>
+                        <div class="sparkle sparkle-2"></div>
+                        <div class="sparkle sparkle-3"></div>
+                    </div>
+                </div>
+                <div class="label">Analytics / Insights</div>
+                <div class="design-intent">
+                    <strong>Intent:</strong> Visualizes data being processed and valuable insights (sparkles) emerging. Dynamic bars show active computation.
+                </div>
+            </div>
+
+            <!-- 9. Satellite -->
+            <div class="card">
+                <h3>9. Satellite View</h3>
+                <p>Orbital data scanning</p>
+                <div class="demo-area">
+                    <div class="satellite">
+                        <div class="earth"></div>
+                        <div class="sat-body">
+                            <div class="panel panel-left"></div>
+                            <div class="panel panel-right"></div>
+                            <div class="dish"></div>
+                        </div>
+                        <div class="scan-beam"></div>
+                    </div>
+                </div>
+                <div class="label">Overhead / Coverage</div>
+                <div class="design-intent">
+                    <strong>Intent:</strong> Big-picture view of the tender landscape. The satellite suggests comprehensive market coverage and advanced technology.
+                </div>
+            </div>
+
+            <!-- 10. Processing Rings -->
+            <div class="card">
+                <h3>10. Processing Rings</h3>
+                <p>Layered data computation</p>
+                <div class="demo-area">
+                    <div class="processing-rings">
                         <div class="ring ring-1"></div>
                         <div class="ring ring-2"></div>
                         <div class="ring ring-3"></div>
                         <div class="core"></div>
                     </div>
                 </div>
-                <div class="label">Technical / Processing</div>
+                <div class="label">Technical / Layers</div>
                 <div class="design-intent">
-                    <strong>Intent:</strong> Represents layers of computation working in parallel. Each ring symbolizes a different processing layer, from data ingestion to output refinement.
+                    <strong>Intent:</strong> Multiple processing layers working in parallel. Each ring represents a stage: ingestion, analysis, matching.
                 </div>
             </div>
 
-            <!-- 3. Radar Sweep -->
+            <!-- 11. Gears -->
             <div class="card">
-                <h3>3. Radar Sweep</h3>
-                <p>Scanning motion with gradient trail</p>
+                <h3>11. Spinning Gears</h3>
+                <p>Mechanical data processing</p>
                 <div class="demo-area">
-                    <div class="orb-radar">
-                        <div class="circle circle-1"></div>
-                        <div class="circle circle-2"></div>
-                    </div>
-                </div>
-                <div class="label">Searching / Scanning</div>
-                <div class="design-intent">
-                    <strong>Intent:</strong> Ideal for search tasks. Communicates active exploration, like sonar finding relevant information in a sea of data.
-                </div>
-            </div>
-
-            <!-- 4. Spinning Gears (Lucide Icons) -->
-            <div class="card">
-                <h3>4. Spinning Gears</h3>
-                <p>Interlocking Lucide cog icons</p>
-                <div class="demo-area">
-                    <div class="orb-gears">
+                    <div class="gears">
                         <div class="gear gear-1"><i data-lucide="cog"></i></div>
                         <div class="gear gear-2"><i data-lucide="cog"></i></div>
                         <div class="gear gear-3"><i data-lucide="cog"></i></div>
                     </div>
                 </div>
-                <div class="label">Mechanical / Computing</div>
+                <div class="label">Mechanical / Reliable</div>
                 <div class="design-intent">
-                    <strong>Intent:</strong> Represents the machinery of thought. Interlocking gears convey precision, reliability, and multiple processes working together.
+                    <strong>Intent:</strong> The machinery of matching. Interlocking gears convey precision, reliability, and complex orchestration.
                 </div>
             </div>
 
-            <!-- 5. Segmented Loader -->
+            <!-- 12. Map Pulse -->
             <div class="card">
-                <h3>5. Segmented Loader</h3>
-                <p>Staggered spinning segments</p>
+                <h3>12. Location Pulse</h3>
+                <p>Geographic tender discovery</p>
                 <div class="demo-area">
-                    <div class="orb-segments">
-                        <div class="segment segment-1"></div>
-                        <div class="segment segment-2"></div>
-                        <div class="segment segment-3"></div>
-                        <div class="segment segment-4"></div>
+                    <div class="map-pulse">
+                        <div class="ring ring-1"></div>
+                        <div class="ring ring-2"></div>
+                        <div class="ring ring-3"></div>
+                        <div class="pin"><i data-lucide="map-pin"></i></div>
                     </div>
                 </div>
-                <div class="label">Progress / Steps</div>
+                <div class="label">Location / Regional</div>
                 <div class="design-intent">
-                    <strong>Intent:</strong> Suggests progress through distinct phases. Each segment represents a processing step, creating anticipation.
+                    <strong>Intent:</strong> Finding tenders in your area. The expanding rings suggest widening search radius and geographic coverage.
                 </div>
             </div>
+        </div>
 
-            <!-- 6. Binary Pulse Grid -->
-            <div class="card">
-                <h3>6. Binary Pulse Grid</h3>
-                <p>Pulsing dot matrix with wave pattern</p>
-                <div class="demo-area">
-                    <div class="orb-grid">
-                        <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
-                        <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
-                        <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
-                        <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
-                        <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
-                    </div>
-                </div>
-                <div class="label">Data / Matrix</div>
-                <div class="design-intent">
-                    <strong>Intent:</strong> Evokes binary data and pixel-level processing. The ripple from center outward suggests information radiating from a core intelligence.
-                </div>
-            </div>
+        <!-- AI / ASSISTANT THEME -->
+        <div class="section-header">
+            <h2><i data-lucide="bot" style="width: 20px; height: 20px;"></i> AI & Assistant</h2>
+            <p>Animations that represent intelligent assistance and AI processing</p>
+        </div>
 
-            <!-- 7. Orbiting Particles -->
+        <div class="grid">
+            <!-- 13. Smart Bot -->
             <div class="card">
-                <h3>7. Orbiting Particles</h3>
-                <p>Particles circling a central core</p>
+                <h3>13. Smart Assistant</h3>
+                <p>Friendly AI helper thinking</p>
                 <div class="demo-area">
-                    <div class="orb-particles">
-                        <div class="center"></div>
-                        <div class="orbit orbit-1"><div class="particle"></div></div>
-                        <div class="orbit orbit-2"><div class="particle"></div></div>
-                        <div class="orbit orbit-3"><div class="particle"></div></div>
-                    </div>
-                </div>
-                <div class="label">Atomic / Neural</div>
-                <div class="design-intent">
-                    <strong>Intent:</strong> Inspired by atomic structure. Conveys energy, potential, and the dynamic nature of intelligent thought processes.
-                </div>
-            </div>
-
-            <!-- 8. Morphing Shape -->
-            <div class="card">
-                <h3>8. Morphing Shape</h3>
-                <p>Smooth shape transformation</p>
-                <div class="demo-area">
-                    <div class="orb-hexagon">
-                        <div class="shape"></div>
-                    </div>
-                </div>
-                <div class="label">Fluid / Adaptive</div>
-                <div class="design-intent">
-                    <strong>Intent:</strong> Represents adaptability and transformation. The ever-changing form suggests an AI that molds itself to each task.
-                </div>
-            </div>
-
-            <!-- 9. Circuit Pulse -->
-            <div class="card">
-                <h3>9. Circuit Pulse</h3>
-                <p>Connected nodes with pulsing signals</p>
-                <div class="demo-area">
-                    <div class="orb-circuit">
-                        <div class="line line-v line-v-top"></div>
-                        <div class="line line-v line-v-bottom"></div>
-                        <div class="line line-h line-h-left"></div>
-                        <div class="line line-h line-h-right"></div>
-                        <div class="node node-1"></div>
-                        <div class="node node-2"></div>
-                        <div class="node node-3"></div>
-                        <div class="node node-4"></div>
-                        <div class="node node-center"></div>
-                    </div>
-                </div>
-                <div class="label">Network / Connected</div>
-                <div class="design-intent">
-                    <strong>Intent:</strong> Visualizes interconnected thoughts. The central hub coordinates nodes, representing how AI synthesizes information.
-                </div>
-            </div>
-
-            <!-- 10. Waveform -->
-            <div class="card">
-                <h3>10. Audio Waveform</h3>
-                <p>Equalizer-style animated bars</p>
-                <div class="demo-area">
-                    <div class="orb-waveform">
-                        <div class="bar"></div>
-                        <div class="bar"></div>
-                        <div class="bar"></div>
-                        <div class="bar"></div>
-                        <div class="bar"></div>
-                        <div class="bar"></div>
-                        <div class="bar"></div>
-                        <div class="bar"></div>
-                        <div class="bar"></div>
-                    </div>
-                </div>
-                <div class="label">Processing / Active</div>
-                <div class="design-intent">
-                    <strong>Intent:</strong> Perfect for voice or audio AI. Suggests active listening and response generation, like a visual heartbeat of conversation.
-                </div>
-            </div>
-
-            <!-- 11. DNA Helix -->
-            <div class="card">
-                <h3>11. DNA Helix</h3>
-                <p>Double helix with connected pairs</p>
-                <div class="demo-area">
-                    <div class="orb-dna">
-                        <div class="connector connector-1"></div>
-                        <div class="connector connector-2"></div>
-                        <div class="connector connector-3"></div>
-                        <div class="connector connector-4"></div>
-                        <div class="connector connector-5"></div>
-                        <div class="dot-pair dot-pair-1"></div>
-                        <div class="dot-pair dot-pair-2"></div>
-                        <div class="dot-pair dot-pair-3"></div>
-                        <div class="dot-pair dot-pair-4"></div>
-                        <div class="dot-pair dot-pair-5"></div>
-                    </div>
-                </div>
-                <div class="label">Bio / Transformation</div>
-                <div class="design-intent">
-                    <strong>Intent:</strong> Represents building blocks of intelligence. DNA metaphor suggests learning, evolution, and organic AI understanding.
-                </div>
-            </div>
-
-            <!-- 12. 3D Cube -->
-            <div class="card">
-                <h3>12. 3D Rotating Cube</h3>
-                <p>Wireframe cube with depth</p>
-                <div class="demo-area">
-                    <div class="orb-cube-container">
-                        <div class="orb-cube">
-                            <div class="face front"></div>
-                            <div class="face back"></div>
-                            <div class="face right"></div>
-                            <div class="face left"></div>
-                            <div class="face top"></div>
-                            <div class="face bottom"></div>
+                    <div class="smart-bot">
+                        <div class="thinking-bubble">
+                            <div class="bubble"></div>
+                            <div class="bubble"></div>
+                            <div class="bubble"></div>
+                        </div>
+                        <div class="ear ear-left"></div>
+                        <div class="ear ear-right"></div>
+                        <div class="face">
+                            <div class="eye-container">
+                                <div class="eye"></div>
+                                <div class="eye"></div>
+                            </div>
+                            <div class="mouth"></div>
                         </div>
                     </div>
                 </div>
-                <div class="label">3D / Dimensional</div>
+                <div class="label">Assistant / Friendly</div>
                 <div class="design-intent">
-                    <strong>Intent:</strong> Represents multi-dimensional thinking. Shows all perspectives simultaneously, suggesting comprehensive analysis.
+                    <strong>Intent:</strong> A friendly AI face that's actively thinking. The thought bubbles show cognitive activity while maintaining approachability.
                 </div>
             </div>
 
-            <!-- 13. Typing Dots -->
+            <!-- 14. Neural Brain -->
             <div class="card">
-                <h3>13. Typing Indicator</h3>
-                <p>Classic chat-style bouncing dots</p>
+                <h3>14. Neural Brain</h3>
+                <p>AI thinking with spark effects</p>
                 <div class="demo-area">
-                    <div class="orb-typing">
-                        <div class="dot"></div>
-                        <div class="dot"></div>
-                        <div class="dot"></div>
-                    </div>
-                </div>
-                <div class="label">Chat / Conversational</div>
-                <div class="design-intent">
-                    <strong>Intent:</strong> Familiar messaging pattern users instantly recognize. Creates anticipation and human-like presence, as if composing a reply.
-                </div>
-            </div>
-
-            <!-- 14. Infinity Loop -->
-            <div class="card">
-                <h3>14. Infinity Loop</h3>
-                <p>Continuous flowing path</p>
-                <div class="demo-area">
-                    <div class="orb-infinity">
-                        <svg viewBox="0 0 100 50" xmlns="http://www.w3.org/2000/svg">
-                            <defs>
-                                <linearGradient id="infinity-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                                    <stop offset="0%" style="stop-color: var(--color-accent)"/>
-                                    <stop offset="50%" style="stop-color: var(--color-accent-secondary)"/>
-                                    <stop offset="100%" style="stop-color: var(--color-accent-tertiary)"/>
-                                </linearGradient>
-                            </defs>
-                            <path class="infinity-line" d="M25 25 C25 10, 10 10, 10 25 C10 40, 25 40, 25 25 C25 10, 40 10, 50 25 C60 40, 75 40, 75 25 C75 10, 60 10, 50 25 C40 40, 25 40, 25 25"/>
-                            <path class="infinity-glow" d="M25 25 C25 10, 10 10, 10 25 C10 40, 25 40, 25 25 C25 10, 40 10, 50 25 C60 40, 75 40, 75 25 C75 10, 60 10, 50 25 C40 40, 25 40, 25 25"/>
-                        </svg>
-                    </div>
-                </div>
-                <div class="label">Continuous / Endless</div>
-                <div class="design-intent">
-                    <strong>Intent:</strong> Symbolizes unlimited potential and continuous processing. The infinity form suggests boundless capability.
-                </div>
-            </div>
-
-            <!-- 15. Heartbeat -->
-            <div class="card">
-                <h3>15. Heartbeat Monitor</h3>
-                <p>ECG-style pulse line</p>
-                <div class="demo-area">
-                    <div class="orb-heartbeat">
-                        <svg viewBox="0 0 120 50" xmlns="http://www.w3.org/2000/svg">
-                            <path class="line" d="M0 25 L25 25 L35 25 L45 8 L55 42 L65 15 L75 35 L85 25 L120 25"/>
-                        </svg>
-                        <div class="glow"></div>
-                    </div>
-                </div>
-                <div class="label">Vital / Alive</div>
-                <div class="design-intent">
-                    <strong>Intent:</strong> Gives AI a sense of life. The heartbeat creates emotional connection, suggesting the system is alive and responsive.
-                </div>
-            </div>
-
-            <!-- 16. Hourglass (Lucide) -->
-            <div class="card">
-                <h3>16. Hourglass Timer</h3>
-                <p>Lucide hourglass with flip animation</p>
-                <div class="demo-area">
-                    <div class="orb-hourglass">
-                        <i data-lucide="hourglass"></i>
-                    </div>
-                </div>
-                <div class="label">Time / Patience</div>
-                <div class="design-intent">
-                    <strong>Intent:</strong> Acknowledges that quality takes time. Sets expectations while suggesting the process is worthwhile waiting for.
-                </div>
-            </div>
-
-            <!-- 17. Neural Network (Lucide Brain) -->
-            <div class="card">
-                <h3>17. Neural Brain</h3>
-                <p>Lucide brain icon with spark effects</p>
-                <div class="demo-area">
-                    <div class="orb-neural">
+                    <div class="neural-brain">
                         <div class="brain-icon"><i data-lucide="brain"></i></div>
                         <div class="spark spark-1"></div>
                         <div class="spark spark-2"></div>
@@ -1323,9 +1688,54 @@
                         <div class="spark spark-4"></div>
                     </div>
                 </div>
-                <div class="label">AI / Intelligence</div>
+                <div class="label">Intelligence / Neural</div>
                 <div class="design-intent">
-                    <strong>Intent:</strong> Directly represents AI architecture. The brain icon with sparks shows active thinking and neural activity.
+                    <strong>Intent:</strong> Directly represents AI architecture. Sparks show neurons firing, making the invisible process of AI thinking visible.
+                </div>
+            </div>
+
+            <!-- 15. Typing Dots -->
+            <div class="card">
+                <h3>15. Typing Indicator</h3>
+                <p>Classic chat-style response</p>
+                <div class="demo-area">
+                    <div class="typing-dots">
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                    </div>
+                </div>
+                <div class="label">Chat / Response</div>
+                <div class="design-intent">
+                    <strong>Intent:</strong> Universally recognized "thinking" indicator. Creates anticipation and human-like presence while composing a response.
+                </div>
+            </div>
+
+            <!-- 16. Pulse Orb -->
+            <div class="card">
+                <h3>16. Pulse Orb</h3>
+                <p>Current ai-orb implementation</p>
+                <div class="demo-area">
+                    <div class="pulse-orb"></div>
+                </div>
+                <div class="label">Current / Organic</div>
+                <div class="design-intent">
+                    <strong>Intent:</strong> The existing implementation. Conveys a living, breathing intelligence with gentle pulsing and orbiting ring.
+                </div>
+            </div>
+
+            <!-- 17. Hourglass -->
+            <div class="card">
+                <h3>17. Hourglass</h3>
+                <p>Time-based patience indicator</p>
+                <div class="demo-area">
+                    <div class="hourglass">
+                        <i data-lucide="hourglass"></i>
+                    </div>
+                </div>
+                <div class="label">Time / Patience</div>
+                <div class="design-intent">
+                    <strong>Intent:</strong> Acknowledges that quality matching takes time. Sets expectations while suggesting the process is worthwhile.
                 </div>
             </div>
         </div>
