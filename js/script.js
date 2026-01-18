@@ -293,6 +293,26 @@ function handleUrlParams() {
         navigateTo(view);
     }
 }
+window.navigateTo = navigateTo;
+
+// Submit manual company entry
+function submitManualEntry() {
+    const name = document.getElementById('manual-name');
+    const city = document.getElementById('manual-city');
+
+    if (!name || !name.value.trim()) {
+        alert('Bitte geben Sie einen Firmennamen ein.');
+        return;
+    }
+
+    // Set state and navigate to AI review
+    state.company = {
+        name: name.value.trim(),
+        city: city ? city.value.trim() : ''
+    };
+    navigateTo('ai-review');
+}
+window.submitManualEntry = submitManualEntry;
 
 // Helpers
 function setSearch(term) {
@@ -383,10 +403,10 @@ function selectCompany(name) {
         const keywordsContainer = document.getElementById('ai-keywords');
         if (keywordsContainer) {
             const positive = rec.keywords.map(k =>
-                `<span class="badge badge-green" style="margin-right: 4px; margin-bottom: 4px;">+ ${k}</span>`
+                `<span class="badge badge-green mr-1 mb-1">+ ${k}</span>`
             ).join('');
             const negative = rec.excludeKeywords.map(k =>
-                `<span class="badge badge-red" style="margin-right: 4px; margin-bottom: 4px;">- ${k}</span>`
+                `<span class="badge badge-red mr-1 mb-1">- ${k}</span>`
             ).join('');
             keywordsContainer.innerHTML = positive + negative;
         }
@@ -629,11 +649,11 @@ function viewTender(id) {
         // Populate Detail View
         const detailContainer = document.getElementById('tender-detail-content');
         detailContainer.innerHTML = `
-            <div class="flex justify-between items-start" style="margin-bottom: var(--space-6)">
+            <div class="flex justify-between items-start mb-6">
                 <div>
-                    <span class="badge badge-blue" style="margin-bottom: var(--space-2)">${tender.status}</span>
+                    <span class="badge badge-blue mb-2">${tender.status}</span>
                     <h1 class="text-display">${tender.title}</h1>
-                    <div class="text-h3 text-secondary" style="margin-top: var(--space-2)">${tender.authority}</div>
+                    <div class="text-h3 text-secondary mt-2">${tender.authority}</div>
                 </div>
                 <div class="text-center">
                     <div class="text-display text-accent">${tender.match}%</div>
@@ -641,7 +661,7 @@ function viewTender(id) {
                 </div>
             </div>
 
-            <div class="grid gap-4" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: var(--space-8)">
+            <div class="detail-stats mb-8">
                 <div class="card">
                     <div class="text-sm text-muted">Auftragswert</div>
                     <div class="text-h3">${tender.price}</div>
@@ -650,19 +670,19 @@ function viewTender(id) {
                     <div class="text-sm text-muted">Eingabefrist</div>
                     <div class="text-h3">${tender.deadlineDate}</div>
                 </div>
-                 <div class="card">
+                <div class="card">
                     <div class="text-sm text-muted">Region</div>
                     <div class="text-h3">${tender.region}</div>
                 </div>
             </div>
 
-            <div class="text-body" style="margin-bottom: var(--space-8)">
-                <h3 class="text-h2" style="margin-bottom: var(--space-4)">Beschreibung</h3>
-                <p class="text-secondary" style="margin-bottom: var(--space-4)">
-                    Gesamtsanierung des Schulhauses Mattenhof inkl. energetischer Erneuerung, Fassadensanierung und Innenausbau. 
+            <div class="mb-8">
+                <h3 class="text-h2 mb-4">Beschreibung</h3>
+                <p class="text-secondary mb-4">
+                    Gesamtsanierung des Schulhauses Mattenhof inkl. energetischer Erneuerung, Fassadensanierung und Innenausbau.
                     Der Auftrag umfasst Baumeisterarbeiten, Gipserarbeiten und Montagebau in Stahl.
                 </p>
-                <ul class="text-secondary" style="list-style: disc; padding-left: var(--space-6)">
+                <ul class="text-secondary list-disc pl-6">
                     <li>Baustart: Juni 2026</li>
                     <li>Dauer: 18 Monate</li>
                     <li>BKP 211, 221, 271</li>
@@ -689,22 +709,41 @@ function renderProfiles() {
     if (!container) return;
 
     container.innerHTML = MOCK_USER_PROFILES.map(p => `
-        <div class="card card-interactive" onclick="selectProfile(${p.id})">
+        <div class="card card-interactive">
             <div class="flex justify-between items-center">
-                <div class="flex items-center gap-4">
-                    <div style="width: 40px; height: 40px; background: var(--color-bg-muted); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: var(--color-text-secondary);">
-                        ${p.company.substring(0, 2).toUpperCase()}
-                    </div>
+                <div class="flex items-center gap-4 flex-1 cursor-pointer" onclick="selectProfile(${p.id})">
+                    <div class="avatar">${p.company.substring(0, 2).toUpperCase()}</div>
                     <div>
                         <div class="text-h3">${p.company}</div>
                         <div class="text-sm text-secondary">${p.role}</div>
                     </div>
                 </div>
-                <svg class="text-accent" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                <div class="flex items-center gap-2">
+                    <button class="btn btn-ghost btn-sm text-error" onclick="event.stopPropagation(); deleteProfile(${p.id})" title="Profil löschen">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 6h18"/>
+                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                        </svg>
+                    </button>
+                    <svg class="text-accent cursor-pointer" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" onclick="selectProfile(${p.id})"><polyline points="9 18 15 12 9 6"/></svg>
+                </div>
             </div>
         </div>
     `).join('');
 }
+
+function deleteProfile(id) {
+    const profile = MOCK_USER_PROFILES.find(p => p.id === id);
+    if (profile && confirm('Möchten Sie das Profil "' + profile.company + '" wirklich löschen?')) {
+        const index = MOCK_USER_PROFILES.findIndex(p => p.id === id);
+        if (index > -1) {
+            MOCK_USER_PROFILES.splice(index, 1);
+            renderProfiles();
+        }
+    }
+}
+window.deleteProfile = deleteProfile;
 
 function selectProfile(id) {
     const profile = MOCK_USER_PROFILES.find(p => p.id === id);
@@ -824,9 +863,9 @@ function openEditModal(field) {
         html = `
             <div class="form-group">
                 <label class="form-label">Such-Keywords (Kommagetrennt)</label>
-                <textarea id="edit-input-pos" class="input" style="height: 80px; margin-bottom: 8px;">${rec.keywords.join(', ')}</textarea>
+                <textarea id="edit-input-pos" class="input input-sm mb-2">${rec.keywords.join(', ')}</textarea>
                 <label class="form-label">Ausschluss-Keywords (Kommagetrennt)</label>
-                <textarea id="edit-input-neg" class="input" style="height: 80px;">${rec.excludeKeywords.join(', ')}</textarea>
+                <textarea id="edit-input-neg" class="input input-sm">${rec.excludeKeywords.join(', ')}</textarea>
             </div>
         `;
     } else if (field === 'cpv' || field === 'npk') {
@@ -837,8 +876,8 @@ function openEditModal(field) {
         html = `
             <div class="form-group">
                 <label class="form-label">${field.toUpperCase()} Codes (Kommagetrennt)</label>
-                <textarea id="edit-input" class="input" style="height: 100px;">${value}</textarea>
-                <div class="text-sm text-secondary" style="margin-top: 4px;">Nur Codes eingeben.</div>
+                <textarea id="edit-input" class="input input-md">${value}</textarea>
+                <div class="text-sm text-secondary mt-1">Nur Codes eingeben.</div>
             </div>
         `;
     }
@@ -880,10 +919,10 @@ function saveEdit() {
         const keywordsContainer = document.getElementById('ai-keywords');
         if (keywordsContainer) {
             const positiveHtml = rec.keywords.map(k =>
-                `<span class="badge badge-green" style="margin-right: 4px; margin-bottom: 4px;">+ ${k}</span>`
+                `<span class="badge badge-green mr-1 mb-1">+ ${k}</span>`
             ).join('');
             const negativeHtml = rec.excludeKeywords.map(k =>
-                `<span class="badge badge-red" style="margin-right: 4px; margin-bottom: 4px;">- ${k}</span>`
+                `<span class="badge badge-red mr-1 mb-1">- ${k}</span>`
             ).join('');
             keywordsContainer.innerHTML = positiveHtml + negativeHtml;
         }
@@ -1011,3 +1050,18 @@ document.addEventListener('click', (e) => {
 // Make globally available
 window.toggleLangDropdown = toggleLangDropdown;
 window.selectLang = selectLang;
+
+// Toggle between login and register forms
+function toggleAuthForm(form) {
+    const loginForm = document.getElementById('auth-login');
+    const registerForm = document.getElementById('auth-register');
+
+    if (form === 'register') {
+        loginForm.classList.add('hidden');
+        registerForm.classList.remove('hidden');
+    } else {
+        loginForm.classList.remove('hidden');
+        registerForm.classList.add('hidden');
+    }
+}
+window.toggleAuthForm = toggleAuthForm;

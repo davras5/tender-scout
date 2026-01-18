@@ -416,7 +416,8 @@
     <!-- 2. Auth View -->
     <div id="view-auth" class="view">
         <div class="container">
-            <div class="auth-container card">
+            <!-- Login Form -->
+            <div id="auth-login" class="auth-container card">
                 <h2 class="text-h1 text-center mb-6">Anmelden</h2>
                 <form onsubmit="event.preventDefault(); navigateTo('profile-selection');">
                     <div class="form-group">
@@ -426,10 +427,40 @@
                     <div class="form-group">
                         <label class="form-label">Passwort</label>
                         <input type="password" class="input" value="password123">
+                        <a href="#" class="text-sm text-accent mt-2 inline-block" onclick="alert('Demo: Passwort-Reset E-Mail gesendet'); return false;">Passwort vergessen?</a>
                     </div>
                     <button type="submit" class="btn btn-primary w-full">Weiter</button>
                     <div class="text-center text-sm text-secondary mt-4">
-                        Noch kein Konto? <a href="#" class="text-accent">Registrieren</a>
+                        Noch kein Konto? <a href="#" class="text-accent" onclick="toggleAuthForm('register'); return false;">Registrieren</a>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Register Form -->
+            <div id="auth-register" class="auth-container card hidden">
+                <h2 class="text-h1 text-center mb-6">Konto erstellen</h2>
+                <form onsubmit="event.preventDefault(); navigateTo('company-search');">
+                    <div class="form-group">
+                        <label class="form-label">E-Mail</label>
+                        <input type="email" class="input" placeholder="name@firma.ch">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Passwort</label>
+                        <input type="password" class="input" placeholder="Min. 8 Zeichen">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Passwort bestätigen</label>
+                        <input type="password" class="input" placeholder="Passwort wiederholen">
+                    </div>
+                    <div class="form-group">
+                        <label class="flex items-center gap-2 text-sm">
+                            <input type="checkbox" required>
+                            <span>Ich akzeptiere die <a href="#" class="text-accent">AGB</a> und <a href="#" class="text-accent">Datenschutzerklärung</a></span>
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-full">Konto erstellen</button>
+                    <div class="text-center text-sm text-secondary mt-4">
+                        Bereits ein Konto? <a href="#" class="text-accent" onclick="toggleAuthForm('login'); return false;">Anmelden</a>
                     </div>
                 </form>
             </div>
@@ -487,7 +518,59 @@
                 </div>
 
                 <div class="text-center text-sm text-muted mt-6">
-                    Firma nicht gefunden? <a href="#" class="text-accent">Manuell eingeben</a>
+                    Firma nicht gefunden? <a href="#" class="text-accent" onclick="navigateTo('manual-entry'); return false;">Manuell eingeben</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3.5 Manual Entry View -->
+    <div id="view-manual-entry" class="view">
+        <div class="container container--narrow pt-12 pb-12">
+            <div class="wizard-steps">
+                <div class="step-dot active"></div>
+                <div class="step-dot"></div>
+                <div class="step-dot"></div>
+            </div>
+
+            <div class="text-center mb-8">
+                <h2 class="text-h1">Firma manuell erfassen</h2>
+                <p class="text-secondary">Geben Sie die Details Ihrer Firma ein.</p>
+            </div>
+
+            <div class="card">
+                <div class="settings-form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Firmenname *</label>
+                        <input type="text" id="manual-name" class="input" placeholder="Meine Firma AG">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">UID-Nummer (optional)</label>
+                        <input type="text" class="input" placeholder="CHE-123.456.789">
+                    </div>
+                </div>
+                <div class="settings-form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Stadt *</label>
+                        <input type="text" id="manual-city" class="input" placeholder="Zürich">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Branche</label>
+                        <select class="input">
+                            <option value="">Bitte wählen...</option>
+                            <option>Baugewerbe / Hochbau</option>
+                            <option>Baugewerbe / Tiefbau</option>
+                            <option>IT-Dienstleistungen</option>
+                            <option>Gartenbau & Landschaftspflege</option>
+                            <option>Sicherheitsdienste</option>
+                            <option>Andere</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex gap-3 mt-6">
+                    <button class="btn btn-secondary" onclick="navigateTo('company-search')">Zurück</button>
+                    <button class="btn btn-primary flex-1" onclick="submitManualEntry()">Weiter zur KI-Analyse</button>
                 </div>
             </div>
         </div>
@@ -616,12 +699,12 @@
             </div>
 
             <div id="filter-tabs" class="flex gap-3 mb-6 overflow-x-auto pb-1">
-                <button class="btn btn-sm btn-primary" data-filter="all" onclick="filterTenders('all')">Alle&nbsp;(<span id="count-all">0</span>)</button>
-                <button class="btn btn-sm btn-ghost" data-filter="open" onclick="filterTenders('open')">Offen&nbsp;(<span id="count-open">0</span>)</button>
-                <button class="btn btn-sm btn-ghost" data-filter="closing" onclick="filterTenders('closing')">Bald fällig&nbsp;(<span id="count-closing">0</span>)</button>
-                <button class="btn btn-sm btn-ghost" data-filter="bookmarked" onclick="filterTenders('bookmarked')">Gemerkt&nbsp;(<span id="count-bookmarked">0</span>)</button>
-                <button class="btn btn-sm btn-ghost" data-filter="applied" onclick="filterTenders('applied')">Beworben&nbsp;(<span id="count-applied">0</span>)</button>
-                <button class="btn btn-sm btn-ghost" data-filter="hidden" onclick="filterTenders('hidden')">Ausgeblendet&nbsp;(<span id="count-hidden">0</span>)</button>
+                <button class="btn btn-sm btn-primary" data-filter="all" onclick="filterTenders('all')"><span>Alle (<span id="count-all">0</span>)</span></button>
+                <button class="btn btn-sm btn-ghost" data-filter="open" onclick="filterTenders('open')"><span>Offen (<span id="count-open">0</span>)</span></button>
+                <button class="btn btn-sm btn-ghost" data-filter="closing" onclick="filterTenders('closing')"><span>Bald fällig (<span id="count-closing">0</span>)</span></button>
+                <button class="btn btn-sm btn-ghost" data-filter="bookmarked" onclick="filterTenders('bookmarked')"><span>Gemerkt (<span id="count-bookmarked">0</span>)</span></button>
+                <button class="btn btn-sm btn-ghost" data-filter="applied" onclick="filterTenders('applied')"><span>Beworben (<span id="count-applied">0</span>)</span></button>
+                <button class="btn btn-sm btn-ghost" data-filter="hidden" onclick="filterTenders('hidden')"><span>Ausgeblendet (<span id="count-hidden">0</span>)</span></button>
             </div>
 
             <div id="tender-feed" class="tender-grid">
@@ -742,6 +825,13 @@
                             <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
                         </svg>
                         Team verwalten
+                    </button>
+                    <button class="settings-nav-item" onclick="showSettingsTab('security')">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                        </svg>
+                        Sicherheit & Konto
                     </button>
                 </div>
 
@@ -1014,6 +1104,88 @@
                                         <div class="font-medium">Mitglied</div>
                                         <div class="text-sm text-secondary">Kann Ausschreibungen ansehen und bearbeiten</div>
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Security Tab -->
+                    <div id="settings-security" class="settings-panel">
+                        <!-- Password Change -->
+                        <div class="card">
+                            <h3 class="text-h3 mb-2">Passwort ändern</h3>
+                            <p class="text-secondary text-sm mb-6">Aktualisieren Sie Ihr Passwort regelmässig für mehr Sicherheit.</p>
+                            <div class="form-group">
+                                <label class="form-label">Aktuelles Passwort</label>
+                                <input type="password" class="input" placeholder="••••••••">
+                            </div>
+                            <div class="settings-form-grid">
+                                <div class="form-group">
+                                    <label class="form-label">Neues Passwort</label>
+                                    <input type="password" class="input" placeholder="••••••••">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Passwort bestätigen</label>
+                                    <input type="password" class="input" placeholder="••••••••">
+                                </div>
+                            </div>
+                            <button class="btn btn-primary mt-4">Passwort ändern</button>
+                        </div>
+
+                        <!-- Two-Factor Authentication -->
+                        <div class="card">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h3 class="text-h3 mb-2">Zwei-Faktor-Authentifizierung</h3>
+                                    <p class="text-secondary text-sm">Schützen Sie Ihr Konto mit einem zusätzlichen Sicherheitscode.</p>
+                                </div>
+                                <span class="badge badge-gray">Inaktiv</span>
+                            </div>
+                            <button class="btn btn-secondary mt-6">2FA aktivieren</button>
+                        </div>
+
+                        <!-- Suchprofile verwalten -->
+                        <div class="card">
+                            <h3 class="text-h3 mb-2">Suchprofile verwalten</h3>
+                            <p class="text-secondary text-sm mb-6">Verwalten oder löschen Sie Ihre Suchprofile.</p>
+                            <div class="settings-team-list">
+                                <div class="settings-team-member">
+                                    <div class="settings-avatar">MB</div>
+                                    <div class="flex-1">
+                                        <div class="font-medium">Müller Bau AG</div>
+                                        <div class="text-sm text-secondary">Erstellt am 15.01.2026</div>
+                                    </div>
+                                    <button class="btn btn-ghost btn-sm text-error" onclick="alert('Demo: Profil würde gelöscht')">Löschen</button>
+                                </div>
+                                <div class="settings-team-member">
+                                    <div class="settings-avatar">IZ</div>
+                                    <div class="flex-1">
+                                        <div class="font-medium">Immo Zürich AG</div>
+                                        <div class="text-sm text-secondary">Erstellt am 10.01.2026</div>
+                                    </div>
+                                    <button class="btn btn-ghost btn-sm text-error" onclick="alert('Demo: Profil würde gelöscht')">Löschen</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Danger Zone -->
+                        <div class="card" style="border-color: var(--color-error);">
+                            <h3 class="text-h3 mb-2" style="color: var(--color-error);">Gefahrenzone</h3>
+                            <p class="text-secondary text-sm mb-6">Diese Aktionen können nicht rückgängig gemacht werden.</p>
+                            <div class="flex flex-col gap-4">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <div class="font-medium">Alle Daten exportieren</div>
+                                        <div class="text-sm text-secondary">Laden Sie alle Ihre Daten als ZIP-Datei herunter</div>
+                                    </div>
+                                    <button class="btn btn-secondary btn-sm">Exportieren</button>
+                                </div>
+                                <div class="flex justify-between items-center pt-4" style="border-top: 1px solid var(--color-border-subtle);">
+                                    <div>
+                                        <div class="font-medium">Konto löschen</div>
+                                        <div class="text-sm text-secondary">Ihr Konto und alle Daten werden unwiderruflich gelöscht</div>
+                                    </div>
+                                    <button class="btn btn-sm" style="background: var(--color-error); color: white;" onclick="if(confirm('Sind Sie sicher? Diese Aktion kann nicht rückgängig gemacht werden.')) alert('Demo: Konto würde gelöscht')">Konto löschen</button>
                                 </div>
                             </div>
                         </div>

@@ -140,6 +140,10 @@ h6 {
     color: var(--color-accent);
 }
 
+.text-error {
+    color: var(--color-error);
+}
+
 /* ========================================
    Layout Utilities
    ======================================== */
@@ -274,6 +278,10 @@ h6 {
     padding-left: 0;
 }
 
+.pl-6 {
+    padding-left: var(--space-6);
+}
+
 .pb-1 {
     padding-bottom: var(--space-1);
 }
@@ -284,6 +292,18 @@ h6 {
 
 .pb-12 {
     padding-bottom: var(--space-12);
+}
+
+.mr-1 {
+    margin-right: var(--space-1);
+}
+
+.mr-2 {
+    margin-right: var(--space-2);
+}
+
+.list-disc {
+    list-style-type: disc;
 }
 
 .tracking-wide {
@@ -324,6 +344,10 @@ h6 {
 
 .mb-12 {
     margin-bottom: var(--space-12);
+}
+
+.mt-1 {
+    margin-top: var(--space-1);
 }
 
 .mt-2 {
@@ -515,6 +539,49 @@ h6 {
 .badge-red {
     background: var(--color-error-bg);
     color: var(--color-error);
+}
+
+/* --- Avatar --- */
+.avatar {
+    width: 40px;
+    height: 40px;
+    background: var(--color-bg-muted);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: var(--weight-bold);
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    flex-shrink: 0;
+}
+
+.avatar-sm {
+    width: 32px;
+    height: 32px;
+    font-size: var(--text-xs);
+}
+
+.avatar-lg {
+    width: 48px;
+    height: 48px;
+    font-size: var(--text-base);
+}
+
+/* --- Textarea --- */
+textarea.input {
+    height: auto;
+    min-height: var(--size-btn-lg);
+    padding: var(--space-3);
+    resize: vertical;
+}
+
+textarea.input-sm {
+    min-height: 80px;
+}
+
+textarea.input-md {
+    min-height: 100px;
 }
 
 /* --- Navigation --- */
@@ -865,6 +932,13 @@ h6 {
     }
 }
 
+/* Tender Detail Grid */
+.detail-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-4);
+}
+
 /* Tender Action Buttons */
 .tender-actions {
     display: flex;
@@ -1070,7 +1144,7 @@ h6 {
 }
 
 @media (min-width: 1024px) {
-    .hero-title { font-size: 3.75rem; }
+    .hero-title { font-size: var(--text-6xl); }
 }
 
 .hero-accent {
