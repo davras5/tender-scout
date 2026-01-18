@@ -531,26 +531,209 @@ def calculate_match_score(profile: SearchProfile, tender: Tender) -> int:
 
 ## Data Flow
 
+```mermaid
+sequenceDiagram
+    autonumber
+    participant User
+    participant Frontend
+    participant Auth as Supabase Auth
+    participant DB as Supabase DB
+    participant Zefix as Zefix API
+    participant AI as AI Service
+    participant Sync as Sync Job
+    participant Match as Match Job
+    participant SIMAP as SIMAP/TED
+
+    %% User Registration
+    rect rgb(240, 248, 255)
+        Note over User,Auth: 1. User Registration
+        User->>Frontend: Sign up
+        Frontend->>Auth: Create account
+        Auth->>DB: Insert user
+        Auth-->>Frontend: Session token
+    end
+
+    %% Company Selection
+    rect rgb(255, 248, 240)
+        Note over User,Zefix: 2. Company Selection
+        User->>Frontend: Search company
+        Frontend->>Zefix: Lookup by name/UID
+        Zefix-->>Frontend: Company data
+        Frontend->>DB: Upsert company
+        Frontend->>DB: Create user_profile
+    end
+
+    %% AI Profile Generation
+    rect rgb(240, 255, 240)
+        Note over User,AI: 3. AI Profile Generation
+        Frontend->>AI: Analyze company
+        AI-->>Frontend: Recommended CPV, NPK, keywords
+        User->>Frontend: Review & adjust
+        Frontend->>DB: Create search_profile
+    end
+
+    %% Tender Sync (Background)
+    rect rgb(255, 240, 255)
+        Note over Sync,DB: 4. Tender Sync (Daily)
+        Sync->>SIMAP: Fetch new tenders
+        SIMAP-->>Sync: Tender data
+        Sync->>DB: Upsert tenders
+    end
+
+    %% Matching (Background)
+    rect rgb(255, 255, 240)
+        Note over Match,DB: 5. Matching (Daily)
+        Match->>DB: Fetch profiles & tenders
+        DB-->>Match: Data
+        Match->>Match: Calculate scores
+        Match->>DB: Upsert user_tender_actions
+    end
+
+    %% User Actions
+    rect rgb(240, 240, 255)
+        Note over User,DB: 6. User Actions
+        User->>Frontend: View dashboard
+        Frontend->>DB: Fetch matched tenders
+        DB-->>Frontend: Tenders + scores
+        User->>Frontend: Bookmark/Apply/Hide
+        Frontend->>DB: Update user_tender_actions
+    end
 ```
-1. User Registration
-   Supabase Auth → users (automatic)
 
-2. Company Selection
-   Zefix API → companies (if new)
-   User selects → user_profiles created
+---
 
-3. AI Profile Generation
-   Company data → AI analysis → search_profiles (with cpv_codes, npk_codes)
+## Expert Review
 
-4. Tender Sync (Daily Job)
-   SIMAP/TED APIs → tenders (with cpv_codes)
+### Strengths
 
-5. Tender Matching (Daily Job)
-   Python script: search_profiles × tenders → user_tender_actions.match_score
+| Area | Assessment |
+|------|------------|
+| **Schema simplicity** | Clean 8-table design; JSONB arrays reduce complexity |
+| **Supabase fit** | Good use of Auth, RLS, Realtime capabilities |
+| **Separation of concerns** | User data, tenders, and matching cleanly separated |
+| **Audit trail** | `created_at`/`updated_at` on all tables |
+| **Multilingual support** | Labels in DE/FR/IT/EN for lookup tables |
 
-6. User Actions
-   Bookmark/Apply/Hide → user_tender_actions
+### Concerns & Recommendations
+
+#### 1. Scalability of Matching Algorithm
+**Issue:** Full cross-product matching (profiles × tenders) becomes expensive.
+- 1,000 profiles × 10,000 tenders = 10M calculations
+
+**Recommendation:**
+- Add `last_matched_at` to `search_profiles` to track freshness
+- Pre-filter tenders by CPV code overlap before full scoring
+- Consider PostgreSQL `pg_trgm` for fuzzy keyword matching
+- Partition `user_tender_actions` by date if it grows large
+
+#### 2. Missing Indexes
+**Issue:** No index strategy defined for query patterns.
+
+**Recommendation:** Add indexes for common queries:
+```sql
+-- Tender queries
+CREATE INDEX idx_tenders_status_deadline ON tenders(status, deadline);
+CREATE INDEX idx_tenders_cpv_gin ON tenders USING GIN(cpv_codes);
+
+-- Matching queries
+CREATE INDEX idx_actions_profile_score ON user_tender_actions(user_profile_id, match_score DESC);
+CREATE INDEX idx_search_profiles_cpv_gin ON search_profiles USING GIN(cpv_codes);
 ```
+
+#### 3. Data Integrity for JSONB
+**Issue:** No validation that CPV/NPK codes in JSONB arrays exist in lookup tables.
+
+**Recommendation:**
+- Add a CHECK constraint or trigger to validate codes
+- Or validate in application layer before insert
+- Document this as a known trade-off
+
+#### 4. Tender Status Management
+**Issue:** No automatic status transitions (open → closing_soon → closed).
+
+**Recommendation:**
+- Add database trigger or scheduled job to update status based on deadline
+- Consider adding `status_updated_at` timestamp
+
+#### 5. Missing `updated_at` on Some Tables
+**Issue:** `companies` and `user_profiles` lack `updated_at`.
+
+**Recommendation:** Add `updated_at` with trigger for consistency.
+
+#### 6. NPK Matching Logic Unclear
+**Issue:** Tenders have CPV codes but not NPK codes. How does NPK matching work?
+
+**Recommendation:**
+- Either add `npk_codes` to tenders (if SIMAP provides them)
+- Or create a CPV→NPK mapping table for translation
+- Or document that NPK is only for construction and derived from CPV
+
+#### 7. No Soft Delete
+**Issue:** No mechanism for soft-deleting tenders or profiles.
+
+**Recommendation:** Consider adding `deleted_at` for audit compliance.
+
+---
+
+## Difficulty Estimation
+
+### Implementation Complexity by Component
+
+| Component | Difficulty | Effort | Notes |
+|-----------|------------|--------|-------|
+| **Supabase setup** | Low | 1-2 days | Tables, RLS, Auth config |
+| **Zefix API integration** | Low | 1-2 days | Simple REST API |
+| **SIMAP API integration** | Medium | 3-5 days | May require scraping if no clean API |
+| **TED API integration** | Medium | 3-5 days | OAuth, pagination, rate limits |
+| **AI profile generation** | Medium | 2-3 days | Prompt engineering, LLM integration |
+| **Matching algorithm (basic)** | Low | 2-3 days | As documented, straightforward |
+| **Matching algorithm (optimized)** | Medium | 5-7 days | Pre-filtering, caching, batching |
+| **Frontend integration** | Medium | 5-7 days | Assuming existing vanilla JS app |
+| **Notifications** | Medium | 3-4 days | Email/push for high-match tenders |
+| **Testing & validation** | Medium | 3-5 days | Match quality tuning, edge cases |
+
+### Risk Assessment
+
+| Risk | Likelihood | Impact | Mitigation |
+|------|------------|--------|------------|
+| SIMAP API changes/unavailable | Medium | High | Cache responses, fallback to scraping |
+| Match score quality | Medium | Medium | A/B testing, user feedback loop |
+| Scale beyond Supabase free tier | Low | Medium | Monitor usage, plan for Pro tier |
+| CPV code hierarchy complexity | Low | Low | Start with exact match, add hierarchy later |
+| Multilingual keyword matching | Medium | Medium | Start DE-only, add languages incrementally |
+
+### Recommended Implementation Order
+
+```mermaid
+flowchart LR
+    subgraph Phase1["Phase 1: Foundation (2-3 weeks)"]
+        A1[Supabase setup] --> A2[Basic schema]
+        A2 --> A3[RLS policies]
+        A3 --> A4[Zefix integration]
+    end
+
+    subgraph Phase2["Phase 2: Core (3-4 weeks)"]
+        B1[SIMAP sync] --> B2[Basic matching]
+        B2 --> B3[Frontend integration]
+        B3 --> B4[User actions]
+    end
+
+    subgraph Phase3["Phase 3: Polish (2-3 weeks)"]
+        C1[AI profile generation] --> C2[Match optimization]
+        C2 --> C3[Notifications]
+        C3 --> C4[TED integration]
+    end
+
+    Phase1 --> Phase2 --> Phase3
+```
+
+### Total Estimate
+
+| Scenario | Duration | Team Size |
+|----------|----------|-----------|
+| **MVP (SIMAP only, basic matching)** | 4-6 weeks | 1 developer |
+| **Full Phase 1-3** | 8-12 weeks | 1-2 developers |
+| **With TED + advanced NLP** | 12-16 weeks | 2 developers |
 
 ---
 
@@ -572,6 +755,7 @@ def calculate_match_score(profile: SearchProfile, tender: Tender) -> int:
 
 | Date       | Version | Changes                    |
 |------------|---------|----------------------------|
+| 2026-01-18 | 0.4     | Add Mermaid data flow diagram, expert review, and difficulty estimation |
 | 2026-01-18 | 0.3     | Add detailed Mermaid flowcharts for matching algorithm |
 | 2026-01-18 | 0.2     | Replace junction tables with JSONB arrays; add matching algorithm section |
 | 2026-01-18 | 0.1     | Initial conceptual model   |
