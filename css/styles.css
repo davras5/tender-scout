@@ -252,7 +252,7 @@ h6 {
 }
 
 .bg-subtle {
-    background-color: var(--color-bg-muted);
+    background-color: var(--color-bg-raised);
 }
 
 .bg-red-subtle {
@@ -1323,9 +1323,7 @@ textarea.input-md {
 /* --- Stats Section --- */
 .stats-section {
     padding: var(--space-12) 0;
-    background: var(--color-bg-subtle);
-    border-top: var(--border-width) solid var(--color-border-subtle);
-    border-bottom: var(--border-width) solid var(--color-border-subtle);
+    background: var(--color-bg-raised);
 }
 
 .stats-grid {
@@ -1566,7 +1564,7 @@ textarea.input-md {
 
 /* --- Pricing Section --- */
 .pricing-section {
-    background: linear-gradient(to bottom, var(--color-bg-subtle) 0%, var(--color-bg-subtle) 40%, var(--color-bg-base) 40%);
+    background: linear-gradient(to bottom, var(--color-bg-raised) 0%, var(--color-bg-raised) 40%, var(--color-bg-base) 40%);
 }
 
 .pricing-grid {
