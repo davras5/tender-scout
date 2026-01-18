@@ -1194,15 +1194,12 @@
         }
 
         /* ==========================================================================
-           14. GEARS - Mechanical processing
+           14. GEARS - Mechanical processing (interlocking)
            ========================================================================== */
         .gears {
-            width: 120px;
-            height: 80px;
+            width: 100px;
+            height: 90px;
             position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
 
         .gears .gear {
@@ -1212,32 +1209,35 @@
             justify-content: center;
         }
 
+        /* Large gear - main driver */
         .gears .gear-1 {
             left: 0;
-            top: 10px;
+            top: 24px;
             color: var(--color-accent);
-            animation: spin 3s linear infinite;
+            animation: spin 4s linear infinite;
         }
 
-        .gears .gear-1 i { width: 48px; height: 48px; }
+        .gears .gear-1 i { width: 56px; height: 56px; }
 
+        /* Medium gear - meshes with large gear on upper right */
         .gears .gear-2 {
-            right: 8px;
+            left: 38px;
             top: 0;
             color: var(--color-accent-secondary);
-            animation: spin 2.4s linear infinite reverse;
+            animation: spin 2.8s linear infinite reverse;
         }
 
         .gears .gear-2 i { width: 40px; height: 40px; }
 
+        /* Small gear - meshes with medium gear on lower right */
         .gears .gear-3 {
-            right: 20px;
-            bottom: 0;
+            left: 58px;
+            top: 38px;
             color: var(--color-accent-tertiary);
-            animation: spin 3.2s linear infinite;
+            animation: spin 2s linear infinite;
         }
 
-        .gears .gear-3 i { width: 32px; height: 32px; }
+        .gears .gear-3 i { width: 28px; height: 28px; }
 
         /* ==========================================================================
            15. NEURAL BRAIN - AI thinking
