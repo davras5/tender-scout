@@ -674,13 +674,12 @@ CREATE TRIGGER user_profiles_single_default
 
 #### Primary Indexes (auto-created)
 - All primary keys (UUID) are automatically indexed
-- Unique constraints create indexes on `users.email`, `companies.uid`
+- Unique constraints auto-create indexes: `companies.uid`, `subscriptions.user_id`, `subscriptions.stripe_customer_id`, `tenders(external_id, source)`
 
 #### Recommended Performance Indexes
 
 ```sql
 -- Tender queries (dashboard, filtering)
-CREATE UNIQUE INDEX idx_tenders_external_source ON tenders(external_id, source);
 CREATE INDEX idx_tenders_status_deadline ON tenders(status, deadline)
     WHERE deleted_at IS NULL;
 CREATE INDEX idx_tenders_region ON tenders(region)
@@ -703,8 +702,6 @@ CREATE INDEX idx_user_profiles_active ON user_profiles(user_id) WHERE deleted_at
 CREATE INDEX idx_tenders_active ON tenders(id) WHERE deleted_at IS NULL;
 
 -- Subscription queries
-CREATE UNIQUE INDEX idx_subscriptions_user ON subscriptions(user_id);
-CREATE UNIQUE INDEX idx_subscriptions_stripe_customer ON subscriptions(stripe_customer_id);
 CREATE INDEX idx_subscriptions_status ON subscriptions(status);
 CREATE INDEX idx_subscriptions_trial_ends ON subscriptions(trial_ends_at) WHERE status = 'trialing';
 
@@ -730,24 +727,24 @@ CREATE INDEX idx_npk_parent ON npk_codes(parent_code);
 #### Row Level Security (RLS) Policies
 
 ```sql
--- Users can only see their own profiles
-user_profiles: auth.uid() = user_id
+-- Users can only see their own active profiles
+user_profiles: auth.uid() = user_id AND deleted_at IS NULL
 
 -- Users can only see/modify their own subscription
 subscriptions: auth.uid() = user_id
 
 -- Companies are readable by all authenticated users, modifiable by linked users
-companies (SELECT): auth.role() = 'authenticated'
-companies (UPDATE): id IN (SELECT company_id FROM user_profiles WHERE user_id = auth.uid())
+companies (SELECT): auth.role() = 'authenticated' AND deleted_at IS NULL
+companies (UPDATE): id IN (SELECT company_id FROM user_profiles WHERE user_id = auth.uid() AND deleted_at IS NULL)
 
--- Users can only see/modify their own search profiles
-search_profiles: user_profile_id IN (SELECT id FROM user_profiles WHERE user_id = auth.uid())
+-- Users can only see/modify their own search profiles (for active user_profiles)
+search_profiles: user_profile_id IN (SELECT id FROM user_profiles WHERE user_id = auth.uid() AND deleted_at IS NULL)
 
--- Users can only see/modify their own tender actions
-user_tender_actions: user_profile_id IN (SELECT id FROM user_profiles WHERE user_id = auth.uid())
+-- Users can only see/modify their own tender actions (for active user_profiles)
+user_tender_actions: user_profile_id IN (SELECT id FROM user_profiles WHERE user_id = auth.uid() AND deleted_at IS NULL)
 
--- Tenders are readable by all authenticated users
-tenders: auth.role() = 'authenticated'
+-- Tenders are readable by all authenticated users (active only)
+tenders: auth.role() = 'authenticated' AND deleted_at IS NULL
 
 -- Code tables are readable by all
 cpv_codes, npk_codes: true (public read)
@@ -1131,6 +1128,7 @@ flowchart LR
 
 | Date       | Version | Changes                    |
 |------------|---------|----------------------------|
+| 2026-01-18 | 1.1     | Remove Expert Review section, fix redundant indexes, correct auto-index documentation, add soft delete filters to RLS policies |
 | 2026-01-18 | 1.0     | Add complete SQL schema with CREATE TABLE statements, triggers for updated_at and single default profile |
 | 2026-01-18 | 0.9     | QA round 2: add companies RLS, scheduled jobs table, minimum profile requirements, boolean defaults, notification/recalculation behavior, profile-per-company design decision |
 | 2026-01-18 | 0.8     | QA fixes: clarify free tier limits company profiles, add external_id+source unique constraint, add subscriptions RLS, document trial expiration job, add Stripe to data flow, clarify manual tender actions |
