@@ -10,6 +10,9 @@ let TEST_DATA = null;
 async function loadTestData() {
     try {
         const response = await fetch('data/test_data.json');
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
         TEST_DATA = await response.json();
 
         // Map companies to expected format
@@ -63,10 +66,11 @@ async function loadTestData() {
             company: p.company
         }));
 
+        console.log('Test data loaded:', MOCK_COMPANIES.length, 'companies,', MOCK_TENDERS.length, 'tenders');
         return true;
     } catch (error) {
         console.error('Failed to load test data:', error);
-        // Fallback to empty arrays - app will still work but with no data
+        console.error('Note: If using file:// protocol, run a local server instead: npx serve');
         return false;
     }
 }
@@ -77,7 +81,8 @@ const state = {
     company: null,
     user: null,
     selectedTender: null,
-    currentFilter: 'all' // all, open, closing, bookmarked
+    currentFilter: 'all', // all, open, closing, bookmarked
+    currentSort: 'match' // match, deadline, title, price
 };
 
 // DOM Elements
@@ -436,8 +441,8 @@ function renderTenderFeed(tenders = MOCK_TENDERS) {
 function filterTenders(filter) {
     state.currentFilter = filter;
 
-    // Update active tab styling
-    const tabs = document.querySelectorAll('#filter-tabs button');
+    // Update active tab styling (only target buttons with data-filter attribute)
+    const tabs = document.querySelectorAll('#filter-tabs button[data-filter]');
     tabs.forEach(tab => {
         if (tab.dataset.filter === filter) {
             tab.classList.remove('btn-ghost');
@@ -474,7 +479,9 @@ function filterTenders(filter) {
             break;
     }
 
-    renderTenderFeed(filtered);
+    // Apply current sort
+    const sorted = getSortedTenders(filtered);
+    renderTenderFeed(sorted);
 }
 
 function updateFilterCounts() {
@@ -527,6 +534,105 @@ window.filterTenders = filterTenders;
 window.toggleBookmark = toggleBookmark;
 window.toggleApplied = toggleApplied;
 window.toggleHidden = toggleHidden;
+
+// Sorting functionality
+function toggleSortDropdown() {
+    const dropdown = document.querySelector('.sort-dropdown');
+    if (dropdown) {
+        dropdown.classList.toggle('is-open');
+    }
+}
+
+function sortTenders(sortBy) {
+    state.currentSort = sortBy;
+
+    // Update dropdown UI
+    const sortLabel = document.getElementById('sort-label');
+    const sortOptions = document.querySelectorAll('.sort-option');
+
+    const labels = {
+        match: 'Match',
+        deadline: 'Frist',
+        title: 'Titel',
+        price: 'Wert'
+    };
+
+    if (sortLabel) sortLabel.textContent = labels[sortBy] || sortBy;
+
+    sortOptions.forEach(opt => {
+        opt.classList.remove('is-active');
+        if (opt.textContent.toLowerCase().includes(sortBy) ||
+            (sortBy === 'match' && opt.textContent.includes('Match')) ||
+            (sortBy === 'deadline' && opt.textContent.includes('Frist')) ||
+            (sortBy === 'title' && opt.textContent.includes('Titel')) ||
+            (sortBy === 'price' && opt.textContent.includes('Auftragswert'))) {
+            opt.classList.add('is-active');
+        }
+    });
+
+    // Close dropdown
+    const dropdown = document.querySelector('.sort-dropdown');
+    if (dropdown) dropdown.classList.remove('is-open');
+
+    // Re-apply current filter (which will also apply sort)
+    filterTenders(state.currentFilter);
+}
+
+function getSortedTenders(tenders) {
+    const sorted = [...tenders];
+
+    switch (state.currentSort) {
+        case 'match':
+            sorted.sort((a, b) => b.match - a.match);
+            break;
+        case 'deadline':
+            sorted.sort((a, b) => new Date(a.deadlineDate) - new Date(b.deadlineDate));
+            break;
+        case 'title':
+            sorted.sort((a, b) => a.title.localeCompare(b.title, 'de'));
+            break;
+        case 'price':
+            // Extract numeric value from price string for sorting
+            const getPrice = (p) => {
+                const match = p.price.match(/[\d.]+/);
+                return match ? parseFloat(match[0]) : 0;
+            };
+            sorted.sort((a, b) => getPrice(b) - getPrice(a));
+            break;
+    }
+
+    return sorted;
+}
+
+// Close sort dropdown when clicking outside
+document.addEventListener('click', (e) => {
+    const sortDropdown = document.querySelector('.sort-dropdown');
+    if (sortDropdown && !sortDropdown.contains(e.target)) {
+        sortDropdown.classList.remove('is-open');
+    }
+});
+
+// Profile settings - open AI review with current profile data
+function openProfileSettings() {
+    // If we have recommendations in state, show them
+    if (state.recommendations) {
+        // Skip the loading animation, go directly to results
+        const overlay = document.getElementById('ai-loading-overlay');
+        const content = document.getElementById('ai-results-content');
+
+        if (overlay) overlay.classList.add('hidden');
+        if (content) content.classList.remove('hidden');
+
+        navigateTo('ai-review');
+    } else {
+        // No profile data yet, start fresh
+        navigateTo('company-search');
+    }
+}
+
+window.toggleSortDropdown = toggleSortDropdown;
+window.sortTenders = sortTenders;
+window.openProfileSettings = openProfileSettings;
 
 function viewTender(id) {
     const tender = MOCK_TENDERS.find(t => t.id === id);

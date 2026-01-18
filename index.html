@@ -696,21 +696,54 @@
                 <span class="breadcrumb-item is-current">Müller Bau AG</span>
             </nav>
 
-            <div class="flex justify-between items-center mb-8">
+            <div class="flex justify-between items-center mb-6">
                 <h2 class="text-h2">Ausschreibungen</h2>
-                <div class="flex gap-2">
-                    <button class="btn btn-secondary">Filter</button>
-                    <button class="btn btn-secondary">Sortieren</button>
-                </div>
+                <!-- Suchprofil Settings -->
+                <button class="btn btn-sm btn-secondary" onclick="openProfileSettings()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                    Suchprofil
+                </button>
             </div>
 
-            <div id="filter-tabs" class="flex gap-3 mb-6 overflow-x-auto pb-1">
-                <button class="btn btn-sm btn-primary" data-filter="all" onclick="filterTenders('all')"><span>Alle (<span id="count-all">0</span>)</span></button>
-                <button class="btn btn-sm btn-ghost" data-filter="open" onclick="filterTenders('open')"><span>Offen (<span id="count-open">0</span>)</span></button>
-                <button class="btn btn-sm btn-ghost" data-filter="closing" onclick="filterTenders('closing')"><span>Bald fällig (<span id="count-closing">0</span>)</span></button>
-                <button class="btn btn-sm btn-ghost" data-filter="bookmarked" onclick="filterTenders('bookmarked')"><span>Gemerkt (<span id="count-bookmarked">0</span>)</span></button>
-                <button class="btn btn-sm btn-ghost" data-filter="applied" onclick="filterTenders('applied')"><span>Beworben (<span id="count-applied">0</span>)</span></button>
-                <button class="btn btn-sm btn-ghost" data-filter="hidden" onclick="filterTenders('hidden')"><span>Ausgeblendet (<span id="count-hidden">0</span>)</span></button>
+            <div id="filter-tabs" class="flex justify-between items-center gap-2 mb-6">
+                <div class="flex gap-2 overflow-x-auto pb-1">
+                    <button class="btn btn-sm btn-primary" data-filter="all" onclick="filterTenders('all')"><span>Alle (<span id="count-all">0</span>)</span></button>
+                    <button class="btn btn-sm btn-ghost" data-filter="open" onclick="filterTenders('open')"><span>Offen (<span id="count-open">0</span>)</span></button>
+                    <button class="btn btn-sm btn-ghost" data-filter="closing" onclick="filterTenders('closing')"><span>Bald fällig (<span id="count-closing">0</span>)</span></button>
+                    <button class="btn btn-sm btn-ghost" data-filter="bookmarked" onclick="filterTenders('bookmarked')"><span>Gemerkt (<span id="count-bookmarked">0</span>)</span></button>
+                    <button class="btn btn-sm btn-ghost" data-filter="applied" onclick="filterTenders('applied')"><span>Beworben (<span id="count-applied">0</span>)</span></button>
+                    <button class="btn btn-sm btn-ghost" data-filter="hidden" onclick="filterTenders('hidden')"><span>Ausgeblendet (<span id="count-hidden">0</span>)</span></button>
+                </div>
+                <div class="flex gap-2 flex-shrink-0">
+                    <!-- Filter -->
+                    <button class="btn btn-sm btn-secondary" onclick="toggleModal('filter', true)">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+                        </svg>
+                        Filter
+                    </button>
+                    <!-- Sort -->
+                    <div class="sort-dropdown">
+                        <button class="btn btn-sm btn-secondary" onclick="toggleSortDropdown()">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="m3 16 4 4 4-4"/>
+                                <path d="M7 20V4"/>
+                                <path d="m21 8-4-4-4 4"/>
+                                <path d="M17 4v16"/>
+                            </svg>
+                            <span id="sort-label">Match</span>
+                        </button>
+                        <div class="sort-dropdown-menu" id="sort-menu">
+                            <button class="sort-option is-active" onclick="sortTenders('match')">Match %</button>
+                            <button class="sort-option" onclick="sortTenders('deadline')">Frist</button>
+                            <button class="sort-option" onclick="sortTenders('title')">Titel A-Z</button>
+                            <button class="sort-option" onclick="sortTenders('price')">Auftragswert</button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div id="tender-feed" class="tender-grid">
@@ -814,7 +847,7 @@
                             <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
                             <circle cx="12" cy="7" r="4"/>
                         </svg>
-                        Profildetails
+                        Kontodaten
                     </button>
                     <button class="settings-nav-item" onclick="showSettingsTab('notifications')">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
