@@ -109,26 +109,113 @@
     <!-- Mobile Menu Drawer -->
     <div class="mobile-menu-backdrop" onclick="toggleMobileMenu()"></div>
     <div class="mobile-menu">
+        <!-- User Profile Section (Auth only) -->
+        <div id="mobile-menu-profile" class="mobile-menu-profile hidden">
+            <div class="mobile-menu-avatar">AB</div>
+            <div class="mobile-menu-user-info">
+                <span class="mobile-menu-user-name">Anna Beispiel</span>
+                <span class="mobile-menu-user-email">anna@firma.ch</span>
+                <span class="mobile-menu-user-plan">Professional Plan</span>
+            </div>
+        </div>
+
         <nav class="mobile-menu-nav">
             <!-- Public Links -->
             <div id="mobile-nav-public" class="mobile-menu-links">
-                <a href="#solution" class="mobile-menu-link" onclick="toggleMobileMenu()">Funktionen</a>
-                <a href="#how-it-works" class="mobile-menu-link" onclick="toggleMobileMenu()">So funktioniert's</a>
-                <a href="#pricing" class="mobile-menu-link" onclick="toggleMobileMenu()">Preise</a>
+                <a href="#solution" class="mobile-menu-link" onclick="toggleMobileMenu()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+                        <polyline points="2 17 12 22 22 17"/>
+                        <polyline points="2 12 12 17 22 12"/>
+                    </svg>
+                    Funktionen
+                </a>
+                <a href="#how-it-works" class="mobile-menu-link" onclick="toggleMobileMenu()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                        <line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                    So funktioniert's
+                </a>
+                <a href="#pricing" class="mobile-menu-link" onclick="toggleMobileMenu()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="1" x2="12" y2="23"/>
+                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                    </svg>
+                    Preise
+                </a>
             </div>
             <!-- Auth Links -->
             <div id="mobile-nav-auth" class="mobile-menu-links hidden">
-                <button class="mobile-menu-link" data-goto="dashboard" onclick="toggleMobileMenu()">Dashboard</button>
-                <button class="mobile-menu-link" onclick="navigateTo('settings'); toggleMobileMenu()">Einstellungen</button>
+                <button class="mobile-menu-link" data-goto="dashboard" onclick="toggleMobileMenu()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="7" height="7"/>
+                        <rect x="14" y="3" width="7" height="7"/>
+                        <rect x="14" y="14" width="7" height="7"/>
+                        <rect x="3" y="14" width="7" height="7"/>
+                    </svg>
+                    Dashboard
+                </button>
+                <button class="mobile-menu-link" onclick="navigateTo('settings'); toggleMobileMenu()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                    </svg>
+                    Einstellungen
+                </button>
+            </div>
+
+            <!-- Logout (Auth only) -->
+            <div id="mobile-nav-logout" class="mobile-menu-section hidden">
+                <button class="mobile-menu-link mobile-menu-link-muted" onclick="logout(); toggleMobileMenu()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                        <polyline points="16 17 21 12 16 7"/>
+                        <line x1="21" y1="12" x2="9" y2="12"/>
+                    </svg>
+                    Abmelden
+                </button>
             </div>
         </nav>
+
         <div class="mobile-menu-footer">
-            <div class="mobile-menu-lang">
-                <span class="mobile-menu-lang-label">Sprache:</span>
-                <button class="mobile-lang-btn" onclick="selectLang('DE'); toggleMobileMenu()">DE</button>
-                <button class="mobile-lang-btn" onclick="selectLang('FR'); toggleMobileMenu()">FR</button>
-                <button class="mobile-lang-btn" onclick="selectLang('IT'); toggleMobileMenu()">IT</button>
-                <button class="mobile-lang-btn" onclick="selectLang('EN'); toggleMobileMenu()">EN</button>
+            <!-- Language Selection -->
+            <div class="mobile-menu-pref-section">
+                <span class="mobile-menu-pref-label">Sprache</span>
+                <div class="mobile-menu-pref-list">
+                    <button class="mobile-menu-pref-option is-active" onclick="selectLang('DE'); updateMobileLangSelection('DE')" data-lang="DE">
+                        <span class="mobile-menu-pref-radio"></span>
+                        Deutsch
+                    </button>
+                    <button class="mobile-menu-pref-option" onclick="selectLang('FR'); updateMobileLangSelection('FR')" data-lang="FR">
+                        <span class="mobile-menu-pref-radio"></span>
+                        Français
+                    </button>
+                    <button class="mobile-menu-pref-option" onclick="selectLang('IT'); updateMobileLangSelection('IT')" data-lang="IT">
+                        <span class="mobile-menu-pref-radio"></span>
+                        Italiano
+                    </button>
+                    <button class="mobile-menu-pref-option" onclick="selectLang('EN'); updateMobileLangSelection('EN')" data-lang="EN">
+                        <span class="mobile-menu-pref-radio"></span>
+                        English
+                    </button>
+                </div>
+            </div>
+
+            <!-- Theme Selection -->
+            <div class="mobile-menu-pref-section">
+                <span class="mobile-menu-pref-label">Darstellung</span>
+                <div class="mobile-menu-pref-list">
+                    <button class="mobile-menu-pref-option is-active" onclick="setTheme('light'); updateMobileThemeSelection()" data-theme="light">
+                        <span class="mobile-menu-pref-radio"></span>
+                        Hell
+                    </button>
+                    <button class="mobile-menu-pref-option" onclick="setTheme('dark'); updateMobileThemeSelection()" data-theme="dark">
+                        <span class="mobile-menu-pref-radio"></span>
+                        Dunkel
+                    </button>
+                </div>
             </div>
         </div>
     </div>
