@@ -442,14 +442,16 @@
             <!-- Login Form -->
             <div id="auth-login" class="auth-container card">
                 <h2 class="text-h1 text-center mb-6">Anmelden</h2>
-                <form onsubmit="event.preventDefault(); navigateTo('profile-selection');">
+                <form id="login-form" onsubmit="return handleLogin(event);">
                     <div class="form-group">
                         <label class="form-label">E-Mail</label>
-                        <input type="email" class="input" placeholder="name@firma.ch" value="demo@tenderscout.ch">
+                        <input type="email" id="login-email" class="input" placeholder="name@firma.ch" value="demo@tenderscout.ch" required>
+                        <span id="login-email-error" class="text-sm text-error hidden"></span>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Passwort</label>
-                        <input type="password" class="input" value="password123">
+                        <input type="password" id="login-password" class="input" value="password123" required minlength="8">
+                        <span id="login-password-error" class="text-sm text-error hidden"></span>
                         <a href="#" class="text-sm text-accent mt-2 inline-block" onclick="alert('Demo: Passwort-Reset E-Mail gesendet'); return false;">Passwort vergessen?</a>
                     </div>
                     <button type="submit" class="btn btn-primary w-full">Weiter</button>
@@ -462,24 +464,28 @@
             <!-- Register Form -->
             <div id="auth-register" class="auth-container card hidden">
                 <h2 class="text-h1 text-center mb-6">Konto erstellen</h2>
-                <form onsubmit="event.preventDefault(); navigateTo('company-search');">
+                <form id="register-form" onsubmit="return handleRegister(event);">
                     <div class="form-group">
                         <label class="form-label">E-Mail</label>
-                        <input type="email" class="input" placeholder="name@firma.ch">
+                        <input type="email" id="register-email" class="input" placeholder="name@firma.ch" required>
+                        <span id="register-email-error" class="text-sm text-error hidden"></span>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Passwort</label>
-                        <input type="password" class="input" placeholder="Min. 8 Zeichen">
+                        <input type="password" id="register-password" class="input" placeholder="Min. 8 Zeichen" required minlength="8">
+                        <span id="register-password-error" class="text-sm text-error hidden"></span>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Passwort bestätigen</label>
-                        <input type="password" class="input" placeholder="Passwort wiederholen">
+                        <input type="password" id="register-password-confirm" class="input" placeholder="Passwort wiederholen" required minlength="8">
+                        <span id="register-password-confirm-error" class="text-sm text-error hidden"></span>
                     </div>
                     <div class="form-group">
                         <label class="flex items-center gap-2 text-sm">
-                            <input type="checkbox" required>
+                            <input type="checkbox" id="register-terms" required>
                             <span>Ich akzeptiere die <a href="#" class="text-accent">AGB</a> und <a href="#" class="text-accent">Datenschutzerklärung</a></span>
                         </label>
+                        <span id="register-terms-error" class="text-sm text-error hidden"></span>
                     </div>
                     <button type="submit" class="btn btn-primary w-full">Konto erstellen</button>
                     <div class="text-center text-sm text-secondary mt-4">
