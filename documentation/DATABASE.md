@@ -826,46 +826,6 @@ flowchart TB
     Upsert -.->|UPSERT| DB_Actions
 ```
 
-### Score Calculation Flow
-
-```mermaid
-flowchart LR
-    subgraph Inputs
-        P[Search Profile]
-        T[Tender]
-    end
-
-    subgraph Scoring["Score Components"]
-        direction TB
-        CPV[CPV Overlap<br/>weight: 40%]
-        KW[Keyword Match<br/>weight: 25%]
-        REG[Region Match<br/>weight: 20%]
-        NPK[NPK Overlap<br/>weight: 15%]
-        EX[Exclusion Check<br/>penalty: -20%]
-    end
-
-    subgraph Output
-        Score[Final Score<br/>0-100]
-    end
-
-    P --> CPV
-    P --> KW
-    P --> REG
-    P --> NPK
-    P --> EX
-    T --> CPV
-    T --> KW
-    T --> REG
-    T --> NPK
-    T --> EX
-
-    CPV --> Score
-    KW --> Score
-    REG --> Score
-    NPK --> Score
-    EX --> Score
-```
-
 ### Matching Criteria
 
 | Criterion | Weight | Logic | Example |
