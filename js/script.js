@@ -476,6 +476,11 @@ function updateHeader() {
         if (authCta) authCta.classList.add('hidden');
         if (publicCta) publicCta.classList.remove('hidden');
     }
+
+    // Sync mobile menu with auth state
+    if (typeof syncMobileMenuAuth === 'function') {
+        syncMobileMenuAuth(isAuth);
+    }
 }
 
 function handleUrlParams() {
@@ -703,20 +708,20 @@ function renderTenderFeed(tenders = MOCK_TENDERS) {
                 </div>
 
                 <div class="tender-actions">
-                    <button class="tender-action ${bookmarkClass}" onclick="toggleBookmark(${tenderId}, event)" title="${t.bookmarked ? 'Nicht mehr merken' : 'Merken'}">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="${t.bookmarked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
+                    <button class="tender-action ${bookmarkClass}" onclick="toggleBookmark(${tenderId}, event)" title="${t.bookmarked ? 'Nicht mehr merken' : 'Merken'}" aria-label="${t.bookmarked ? 'Nicht mehr merken' : 'Merken'}">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="${t.bookmarked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" aria-hidden="true">
                             <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
                         </svg>
                         <span>${t.bookmarked ? 'Gemerkt' : 'Merken'}</span>
                     </button>
-                    <button class="tender-action ${appliedClass}" onclick="toggleApplied(${tenderId}, event)" title="${t.applied ? 'Bewerbung zurückziehen' : 'Als beworben markieren'}">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <button class="tender-action ${appliedClass}" onclick="toggleApplied(${tenderId}, event)" title="${t.applied ? 'Bewerbung zurückziehen' : 'Als beworben markieren'}" aria-label="${t.applied ? 'Bewerbung zurückziehen' : 'Als beworben markieren'}">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
                             <polyline points="22 4 12 14.01 9 11.01"/>
                         </svg>
                         <span>${t.applied ? 'Beworben' : 'Bewerben'}</span>
                     </button>
-                    <button class="tender-action ${hiddenClass}" onclick="toggleHidden(${tenderId}, event)" title="${t.hidden ? 'Wieder anzeigen' : 'Ausblenden'}">
+                    <button class="tender-action ${hiddenClass}" onclick="toggleHidden(${tenderId}, event)" title="${t.hidden ? 'Wieder anzeigen' : 'Ausblenden'}" aria-label="${t.hidden ? 'Wieder anzeigen' : 'Ausblenden'}">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             ${t.hidden
                                 ? '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>'
@@ -1484,3 +1489,48 @@ if (window.matchMedia) {
 }
 
 window.toggleTheme = toggleTheme;
+
+// Mobile Menu Toggle
+function toggleMobileMenu() {
+    const toggleBtn = document.querySelector('.mobile-menu-toggle');
+    const backdrop = document.querySelector('.mobile-menu-backdrop');
+    const menu = document.querySelector('.mobile-menu');
+
+    if (!toggleBtn || !backdrop || !menu) return;
+
+    const isActive = menu.classList.contains('is-active');
+
+    if (isActive) {
+        // Close menu
+        toggleBtn.classList.remove('is-active');
+        backdrop.classList.remove('is-active');
+        menu.classList.remove('is-active');
+        document.body.style.overflow = '';
+        toggleBtn.setAttribute('aria-label', 'Menü öffnen');
+    } else {
+        // Open menu
+        toggleBtn.classList.add('is-active');
+        backdrop.classList.add('is-active');
+        menu.classList.add('is-active');
+        document.body.style.overflow = 'hidden';
+        toggleBtn.setAttribute('aria-label', 'Menü schließen');
+    }
+}
+window.toggleMobileMenu = toggleMobileMenu;
+
+// Sync mobile menu with auth state
+function syncMobileMenuAuth(isAuthenticated) {
+    const mobileNavPublic = document.getElementById('mobile-nav-public');
+    const mobileNavAuth = document.getElementById('mobile-nav-auth');
+
+    if (mobileNavPublic && mobileNavAuth) {
+        if (isAuthenticated) {
+            mobileNavPublic.classList.add('hidden');
+            mobileNavAuth.classList.remove('hidden');
+        } else {
+            mobileNavPublic.classList.remove('hidden');
+            mobileNavAuth.classList.add('hidden');
+        }
+    }
+}
+window.syncMobileMenuAuth = syncMobileMenuAuth;
