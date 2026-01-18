@@ -263,6 +263,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Render Feed
     renderTenderFeed();
+
+    // Initialize mobile menu selections
+    updateMobileThemeSelection();
 });
 
 // ============================================
@@ -1463,7 +1466,41 @@ function toggleTheme() {
 
     html.setAttribute('data-theme', newTheme);
     localStorage.setItem('theme', newTheme);
+    updateMobileThemeSelection();
 }
+
+// Set specific theme
+function setTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+    updateMobileThemeSelection();
+}
+window.setTheme = setTheme;
+
+// Update mobile menu theme selection visual state
+function updateMobileThemeSelection() {
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+    document.querySelectorAll('.mobile-menu-pref-option[data-theme]').forEach(option => {
+        if (option.dataset.theme === currentTheme) {
+            option.classList.add('is-active');
+        } else {
+            option.classList.remove('is-active');
+        }
+    });
+}
+window.updateMobileThemeSelection = updateMobileThemeSelection;
+
+// Update mobile menu language selection visual state
+function updateMobileLangSelection(lang) {
+    document.querySelectorAll('.mobile-menu-pref-option[data-lang]').forEach(option => {
+        if (option.dataset.lang === lang) {
+            option.classList.add('is-active');
+        } else {
+            option.classList.remove('is-active');
+        }
+    });
+}
+window.updateMobileLangSelection = updateMobileLangSelection;
 
 // Initialize theme from localStorage or system preference
 function initTheme() {
@@ -1522,14 +1559,20 @@ window.toggleMobileMenu = toggleMobileMenu;
 function syncMobileMenuAuth(isAuthenticated) {
     const mobileNavPublic = document.getElementById('mobile-nav-public');
     const mobileNavAuth = document.getElementById('mobile-nav-auth');
+    const mobileNavLogout = document.getElementById('mobile-nav-logout');
+    const mobileMenuProfile = document.getElementById('mobile-menu-profile');
 
     if (mobileNavPublic && mobileNavAuth) {
         if (isAuthenticated) {
             mobileNavPublic.classList.add('hidden');
             mobileNavAuth.classList.remove('hidden');
+            if (mobileNavLogout) mobileNavLogout.classList.remove('hidden');
+            if (mobileMenuProfile) mobileMenuProfile.classList.remove('hidden');
         } else {
             mobileNavPublic.classList.remove('hidden');
             mobileNavAuth.classList.add('hidden');
+            if (mobileNavLogout) mobileNavLogout.classList.add('hidden');
+            if (mobileMenuProfile) mobileMenuProfile.classList.add('hidden');
         }
     }
 }
