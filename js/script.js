@@ -1,3 +1,96 @@
+// ============================================
+// CONSTANTS
+// ============================================
+
+const VIEWS = {
+    LANDING: 'landing',
+    AUTH: 'auth',
+    PROFILE_SELECTION: 'profile-selection',
+    COMPANY_SEARCH: 'company-search',
+    MANUAL_ENTRY: 'manual-entry',
+    AI_REVIEW: 'ai-review',
+    DASHBOARD: 'dashboard',
+    TENDER_DETAIL: 'tender-detail',
+    SETTINGS: 'settings'
+};
+
+const FILTERS = {
+    ALL: 'all',
+    OPEN: 'open',
+    CLOSING: 'closing',
+    BOOKMARKED: 'bookmarked',
+    APPLIED: 'applied',
+    HIDDEN: 'hidden'
+};
+
+const SORT_OPTIONS = {
+    MATCH: 'match',
+    DEADLINE: 'deadline',
+    TITLE: 'title',
+    PRICE: 'price'
+};
+
+const TENDER_STATUS = {
+    OPEN: 'Offen',
+    CLOSING_SOON: 'Bald fällig'
+};
+
+// ============================================
+// SECURITY HELPERS
+// ============================================
+
+/**
+ * Escapes HTML special characters to prevent XSS attacks
+ * @param {string} str - The string to escape
+ * @returns {string} - The escaped string
+ */
+function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    const htmlEntities = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+    };
+    return String(str).replace(/[&<>"']/g, char => htmlEntities[char]);
+}
+
+/**
+ * Validates an email address format
+ * @param {string} email - The email to validate
+ * @returns {boolean} - Whether the email is valid
+ */
+function isValidEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
+
+/**
+ * Validates password strength
+ * @param {string} password - The password to validate
+ * @returns {{valid: boolean, message: string}} - Validation result
+ */
+function validatePassword(password) {
+    if (!password || password.length < 8) {
+        return { valid: false, message: 'Passwort muss mindestens 8 Zeichen lang sein.' };
+    }
+    return { valid: true, message: '' };
+}
+
+/**
+ * Sanitizes a string for use in onclick handlers (escapes quotes)
+ * @param {string} str - The string to sanitize
+ * @returns {string} - The sanitized string
+ */
+function escapeAttr(str) {
+    if (str === null || str === undefined) return '';
+    return String(str).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+}
+
+// ============================================
+// STATE
+// ============================================
 
 // Test Data - Loaded from JSON
 let MOCK_COMPANIES = [];
@@ -5,6 +98,9 @@ let AI_RECOMMENDATIONS = {};
 let MOCK_TENDERS = [];
 let MOCK_USER_PROFILES = [];
 let TEST_DATA = null;
+
+// Current field being edited in modal
+let currentEditField = null;
 
 // Load test data from JSON
 async function loadTestData() {
@@ -139,14 +235,154 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderTenderFeed();
 });
 
-// Auth Controller
+// ============================================
+// FORM VALIDATION
+// ============================================
+
+/**
+ * Shows an error message for a form field
+ * @param {string} elementId - The ID of the error span element
+ * @param {string} message - The error message to display
+ */
+function showFieldError(elementId, message) {
+    const el = document.getElementById(elementId);
+    if (el) {
+        el.textContent = message;
+        el.classList.remove('hidden');
+    }
+}
+
+/**
+ * Hides an error message for a form field
+ * @param {string} elementId - The ID of the error span element
+ */
+function hideFieldError(elementId) {
+    const el = document.getElementById(elementId);
+    if (el) {
+        el.textContent = '';
+        el.classList.add('hidden');
+    }
+}
+
+/**
+ * Handles login form submission with validation
+ * @param {Event} event - The form submit event
+ * @returns {boolean} - False to prevent default form submission
+ */
+function handleLogin(event) {
+    event.preventDefault();
+
+    const emailInput = document.getElementById('login-email');
+    const passwordInput = document.getElementById('login-password');
+
+    // Reset errors
+    hideFieldError('login-email-error');
+    hideFieldError('login-password-error');
+
+    let isValid = true;
+
+    // Validate email
+    const email = emailInput?.value?.trim() || '';
+    if (!email) {
+        showFieldError('login-email-error', 'E-Mail ist erforderlich.');
+        isValid = false;
+    } else if (!isValidEmail(email)) {
+        showFieldError('login-email-error', 'Bitte geben Sie eine gültige E-Mail-Adresse ein.');
+        isValid = false;
+    }
+
+    // Validate password
+    const password = passwordInput?.value || '';
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.valid) {
+        showFieldError('login-password-error', passwordValidation.message);
+        isValid = false;
+    }
+
+    if (isValid) {
+        // Demo: proceed to profile selection
+        navigateTo(VIEWS.PROFILE_SELECTION);
+    }
+
+    return false;
+}
+window.handleLogin = handleLogin;
+
+/**
+ * Handles registration form submission with validation
+ * @param {Event} event - The form submit event
+ * @returns {boolean} - False to prevent default form submission
+ */
+function handleRegister(event) {
+    event.preventDefault();
+
+    const emailInput = document.getElementById('register-email');
+    const passwordInput = document.getElementById('register-password');
+    const passwordConfirmInput = document.getElementById('register-password-confirm');
+    const termsCheckbox = document.getElementById('register-terms');
+
+    // Reset all errors
+    hideFieldError('register-email-error');
+    hideFieldError('register-password-error');
+    hideFieldError('register-password-confirm-error');
+    hideFieldError('register-terms-error');
+
+    let isValid = true;
+
+    // Validate email
+    const email = emailInput?.value?.trim() || '';
+    if (!email) {
+        showFieldError('register-email-error', 'E-Mail ist erforderlich.');
+        isValid = false;
+    } else if (!isValidEmail(email)) {
+        showFieldError('register-email-error', 'Bitte geben Sie eine gültige E-Mail-Adresse ein.');
+        isValid = false;
+    }
+
+    // Validate password
+    const password = passwordInput?.value || '';
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.valid) {
+        showFieldError('register-password-error', passwordValidation.message);
+        isValid = false;
+    }
+
+    // Validate password confirmation
+    const passwordConfirm = passwordConfirmInput?.value || '';
+    if (!passwordConfirm) {
+        showFieldError('register-password-confirm-error', 'Bitte bestätigen Sie Ihr Passwort.');
+        isValid = false;
+    } else if (password !== passwordConfirm) {
+        showFieldError('register-password-confirm-error', 'Die Passwörter stimmen nicht überein.');
+        isValid = false;
+    }
+
+    // Validate terms acceptance
+    if (!termsCheckbox?.checked) {
+        showFieldError('register-terms-error', 'Bitte akzeptieren Sie die AGB und Datenschutzerklärung.');
+        isValid = false;
+    }
+
+    if (isValid) {
+        // Demo: proceed to company search
+        navigateTo(VIEWS.COMPANY_SEARCH);
+    }
+
+    return false;
+}
+window.handleRegister = handleRegister;
+
+// ============================================
+// AUTH CONTROLLER
+// ============================================
+
 function logout() {
     state.user = null;
     state.company = null;
     state.selectedTender = null;
     state.recommendations = null;
 
-    navigateTo('landing');
+    navigateTo(VIEWS.LANDING);
 }
 window.logout = logout;
 
@@ -207,22 +443,30 @@ function handleUrlParams() {
 }
 window.navigateTo = navigateTo;
 
-// Submit manual company entry
+// Submit manual company entry with validation
 function submitManualEntry() {
-    const name = document.getElementById('manual-name');
-    const city = document.getElementById('manual-city');
+    const nameInput = document.getElementById('manual-name');
+    const cityInput = document.getElementById('manual-city');
 
-    if (!name || !name.value.trim()) {
+    const name = nameInput?.value?.trim() || '';
+    const city = cityInput?.value?.trim() || '';
+
+    // Validate required fields
+    if (!name) {
         alert('Bitte geben Sie einen Firmennamen ein.');
+        if (nameInput) nameInput.focus();
+        return;
+    }
+
+    if (!city) {
+        alert('Bitte geben Sie eine Stadt ein.');
+        if (cityInput) cityInput.focus();
         return;
     }
 
     // Set state and navigate to AI review
-    state.company = {
-        name: name.value.trim(),
-        city: city ? city.value.trim() : ''
-    };
-    navigateTo('ai-review');
+    state.company = { name, city };
+    selectCompany(name);
 }
 window.submitManualEntry = submitManualEntry;
 
@@ -239,11 +483,11 @@ function setSearch(term) {
 
 function renderSearchResults(companies, container) {
     container.innerHTML = companies.map(c => `
-        <div class="card card-interactive" onclick="selectCompany('${c.name}')">
+        <div class="card card-interactive" onclick="selectCompany('${escapeAttr(c.name)}')">
             <div class="flex justify-between items-center">
                 <div>
-                    <div class="text-h3">${c.name}</div>
-                    <div class="text-sm text-secondary">${c.uid} • ${c.city}</div>
+                    <div class="text-h3">${escapeHtml(c.name)}</div>
+                    <div class="text-sm text-secondary">${escapeHtml(c.uid)} • ${escapeHtml(c.city)}</div>
                 </div>
                 <div class="btn btn-sm btn-secondary">Auswählen</div>
             </div>
@@ -275,7 +519,7 @@ function selectCompany(name) {
     if (overlay) overlay.classList.remove('hidden');
     if (content) content.classList.add('hidden');
 
-    navigateTo('ai-review');
+    navigateTo(VIEWS.AI_REVIEW);
 
     // Animation Steps
     const steps = [
@@ -311,33 +555,33 @@ function selectCompany(name) {
         const sizeEl = document.getElementById('ai-size');
         if (sizeEl) sizeEl.textContent = rec.size;
 
-        // Keywords (New)
+        // Keywords (New) - escape all keyword values
         const keywordsContainer = document.getElementById('ai-keywords');
         if (keywordsContainer) {
             const positive = rec.keywords.map(k =>
-                `<span class="badge badge-green mr-1 mb-1">+ ${k}</span>`
+                `<span class="badge badge-green mr-1 mb-1">+ ${escapeHtml(k)}</span>`
             ).join('');
             const negative = rec.excludeKeywords.map(k =>
-                `<span class="badge badge-red mr-1 mb-1">- ${k}</span>`
+                `<span class="badge badge-red mr-1 mb-1">- ${escapeHtml(k)}</span>`
             ).join('');
             keywordsContainer.innerHTML = positive + negative;
         }
 
-        // NPK Codes (New - Conditional)
+        // NPK Codes (New - Conditional) - escape code values
         const npkSection = document.getElementById('ai-npk-section');
         const npkContainer = document.getElementById('ai-npk-codes');
         if (npkSection && npkContainer) {
             if (rec.npk && rec.npk.length > 0) {
                 npkSection.style.display = 'block';
                 npkContainer.innerHTML = rec.npk.map(code =>
-                    `<div class="flex items-center gap-2"><svg class="text-accent" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <span>${code}</span></div>`
+                    `<div class="flex items-center gap-2"><svg class="text-accent" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <span>${escapeHtml(code)}</span></div>`
                 ).join('');
             } else {
                 npkSection.style.display = 'none';
             }
         }
 
-        // CPV Codes
+        // CPV Codes - escape code and label values
         const cpvContainer = document.getElementById('ai-cpv-codes');
         if (cpvContainer) {
             cpvContainer.innerHTML = rec.cpv.map(c => `
@@ -345,7 +589,7 @@ function selectCompany(name) {
                     <svg class="text-accent" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="20 6 9 17 4 12"/>
                     </svg>
-                    <span>${c.code} - ${c.label}</span>
+                    <span>${escapeHtml(c.code)} - ${escapeHtml(c.label)}</span>
                 </div>
             `).join('');
         }
@@ -375,54 +619,57 @@ function renderTenderFeed(tenders = MOCK_TENDERS) {
 
     container.innerHTML = tenders.map(t => {
         let badgeColor = 'green';
-        if (t.status === 'Bald fällig') badgeColor = 'orange';
+        if (t.status === TENDER_STATUS.CLOSING_SOON) badgeColor = 'orange';
         if (t.applied) badgeColor = 'blue';
 
-        // Status indicators
+        // Status indicators (escape status text)
         const statusBadge = t.applied
             ? `<span class="badge badge-blue">Beworben</span>`
-            : `<span class="badge badge-${badgeColor}">${t.status}</span>`;
+            : `<span class="badge badge-${badgeColor}">${escapeHtml(t.status)}</span>`;
 
         // Action button states
         const bookmarkClass = t.bookmarked ? 'is-active' : '';
         const appliedClass = t.applied ? 'is-active' : '';
         const hiddenClass = t.hidden ? 'is-active' : '';
 
+        // Ensure ID is numeric to prevent injection
+        const tenderId = parseInt(t.id, 10);
+
         return `
-            <div class="card card-interactive" onclick="viewTender(${t.id})">
+            <div class="card card-interactive" onclick="viewTender(${tenderId})">
                 <div class="flex justify-between items-center mb-3">
                     ${statusBadge}
-                    <span class="text-h3 text-accent">${t.match}%</span>
+                    <span class="text-h3 text-accent">${parseInt(t.match, 10)}%</span>
                 </div>
-                <h3 class="text-h3 mb-2">${t.title}</h3>
-                <div class="text-secondary text-sm mb-4">${t.authority}</div>
+                <h3 class="text-h3 mb-2">${escapeHtml(t.title)}</h3>
+                <div class="text-secondary text-sm mb-4">${escapeHtml(t.authority)}</div>
 
                 <div class="flex justify-between items-center text-sm text-muted mb-4">
-                    <span>${t.price}</span>
+                    <span>${escapeHtml(t.price)}</span>
                     <span class="flex items-center gap-1">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="10"/>
                             <polyline points="12 6 12 12 16 14"/>
                         </svg>
-                        ${t.deadline}
+                        ${escapeHtml(t.deadline)}
                     </span>
                 </div>
 
                 <div class="tender-actions">
-                    <button class="tender-action ${bookmarkClass}" onclick="toggleBookmark(${t.id}, event)" title="${t.bookmarked ? 'Nicht mehr merken' : 'Merken'}">
+                    <button class="tender-action ${bookmarkClass}" onclick="toggleBookmark(${tenderId}, event)" title="${t.bookmarked ? 'Nicht mehr merken' : 'Merken'}">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="${t.bookmarked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
                             <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
                         </svg>
                         <span>${t.bookmarked ? 'Gemerkt' : 'Merken'}</span>
                     </button>
-                    <button class="tender-action ${appliedClass}" onclick="toggleApplied(${t.id}, event)" title="${t.applied ? 'Bewerbung zurückziehen' : 'Als beworben markieren'}">
+                    <button class="tender-action ${appliedClass}" onclick="toggleApplied(${tenderId}, event)" title="${t.applied ? 'Bewerbung zurückziehen' : 'Als beworben markieren'}">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
                             <polyline points="22 4 12 14.01 9 11.01"/>
                         </svg>
                         <span>${t.applied ? 'Beworben' : 'Bewerben'}</span>
                     </button>
-                    <button class="tender-action ${hiddenClass}" onclick="toggleHidden(${t.id}, event)" title="${t.hidden ? 'Wieder anzeigen' : 'Ausblenden'}">
+                    <button class="tender-action ${hiddenClass}" onclick="toggleHidden(${tenderId}, event)" title="${t.hidden ? 'Wieder anzeigen' : 'Ausblenden'}">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             ${t.hidden
                                 ? '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>'
@@ -457,22 +704,22 @@ function filterTenders(filter) {
     let filtered = MOCK_TENDERS;
 
     switch (filter) {
-        case 'open':
-            filtered = MOCK_TENDERS.filter(t => t.status === 'Offen' && !t.hidden);
+        case FILTERS.OPEN:
+            filtered = MOCK_TENDERS.filter(t => t.status === TENDER_STATUS.OPEN && !t.hidden);
             break;
-        case 'closing':
-            filtered = MOCK_TENDERS.filter(t => t.status === 'Bald fällig' && !t.hidden);
+        case FILTERS.CLOSING:
+            filtered = MOCK_TENDERS.filter(t => t.status === TENDER_STATUS.CLOSING_SOON && !t.hidden);
             break;
-        case 'bookmarked':
+        case FILTERS.BOOKMARKED:
             filtered = MOCK_TENDERS.filter(t => t.bookmarked === true && !t.hidden);
             break;
-        case 'applied':
+        case FILTERS.APPLIED:
             filtered = MOCK_TENDERS.filter(t => t.applied === true);
             break;
-        case 'hidden':
+        case FILTERS.HIDDEN:
             filtered = MOCK_TENDERS.filter(t => t.hidden === true);
             break;
-        case 'all':
+        case FILTERS.ALL:
         default:
             // "All" excludes hidden tenders
             filtered = MOCK_TENDERS.filter(t => !t.hidden);
@@ -494,8 +741,8 @@ function updateFilterCounts() {
 
     // "All" count excludes hidden
     if (countAll) countAll.textContent = MOCK_TENDERS.filter(t => !t.hidden).length;
-    if (countOpen) countOpen.textContent = MOCK_TENDERS.filter(t => t.status === 'Offen' && !t.hidden).length;
-    if (countClosing) countClosing.textContent = MOCK_TENDERS.filter(t => t.status === 'Bald fällig' && !t.hidden).length;
+    if (countOpen) countOpen.textContent = MOCK_TENDERS.filter(t => t.status === TENDER_STATUS.OPEN && !t.hidden).length;
+    if (countClosing) countClosing.textContent = MOCK_TENDERS.filter(t => t.status === TENDER_STATUS.CLOSING_SOON && !t.hidden).length;
     if (countBookmarked) countBookmarked.textContent = MOCK_TENDERS.filter(t => t.bookmarked === true && !t.hidden).length;
     if (countApplied) countApplied.textContent = MOCK_TENDERS.filter(t => t.applied === true).length;
     if (countHidden) countHidden.textContent = MOCK_TENDERS.filter(t => t.hidden === true).length;
@@ -615,7 +862,7 @@ document.addEventListener('click', (e) => {
 // Profile settings - open wizard to edit search profile
 function openProfileSettings() {
     // Always open the wizard so users can edit their search profile
-    navigateTo('company-search');
+    navigateTo(VIEWS.COMPANY_SEARCH);
 }
 
 window.toggleSortDropdown = toggleSortDropdown;
@@ -624,80 +871,93 @@ window.openProfileSettings = openProfileSettings;
 
 function viewTender(id) {
     const tender = MOCK_TENDERS.find(t => t.id === id);
-    if (tender) {
-        state.selectedTender = tender;
+    if (!tender) return;
 
-        // Update Breadcrumbs
-        const breadcrumbs = document.getElementById('tender-detail-breadcrumbs');
-        if (breadcrumbs) {
-            breadcrumbs.innerHTML = `
-                <span class="breadcrumb-item is-clickable" onclick="navigateTo('profile-selection')">Meine Profile</span>
-                <span class="breadcrumb-separator">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="9 18 15 12 9 6"/>
-                    </svg>
-                </span>
-                <span class="breadcrumb-item is-clickable" onclick="navigateTo('dashboard')">Müller Bau AG</span>
-                <span class="breadcrumb-separator">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="9 18 15 12 9 6"/>
-                    </svg>
-                </span>
-                <span class="breadcrumb-item is-current is-truncate">${tender.title}</span>
-            `;
-        }
+    state.selectedTender = tender;
 
-        // Populate Detail View
-        const detailContainer = document.getElementById('tender-detail-content');
-        detailContainer.innerHTML = `
-            <div class="flex justify-between items-start mb-6">
-                <div>
-                    <span class="badge badge-blue mb-2">${tender.status}</span>
-                    <h1 class="text-display">${tender.title}</h1>
-                    <div class="text-h3 text-secondary mt-2">${tender.authority}</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-display text-accent">${tender.match}%</div>
-                    <div class="text-sm text-muted">Übereinstimmung</div>
-                </div>
-            </div>
-
-            <div class="detail-stats mb-8">
-                <div class="card">
-                    <div class="text-sm text-muted">Auftragswert</div>
-                    <div class="text-h3">${tender.price}</div>
-                </div>
-                <div class="card">
-                    <div class="text-sm text-muted">Eingabefrist</div>
-                    <div class="text-h3">${tender.deadlineDate}</div>
-                </div>
-                <div class="card">
-                    <div class="text-sm text-muted">Region</div>
-                    <div class="text-h3">${tender.region}</div>
-                </div>
-            </div>
-
-            <div class="mb-8">
-                <h3 class="text-h2 mb-4">Beschreibung</h3>
-                <p class="text-secondary mb-4">
-                    ${tender.description || 'Keine Beschreibung verfügbar.'}
-                </p>
-                ${tender.details ? `
-                <ul class="text-secondary list-disc pl-6">
-                    ${tender.details.baustart ? `<li>Baustart: ${tender.details.baustart}</li>` : ''}
-                    ${tender.details.dauer ? `<li>Dauer: ${tender.details.dauer}</li>` : ''}
-                    ${tender.details.bkp && tender.details.bkp.length > 0 ? `<li>BKP ${tender.details.bkp.join(', ')}</li>` : ''}
-                </ul>
-                ` : ''}
-            </div>
-            
-            <div class="flex gap-4">
-                <button class="btn btn-lg btn-primary">Jetzt Bewerben</button>
-                <button class="btn btn-lg btn-secondary">Ausschreibung ansehen (SIMAP)</button>
-            </div>
+    // Update Breadcrumbs
+    const breadcrumbs = document.getElementById('tender-detail-breadcrumbs');
+    if (breadcrumbs) {
+        breadcrumbs.innerHTML = `
+            <span class="breadcrumb-item is-clickable" onclick="navigateTo('${VIEWS.PROFILE_SELECTION}')">Meine Profile</span>
+            <span class="breadcrumb-separator">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6"/>
+                </svg>
+            </span>
+            <span class="breadcrumb-item is-clickable" onclick="navigateTo('${VIEWS.DASHBOARD}')">Müller Bau AG</span>
+            <span class="breadcrumb-separator">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6"/>
+                </svg>
+            </span>
+            <span class="breadcrumb-item is-current is-truncate">${escapeHtml(tender.title)}</span>
         `;
-        navigateTo('tender-detail');
     }
+
+    // Safely build details list if present
+    let detailsList = '';
+    if (tender.details) {
+        const items = [];
+        if (tender.details.baustart) {
+            items.push(`<li>Baustart: ${escapeHtml(tender.details.baustart)}</li>`);
+        }
+        if (tender.details.dauer) {
+            items.push(`<li>Dauer: ${escapeHtml(tender.details.dauer)}</li>`);
+        }
+        if (tender.details.bkp && tender.details.bkp.length > 0) {
+            const bkpEscaped = tender.details.bkp.map(b => escapeHtml(b)).join(', ');
+            items.push(`<li>BKP ${bkpEscaped}</li>`);
+        }
+        if (items.length > 0) {
+            detailsList = `<ul class="text-secondary list-disc pl-6">${items.join('')}</ul>`;
+        }
+    }
+
+    // Populate Detail View
+    const detailContainer = document.getElementById('tender-detail-content');
+    detailContainer.innerHTML = `
+        <div class="flex justify-between items-start mb-6">
+            <div>
+                <span class="badge badge-blue mb-2">${escapeHtml(tender.status)}</span>
+                <h1 class="text-display">${escapeHtml(tender.title)}</h1>
+                <div class="text-h3 text-secondary mt-2">${escapeHtml(tender.authority)}</div>
+            </div>
+            <div class="text-center">
+                <div class="text-display text-accent">${parseInt(tender.match, 10)}%</div>
+                <div class="text-sm text-muted">Übereinstimmung</div>
+            </div>
+        </div>
+
+        <div class="detail-stats mb-8">
+            <div class="card">
+                <div class="text-sm text-muted">Auftragswert</div>
+                <div class="text-h3">${escapeHtml(tender.price)}</div>
+            </div>
+            <div class="card">
+                <div class="text-sm text-muted">Eingabefrist</div>
+                <div class="text-h3">${escapeHtml(tender.deadlineDate)}</div>
+            </div>
+            <div class="card">
+                <div class="text-sm text-muted">Region</div>
+                <div class="text-h3">${escapeHtml(tender.region)}</div>
+            </div>
+        </div>
+
+        <div class="mb-8">
+            <h3 class="text-h2 mb-4">Beschreibung</h3>
+            <p class="text-secondary mb-4">
+                ${escapeHtml(tender.description) || 'Keine Beschreibung verfügbar.'}
+            </p>
+            ${detailsList}
+        </div>
+
+        <div class="flex gap-4">
+            <button class="btn btn-lg btn-primary">Jetzt Bewerben</button>
+            <button class="btn btn-lg btn-secondary">Ausschreibung ansehen (SIMAP)</button>
+        </div>
+    `;
+    navigateTo(VIEWS.TENDER_DETAIL);
 }
 
 // Make functions global for inline onclick handlers
@@ -710,34 +970,40 @@ function renderProfiles() {
     const container = document.getElementById('profile-list');
     if (!container) return;
 
-    container.innerHTML = MOCK_USER_PROFILES.map(p => `
+    container.innerHTML = MOCK_USER_PROFILES.map(p => {
+        // Ensure ID is numeric to prevent injection
+        const profileId = parseInt(p.id, 10);
+        // Safely get avatar initials
+        const avatarText = escapeHtml(String(p.company || '').substring(0, 2).toUpperCase());
+
+        return `
         <div class="card card-interactive">
             <div class="flex justify-between items-center">
-                <div class="flex items-center gap-4 flex-1 cursor-pointer" onclick="selectProfile(${p.id})">
-                    <div class="avatar">${p.company.substring(0, 2).toUpperCase()}</div>
+                <div class="flex items-center gap-4 flex-1 cursor-pointer" onclick="selectProfile(${profileId})">
+                    <div class="avatar">${avatarText}</div>
                     <div>
-                        <div class="text-h3">${p.company}</div>
-                        <div class="text-sm text-secondary">${p.role}</div>
+                        <div class="text-h3">${escapeHtml(p.company)}</div>
+                        <div class="text-sm text-secondary">${escapeHtml(p.role)}</div>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <button class="btn btn-ghost btn-sm text-error" onclick="event.stopPropagation(); deleteProfile(${p.id})" title="Profil löschen">
+                    <button class="btn btn-ghost btn-sm text-error" onclick="event.stopPropagation(); deleteProfile(${profileId})" title="Profil löschen">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M3 6h18"/>
                             <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
                             <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
                         </svg>
                     </button>
-                    <svg class="text-accent cursor-pointer" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" onclick="selectProfile(${p.id})"><polyline points="9 18 15 12 9 6"/></svg>
+                    <svg class="text-accent cursor-pointer" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" onclick="selectProfile(${profileId})"><polyline points="9 18 15 12 9 6"/></svg>
                 </div>
             </div>
         </div>
-    `).join('');
+    `}).join('');
 }
 
 function deleteProfile(id) {
     const profile = MOCK_USER_PROFILES.find(p => p.id === id);
-    if (profile && confirm('Möchten Sie das Profil "' + profile.company + '" wirklich löschen?')) {
+    if (profile && confirm('Möchten Sie das Profil "' + escapeHtml(profile.company) + '" wirklich löschen?')) {
         const index = MOCK_USER_PROFILES.findIndex(p => p.id === id);
         if (index > -1) {
             MOCK_USER_PROFILES.splice(index, 1);
@@ -753,7 +1019,7 @@ function selectProfile(id) {
         // Mock State Update
         state.company = { name: profile.company };
         // Assuming profile is already set up, go to dashboard
-        navigateTo('dashboard');
+        navigateTo(VIEWS.DASHBOARD);
     }
 }
 
@@ -794,18 +1060,6 @@ function applyFilters() {
 window.applyFilters = applyFilters;
 
 window.saveEdit = saveEdit;
-
-// Manual Entry Logic
-function submitManualEntry() {
-    const name = document.getElementById('manual-name')?.value;
-    const city = document.getElementById('manual-city')?.value;
-
-    if (name && city) {
-        // Use generic recommendation for manual entry
-        selectCompany(name);
-    }
-}
-window.submitManualEntry = submitManualEntry;
 
 function openEditModal(field) {
     currentEditField = field;
@@ -917,14 +1171,14 @@ function saveEdit() {
         rec.keywords = pos;
         rec.excludeKeywords = neg;
 
-        // Re-render keywords
+        // Re-render keywords with escaping
         const keywordsContainer = document.getElementById('ai-keywords');
         if (keywordsContainer) {
             const positiveHtml = rec.keywords.map(k =>
-                `<span class="badge badge-green mr-1 mb-1">+ ${k}</span>`
+                `<span class="badge badge-green mr-1 mb-1">+ ${escapeHtml(k)}</span>`
             ).join('');
             const negativeHtml = rec.excludeKeywords.map(k =>
-                `<span class="badge badge-red mr-1 mb-1">- ${k}</span>`
+                `<span class="badge badge-red mr-1 mb-1">- ${escapeHtml(k)}</span>`
             ).join('');
             keywordsContainer.innerHTML = positiveHtml + negativeHtml;
         }
@@ -939,7 +1193,7 @@ function saveEdit() {
                 cpvContainer.innerHTML = rec.cpv.map(c => `
                     <div class="flex items-center gap-2">
                         <svg class="text-accent" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                        <span>${c.code} - ${c.label}</span>
+                        <span>${escapeHtml(c.code)} - ${escapeHtml(c.label)}</span>
                     </div>
                 `).join('');
             }
@@ -953,7 +1207,7 @@ function saveEdit() {
             const npkContainer = document.getElementById('ai-npk-codes');
             if (npkContainer) {
                 npkContainer.innerHTML = rec.npk.map(code =>
-                    `<div class="flex items-center gap-2"><svg class="text-accent" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <span>${code}</span></div>`
+                    `<div class="flex items-center gap-2"><svg class="text-accent" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <span>${escapeHtml(code)}</span></div>`
                 ).join('');
             }
         }
