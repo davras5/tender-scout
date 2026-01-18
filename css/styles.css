@@ -1241,7 +1241,13 @@ textarea.input-md {
         display: none;
     }
     .navbar-container {
-        grid-template-columns: 1fr auto auto;
+        grid-template-columns: 1fr auto;
+    }
+    /* Hide elements that are now in mobile menu */
+    .theme-toggle,
+    .lang-dropdown,
+    #nav-cta-auth {
+        display: none;
     }
     .mobile-menu-toggle {
         display: flex;
