@@ -29,10 +29,10 @@ GET https://www.simap.ch/api/publications/v2/project/project-search
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `search` | string | Free text search (3-1000 chars) |
-| `lang` | array | Languages to search: `de`, `en`, `fr`, `it` |
-| `projectSubTypes` | array | `construction`, `service`, `supply`, etc. |
-| `processTypes` | array | `open`, `selective`, `invitation`, `direct`, `no_process` |
-| `newestPubTypes` | array | `tender`, `award`, `revocation`, etc. |
+| `lang` | array | Languages to search in (see values below) |
+| `projectSubTypes` | array | Project sub-types to filter (see values below) |
+| `processTypes` | array | Procurement process types (see values below) |
+| `newestPubTypes` | array | Publication types (see values below) |
 | `cpvCodes` | array | CPV classification codes |
 | `npkCodes` | array | NPK codes (Swiss construction standards) |
 | `bkpCodes` | array | BKP codes (Swiss construction cost codes) |
@@ -41,6 +41,49 @@ GET https://www.simap.ch/api/publications/v2/project/project-search
 | `newestPublicationFrom` | date | Publication date from (YYYY-MM-DD) |
 | `newestPublicationUntil` | date | Publication date until (YYYY-MM-DD) |
 | `lastItem` | string | Pagination cursor from previous response |
+
+**Parameter Values:**
+
+`lang` - Languages to search:
+```
+de, en, fr, it
+```
+
+`projectSubTypes` - Project sub-types:
+```
+construction, service, supply, project_competition, idea_competition,
+overall_performance_competition, project_study, idea_study,
+overall_performance_study, request_for_information
+```
+
+`processTypes` - Procurement process types:
+```
+open, selective, invitation, direct, no_process
+```
+
+`newestPubTypes` - Publication types:
+```
+advance_notice, request_for_information, tender, competition, study_contract,
+award_tender, award_study_contract, award_competition, direct_award,
+participant_selection, revocation, abandonment, selective_offering_phase
+```
+
+**Date Filters (for incremental sync):**
+
+For daily update jobs, use these date filters to fetch only recent publications:
+
+| Parameter | Format | Description |
+|-----------|--------|-------------|
+| `newestPublicationFrom` | `YYYY-MM-DD` | Filter projects with newest publication date >= this date |
+| `newestPublicationUntil` | `YYYY-MM-DD` | Filter projects with newest publication date <= this date |
+| `lastItem` | `YYYYMMDD\|projectNumber` | Pagination cursor (from previous response's `pagination.lastItem`) |
+
+Example for fetching last 7 days:
+```bash
+# Get publications from the last week
+curl -X GET "https://www.simap.ch/api/publications/v2/project/project-search?orderAddressCountryOnlySwitzerland=true&newestPublicationFrom=2026-01-12" \
+  -H "accept: application/json"
+```
 
 **Example Request:**
 ```bash
