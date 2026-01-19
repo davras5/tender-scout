@@ -512,6 +512,14 @@
             white-space: nowrap;
         }
 
+        /* Allow wrapping on mobile */
+        @media (max-width: 768px) {
+            .data-table td {
+                white-space: normal;
+                word-break: break-word;
+            }
+        }
+
         /* Optimize column widths */
         .data-table th:first-child,
         .data-table td:first-child {
@@ -778,6 +786,12 @@
         /* Table Scroll Container */
         .table-scroll {
             overflow-x: auto;
+            -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+        }
+
+        /* Ensure table doesn't break out of container */
+        .table-container {
+            overflow: hidden;
         }
 
         /* Pagination Ellipsis */
@@ -947,22 +961,41 @@
                 border-radius: var(--radius-md);
             }
 
-            .table-wrapper {
-                margin: 0 calc(-1 * var(--space-2));
-                padding: 0 var(--space-2);
-            }
+            /* Removed negative margins - causes horizontal overflow */
 
             .data-table th,
             .data-table td {
                 padding: var(--space-2);
                 font-size: var(--text-xs);
-                max-width: 150px;
             }
 
             .data-table th:first-child,
             .data-table td:first-child {
                 display: none; /* Hide row numbers on mobile */
             }
+
+            /* Hide non-essential columns on mobile - keep only Title, Deadline, Status */
+            .data-table th:nth-child(2),
+            .data-table td:nth-child(2) {
+                display: none; /* Hide Project # */
+            }
+
+            .data-table th:nth-child(4),
+            .data-table td:nth-child(4) {
+                display: none; /* Hide Authority */
+            }
+
+            .data-table th:nth-child(5),
+            .data-table td:nth-child(5) {
+                display: none; /* Hide Region */
+            }
+
+            .data-table th:nth-child(6),
+            .data-table td:nth-child(6) {
+                display: none; /* Hide Published */
+            }
+
+            /* Keep visible: Title (3), Deadline (7), Status (8) */
 
             .status-badge {
                 font-size: var(--text-xs);
@@ -1043,7 +1076,7 @@
             .data-table th,
             .data-table td {
                 padding: var(--space-1) var(--space-2);
-                max-width: 120px;
+                /* Removed max-width to allow flexible wrapping */
             }
 
             .pagination-controls {
