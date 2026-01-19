@@ -146,8 +146,14 @@ erDiagram
         varchar external_id
         varchar source
         varchar source_url
-        varchar title
-        varchar authority
+        jsonb title "multilingual de/fr/it/en"
+        varchar project_number
+        varchar publication_number
+        varchar project_type
+        varchar project_sub_type
+        varchar process_type
+        varchar lots_type
+        jsonb authority "multilingual de/fr/it/en"
         varchar authority_type
         text description
         decimal price_min
@@ -155,11 +161,15 @@ erDiagram
         varchar currency
         timestamptz deadline
         timestamptz publication_date
+        varchar pub_type
         varchar status
         timestamptz status_changed_at
-        varchar region
+        varchar region "canton code"
+        varchar country
+        jsonb order_address
         varchar language
         jsonb cpv_codes "array of codes"
+        boolean corrected
         jsonb raw_data
         timestamptz created_at
         timestamptz updated_at
@@ -360,34 +370,172 @@ Public procurement opportunities from SIMAP, TED, and other sources.
 | Attribute        | Type        | Description                          |
 |------------------|-------------|--------------------------------------|
 | id               | UUID (PK)   | Unique identifier                    |
-| external_id      | VARCHAR     | Source system ID (SIMAP/TED ref)     |
+| external_id      | VARCHAR     | Source system ID (SIMAP project ID or TED ref) |
 | source           | VARCHAR     | Origin: 'simap', 'ted', 'eu'         |
 | source_url       | VARCHAR     | Link to original tender              |
-| title            | VARCHAR     | Tender title                         |
-| authority        | VARCHAR     | Contracting authority name           |
+| title            | JSONB       | Multilingual title `{"de": "...", "fr": "...", "it": "...", "en": "..."}` |
+| project_number   | VARCHAR     | SIMAP project number (e.g., "13485") |
+| publication_number | VARCHAR   | SIMAP publication number (e.g., "13485-02") |
+| project_type     | VARCHAR     | 'tender', 'competition', 'study'     |
+| project_sub_type | VARCHAR     | 'construction', 'service', 'supply', etc. |
+| process_type     | VARCHAR     | 'open', 'selective', 'invitation', 'direct' |
+| lots_type        | VARCHAR     | 'with', 'without'                    |
+| authority        | JSONB       | Multilingual contracting authority `{"de": "...", ...}` |
 | authority_type   | VARCHAR     | Type: municipal, cantonal, federal   |
-| description      | TEXT        | Full tender description              |
+| description      | TEXT        | Full tender description (from detail API) |
 | price_min        | DECIMAL     | Minimum estimated value (CHF)        |
 | price_max        | DECIMAL     | Maximum estimated value (CHF)        |
 | currency         | VARCHAR     | Currency code (CHF, EUR)             |
-| deadline         | TIMESTAMPTZ | Submission deadline                  |
+| deadline         | TIMESTAMPTZ | Submission deadline (from detail API) |
 | publication_date | TIMESTAMPTZ | When tender was published            |
+| pub_type         | VARCHAR     | Publication type (see values below)  |
 | status           | VARCHAR     | 'open', 'closing_soon', 'closed'     |
 | status_changed_at| TIMESTAMPTZ | When status last changed             |
-| region           | VARCHAR     | Primary region/canton                |
+| region           | VARCHAR     | Primary canton code (e.g., 'BE', 'ZH') |
+| country          | VARCHAR     | Country code (e.g., 'CH')            |
+| order_address    | JSONB       | Full address details from SIMAP      |
 | language         | VARCHAR     | Primary language (de, fr, it, en)    |
 | cpv_codes        | JSONB       | CPV classification codes `["45210000", ...]` |
+| corrected        | BOOLEAN     | Whether publication has been corrected |
 | raw_data         | JSONB       | Original API response                |
 | created_at       | TIMESTAMPTZ | Record creation timestamp            |
 | updated_at       | TIMESTAMPTZ | Last sync timestamp                  |
 | deleted_at       | TIMESTAMPTZ | Soft delete timestamp, nullable      |
 
+**Publication Types (`pub_type`):**
+| Value | Description |
+|-------|-------------|
+| `advance_notice` | Early announcement of upcoming tender |
+| `request_for_information` | RFI before formal tender |
+| `tender` | Active tender accepting submissions |
+| `competition` | Design/architecture competition |
+| `study_contract` | Study contract announcement |
+| `award_tender` | Award notification for tender |
+| `award_study_contract` | Award for study contract |
+| `award_competition` | Competition winner announcement |
+| `direct_award` | Direct award without competition |
+| `participant_selection` | Selective procedure participant selection |
+| `revocation` | Tender revocation |
+| `abandonment` | Tender abandonment |
+| `selective_offering_phase` | Selective procedure offering phase |
+
+**Project Sub-Types (`project_sub_type`):**
+| Value | Description |
+|-------|-------------|
+| `construction` | Construction works |
+| `service` | Service contracts |
+| `supply` | Supply/goods contracts |
+| `project_competition` | Project competition |
+| `idea_competition` | Idea competition |
+| `overall_performance_competition` | Overall performance competition |
+| `project_study` | Project study |
+| `idea_study` | Idea study |
+| `overall_performance_study` | Overall performance study |
+| `request_for_information` | Request for information |
+
 **Notes:**
 - `external_id` + `source` should be unique (prevents duplicate imports)
+- `title` and `authority` are JSONB for multilingual support (de/fr/it/en)
 - `raw_data` preserves original data for debugging and future parsing improvements
 - CPV codes stored as JSONB array for simpler matching queries
 - Status auto-transitions via scheduled job: `open` → `closing_soon` (7 days before deadline) → `closed` (after deadline)
 - Soft delete via `deleted_at` - filter with `WHERE deleted_at IS NULL`
+
+##### SIMAP API Integration
+
+The SIMAP API (`https://www.simap.ch/api/publications/v2/project/project-search`) returns project data in the following structure:
+
+**Example SIMAP API Response:**
+```json
+{
+  "projects": [
+    {
+      "id": "ac154329-c01d-4e94-b842-cc3e12119c97",
+      "title": {
+        "de": "BAV 80720 Schulanlage Tüffenwies - BKP 243 Heizungsanlagen",
+        "en": null,
+        "fr": null,
+        "it": null
+      },
+      "projectNumber": "13485",
+      "projectType": "tender",
+      "projectSubType": "construction",
+      "processType": "open",
+      "lotsType": "without",
+      "publicationId": "33fee4eb-b18a-4a24-8efd-a5690a0e2e89",
+      "publicationDate": "2026-01-19",
+      "publicationNumber": "13485-02",
+      "pubType": "award",
+      "corrected": false,
+      "procOfficeName": {
+        "de": "HBD - Amt für Hochbauten (AHB)",
+        "en": null,
+        "fr": null,
+        "it": null
+      },
+      "lots": [],
+      "orderAddressOnlyDescription": "yes",
+      "orderAddress": {
+        "countryId": "CH",
+        "cantonId": "BE",
+        "postalCode": "3400",
+        "city": {
+          "de": "Burgdorf",
+          "en": null,
+          "fr": null,
+          "it": null
+        }
+      }
+    }
+  ],
+  "pagination": {
+    "lastItem": "20260119|26624",
+    "itemsPerPage": 20
+  }
+}
+```
+
+**SIMAP API → Tenders Table Mapping:**
+
+| SIMAP Field | Tenders Column | Notes |
+|-------------|----------------|-------|
+| `id` | `external_id` | SIMAP project UUID |
+| `title` | `title` | Store as JSONB directly |
+| `projectNumber` | `project_number` | e.g., "13485" |
+| `publicationNumber` | `publication_number` | e.g., "13485-02" |
+| `projectType` | `project_type` | tender, competition, study |
+| `projectSubType` | `project_sub_type` | construction, service, supply |
+| `processType` | `process_type` | open, selective, invitation, direct |
+| `lotsType` | `lots_type` | with, without |
+| `publicationDate` | `publication_date` | Parse to TIMESTAMPTZ |
+| `pubType` | `pub_type` | tender, award, revocation, etc. |
+| `corrected` | `corrected` | Boolean |
+| `procOfficeName` | `authority` | Store as JSONB directly |
+| `orderAddress.cantonId` | `region` | e.g., "BE", "ZH" |
+| `orderAddress.countryId` | `country` | e.g., "CH" |
+| `orderAddress` | `order_address` | Store full object as JSONB |
+| (full response) | `raw_data` | Preserve for debugging |
+
+**SIMAP API Search Parameters:**
+
+The search endpoint requires at least one filter. Key parameters:
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `search` | string | Free text search (3-1000 chars) |
+| `lang` | array | Languages to search: de, en, fr, it |
+| `projectSubTypes` | array | construction, service, supply, etc. |
+| `processTypes` | array | open, selective, invitation, direct |
+| `newestPubTypes` | array | tender, award, revocation, etc. |
+| `cpvCodes` | array | CPV classification codes |
+| `npkCodes` | array | NPK codes (Swiss construction) |
+| `orderAddressCantons` | array | Canton codes: BE, ZH, VD, etc. |
+| `orderAddressCountryOnlySwitzerland` | boolean | Filter to Swiss projects only |
+| `newestPublicationFrom` | date | Filter by publication date (from) |
+| `newestPublicationUntil` | date | Filter by publication date (until) |
+| `lastItem` | string | Pagination cursor (format: `YYYYMMDD\|projectNumber`) |
+
+**Pagination:** Uses rolling pagination with `lastItem` from previous response.
 
 ---
 
@@ -567,9 +715,20 @@ CREATE TABLE tenders (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     external_id VARCHAR(100) NOT NULL,
     source VARCHAR(20) NOT NULL CHECK (source IN ('simap', 'ted', 'eu')),
-    source_url VARCHAR(500) NOT NULL,
-    title VARCHAR(500) NOT NULL,
-    authority VARCHAR(255) NOT NULL,
+    source_url VARCHAR(500),
+    title JSONB NOT NULL, -- Multilingual: {"de": "...", "fr": "...", "it": "...", "en": "..."}
+    project_number VARCHAR(50),
+    publication_number VARCHAR(50),
+    project_type VARCHAR(50) CHECK (project_type IN ('tender', 'competition', 'study')),
+    project_sub_type VARCHAR(50) CHECK (project_sub_type IN (
+        'construction', 'service', 'supply',
+        'project_competition', 'idea_competition', 'overall_performance_competition',
+        'project_study', 'idea_study', 'overall_performance_study',
+        'request_for_information'
+    )),
+    process_type VARCHAR(20) CHECK (process_type IN ('open', 'selective', 'invitation', 'direct', 'no_process')),
+    lots_type VARCHAR(20) CHECK (lots_type IN ('with', 'without')),
+    authority JSONB, -- Multilingual: {"de": "...", "fr": "...", "it": "...", "en": "..."}
     authority_type VARCHAR(50) CHECK (authority_type IN ('municipal', 'cantonal', 'federal', 'other')),
     description TEXT,
     price_min DECIMAL(15, 2),
@@ -577,11 +736,20 @@ CREATE TABLE tenders (
     currency VARCHAR(3) DEFAULT 'CHF',
     deadline TIMESTAMPTZ,
     publication_date TIMESTAMPTZ NOT NULL,
+    pub_type VARCHAR(50) CHECK (pub_type IN (
+        'advance_notice', 'request_for_information', 'tender', 'competition',
+        'study_contract', 'award_tender', 'award_study_contract', 'award_competition',
+        'direct_award', 'participant_selection', 'revocation', 'abandonment',
+        'selective_offering_phase'
+    )),
     status VARCHAR(20) NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'closing_soon', 'closed')),
     status_changed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    region VARCHAR(50),
+    region VARCHAR(10), -- Canton code: BE, ZH, VD, etc.
+    country VARCHAR(5) DEFAULT 'CH',
+    order_address JSONB, -- Full address from SIMAP: {countryId, cantonId, postalCode, city}
     language VARCHAR(5) DEFAULT 'de' CHECK (language IN ('de', 'fr', 'it', 'en')),
     cpv_codes JSONB DEFAULT '[]',
+    corrected BOOLEAN DEFAULT false,
     raw_data JSONB,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -776,17 +944,36 @@ cpv_codes, npk_codes: true (public read)
 - Tender attachments in `tender-documents` bucket (future)
 
 #### Edge Functions
-- `sync-simap`: Fetch new tenders from SIMAP API
 - `sync-ted`: Fetch new tenders from TED API
 
 #### Scheduled Jobs (Cron)
 
-| Job | Schedule | Description |
-|-----|----------|-------------|
-| `sync-tenders` | Daily 06:00 | Run `sync-simap` and `sync-ted` |
-| `update-tender-status` | Daily 00:00 | Transition tenders: `open` → `closing_soon` (7 days before deadline) → `closed` (past deadline) |
-| `check-trial-expiration` | Daily 00:00 | Downgrade expired trials: set `plan='free'`, `status='active'` where `trial_ends_at < NOW()` |
-| `run-matching` | Daily 07:00 | Execute Python matching job for all profiles × new tenders |
+| Job | Schedule | Description | Implementation |
+|-----|----------|-------------|----------------|
+| `sync-simap` | Daily 06:00 | Fetch tenders from SIMAP API | [`workers/simap_sync.py`](../workers/simap_sync.py) |
+| `sync-ted` | Daily 06:30 | Fetch tenders from TED API | TBD |
+| `update-tender-status` | Daily 00:00 | Transition tenders: `open` → `closing_soon` (7 days before deadline) → `closed` (past deadline) | Included in `simap_sync.py` |
+| `check-trial-expiration` | Daily 00:00 | Downgrade expired trials: set `plan='free'`, `status='active'` where `trial_ends_at < NOW()` | TBD |
+| `run-matching` | Daily 07:00 | Execute Python matching job for all profiles × new tenders | TBD |
+
+**SIMAP Sync Worker Usage:**
+
+```bash
+# Install dependencies
+cd workers && pip install -r requirements.txt
+
+# Set environment variables
+export SUPABASE_URL="https://your-project.supabase.co"
+export SUPABASE_KEY="your-service-role-key"
+
+# Run sync (all project types, last 7 days)
+python simap_sync.py --days 7
+
+# Dry run (preview without database writes)
+python simap_sync.py --days 7 --dry-run
+```
+
+See [`workers/README.md`](../workers/README.md) for full documentation.
 
 ---
 
@@ -1104,6 +1291,8 @@ flowchart LR
 
 | Date       | Version | Changes                    |
 |------------|---------|----------------------------|
+| 2026-01-19 | 1.3     | Add SIMAP sync worker implementation (workers/simap_sync.py), update scheduled jobs table with implementation links |
+| 2026-01-19 | 1.2     | Update tenders entity with actual SIMAP API structure: add multilingual JSONB fields (title, authority), new columns (project_number, publication_number, project_type, project_sub_type, process_type, lots_type, pub_type, country, order_address, corrected), document SIMAP API response format and field mapping |
 | 2026-01-18 | 1.1     | Remove Expert Review section, fix redundant indexes, correct auto-index documentation, add soft delete filters to RLS policies |
 | 2026-01-18 | 1.0     | Add complete SQL schema with CREATE TABLE statements, triggers for updated_at and single default profile |
 | 2026-01-18 | 0.9     | QA round 2: add companies RLS, scheduled jobs table, minimum profile requirements, boolean defaults, notification/recalculation behavior, profile-per-company design decision |
