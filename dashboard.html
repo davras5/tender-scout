@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Tender Database Explorer - Dashboard</title>
 
     <!-- Fonts -->
@@ -32,6 +32,9 @@
             background: var(--color-bg-blur);
             backdrop-filter: blur(var(--blur-md));
             border-bottom: 1px solid var(--color-border-subtle);
+            /* Safe area for notched phones */
+            padding-left: env(safe-area-inset-left);
+            padding-right: env(safe-area-inset-right);
         }
 
         .dashboard-navbar-container {
@@ -90,6 +93,10 @@
             max-width: var(--container-max);
             margin: 0 auto;
             padding: var(--space-6) var(--space-4);
+            /* Safe area for notched phones */
+            padding-left: max(var(--space-4), env(safe-area-inset-left));
+            padding-right: max(var(--space-4), env(safe-area-inset-right));
+            padding-bottom: max(var(--space-6), env(safe-area-inset-bottom));
         }
 
         .admin-badge {
@@ -504,7 +511,12 @@
             white-space: nowrap;
         }
 
-        .data-table tr:hover {
+        .data-table tbody tr {
+            cursor: pointer;
+            transition: background var(--duration-fast);
+        }
+
+        .data-table tbody tr:hover {
             background: var(--color-bg-subtle);
         }
 
@@ -719,21 +731,97 @@
         }
 
         /* Responsive */
+        /* ========================================
+           Responsive Design
+           ======================================== */
+
+        /* Tablet - 1024px and below */
         @media (max-width: 1024px) {
             .charts-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .charts-grid-2 {
                 grid-template-columns: 1fr;
             }
 
             .filter-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
+
+            .admin-container {
+                padding: var(--space-4) var(--space-3);
+            }
         }
 
+        /* Mobile - 768px and below */
         @media (max-width: 768px) {
+            /* Navbar */
+            .dashboard-navbar-container {
+                padding: var(--space-2) var(--space-3);
+            }
+
+            .dashboard-navbar-logo span {
+                display: none;
+            }
+
+            .dashboard-page-title {
+                font-size: var(--text-base);
+                gap: var(--space-2);
+            }
+
+            .dashboard-page-title span:first-child {
+                display: none;
+            }
+
+            .admin-badge {
+                font-size: 10px;
+                padding: 2px 6px;
+            }
+
+            /* Container */
+            .admin-container {
+                padding: var(--space-3) var(--space-2);
+            }
+
+            /* Charts - single column */
+            .charts-grid,
+            .charts-grid-2 {
+                grid-template-columns: 1fr;
+                gap: var(--space-3);
+            }
+
+            .chart-card {
+                padding: var(--space-3);
+            }
+
+            .chart-title {
+                font-size: var(--text-sm);
+            }
+
+            .chart-container {
+                height: 140px;
+            }
+
+            .chart-container-bar {
+                height: 160px;
+            }
+
+            .chart-legend {
+                font-size: 11px;
+                gap: var(--space-1);
+            }
+
+            .legend-item {
+                padding: var(--space-1) 0;
+            }
+
+            /* Toolbar */
             .table-toolbar {
                 flex-direction: column;
                 align-items: stretch;
                 gap: var(--space-3);
+                padding: var(--space-3);
             }
 
             .toolbar-left {
@@ -741,11 +829,207 @@
             }
 
             .toolbar-right {
-                justify-content: flex-end;
+                flex-wrap: wrap;
+                justify-content: space-between;
+                gap: var(--space-2);
+            }
+
+            .toolbar-btn {
+                flex: 1;
+                min-width: 0;
+                justify-content: center;
+                padding: var(--space-2) var(--space-3);
+                font-size: var(--text-sm);
+            }
+
+            .search-input {
+                font-size: 16px; /* Prevents zoom on iOS */
+            }
+
+            /* Filter Panel */
+            .filter-panel {
+                padding: var(--space-3);
             }
 
             .filter-grid {
                 grid-template-columns: 1fr;
+                gap: var(--space-3);
+            }
+
+            .filter-select,
+            .filter-input {
+                font-size: 16px; /* Prevents zoom on iOS */
+                padding: var(--space-3);
+            }
+
+            .filter-actions {
+                flex-direction: column;
+                gap: var(--space-2);
+            }
+
+            .filter-actions .toolbar-btn {
+                width: 100%;
+            }
+
+            /* Active Filters */
+            .active-filters {
+                padding: var(--space-2) var(--space-3);
+                gap: var(--space-2);
+            }
+
+            .filter-badge {
+                font-size: 11px;
+                padding: 4px 8px;
+            }
+
+            .clear-all-btn {
+                font-size: 11px;
+                padding: 4px 10px;
+            }
+
+            /* Table */
+            .table-container {
+                border-radius: var(--radius-md);
+            }
+
+            .table-wrapper {
+                margin: 0 calc(-1 * var(--space-2));
+                padding: 0 var(--space-2);
+            }
+
+            .data-table th,
+            .data-table td {
+                padding: var(--space-2);
+                font-size: var(--text-xs);
+                max-width: 150px;
+            }
+
+            .data-table th:first-child,
+            .data-table td:first-child {
+                display: none; /* Hide row numbers on mobile */
+            }
+
+            .status-badge {
+                font-size: 10px;
+                padding: 2px 6px;
+            }
+
+            /* Pagination */
+            .pagination {
+                flex-direction: column;
+                gap: var(--space-3);
+                padding: var(--space-3);
+            }
+
+            .rows-per-page {
+                order: 2;
+                font-size: var(--text-xs);
+            }
+
+            .pagination-info {
+                order: 1;
+                text-align: center;
+                font-size: var(--text-xs);
+            }
+
+            .pagination-controls {
+                order: 3;
+                justify-content: center;
+                width: 100%;
+            }
+
+            .pagination-btn {
+                min-width: 36px;
+                height: 36px;
+                font-size: var(--text-sm);
+            }
+
+            /* Column Selector Dropdown */
+            .column-dropdown {
+                right: 0;
+                left: auto;
+                max-width: calc(100vw - var(--space-4));
+            }
+
+        }
+
+        /* Small Mobile - 480px and below */
+        @media (max-width: 480px) {
+            .dashboard-navbar-actions {
+                gap: var(--space-1);
+            }
+
+            .theme-toggle {
+                padding: var(--space-2);
+            }
+
+            .lang-dropdown-btn {
+                padding: var(--space-2);
+                min-width: 44px;
+            }
+
+            .chart-container {
+                height: 120px;
+            }
+
+            .chart-legend {
+                max-height: 100px;
+                overflow-y: auto;
+            }
+
+            .toolbar-right {
+                flex-direction: column;
+            }
+
+            .toolbar-btn {
+                width: 100%;
+            }
+
+            .data-table th,
+            .data-table td {
+                padding: var(--space-1) var(--space-2);
+                max-width: 120px;
+            }
+
+            .pagination-controls {
+                flex-wrap: wrap;
+            }
+        }
+
+        /* Touch-friendly improvements */
+        @media (hover: none) and (pointer: coarse) {
+            .toolbar-btn,
+            .pagination-btn,
+            .filter-select,
+            .filter-input,
+            .theme-toggle,
+            .lang-dropdown-btn {
+                min-height: 44px; /* iOS touch target minimum */
+            }
+
+            .data-table tbody tr {
+                min-height: 48px;
+            }
+
+            .legend-item.clickable {
+                padding: var(--space-2) var(--space-1);
+                margin: 0;
+            }
+        }
+
+        /* Landscape phone orientation */
+        @media (max-height: 500px) and (orientation: landscape) {
+            .charts-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .chart-container {
+                height: 100px;
+            }
+
+            .chart-legend {
+                max-height: 60px;
+                overflow-y: auto;
             }
         }
     </style>
@@ -988,13 +1272,9 @@
                     </div>
 
                     <div class="filter-group">
-                        <label class="filter-label">Authority Type</label>
-                        <select class="filter-select" id="filterAuthorityType">
+                        <label class="filter-label">Authority</label>
+                        <select class="filter-select" id="filterAuthority">
                             <option value="">All</option>
-                            <option value="municipal">Municipal</option>
-                            <option value="cantonal">Cantonal</option>
-                            <option value="federal">Federal</option>
-                            <option value="other">Other</option>
                         </select>
                     </div>
 
@@ -1130,44 +1410,78 @@
         // ========================================
         // Data Loading
         // ========================================
+        const BATCH_SIZE = 500;
+        let totalCount = 0;
+
         async function loadData() {
             showLoading();
+            updateLoadingProgress('Connecting to database...');
 
             try {
-                // Load initial batch quickly for fast visual feedback
-                const { data: initialData, error: initialError } = await supabaseClient
+                // First, get total count for progress tracking
+                const { count, error: countError } = await supabaseClient
                     .from('tenders')
-                    .select('*')
-                    .is('deleted_at', null)
-                    .order('publication_date', { ascending: false })
-                    .limit(100);
+                    .select('*', { count: 'exact', head: true })
+                    .is('deleted_at', null);
 
-                if (initialError) throw initialError;
+                if (countError) throw countError;
+                totalCount = count || 0;
 
-                // Show initial data immediately
-                allTenders = initialData || [];
+                updateLoadingProgress(`Found ${totalCount.toLocaleString()} tenders`);
+
+                // Load all data progressively
+                let offset = 0;
+
+                while (offset < totalCount) {
+                    // Update progress
+                    const loaded = Math.min(offset, totalCount);
+                    const percent = totalCount > 0 ? Math.round((loaded / totalCount) * 100) : 0;
+                    updateLoadingProgress(`Loading ${loaded.toLocaleString()} / ${totalCount.toLocaleString()} tenders (${percent}%)`);
+
+                    // Load next batch
+                    const { data: batchData, error: batchError } = await supabaseClient
+                        .from('tenders')
+                        .select('*')
+                        .is('deleted_at', null)
+                        .order('publication_date', { ascending: false })
+                        .range(offset, offset + BATCH_SIZE - 1);
+
+                    if (batchError) {
+                        console.error('Batch load error:', batchError);
+                        break;
+                    }
+
+                    if (!batchData || batchData.length === 0) break;
+
+                    // Merge new data (avoiding duplicates by ID)
+                    if (offset === 0) {
+                        allTenders = batchData;
+                    } else {
+                        const existingIds = new Set(allTenders.map(t => t.id));
+                        const newTenders = batchData.filter(t => !existingIds.has(t.id));
+                        allTenders = [...allTenders, ...newTenders];
+                    }
+
+                    offset += BATCH_SIZE;
+
+                    // Small delay to allow UI to update
+                    await new Promise(resolve => setTimeout(resolve, 10));
+                }
+
+                // Final update
+                updateLoadingProgress(`Loaded ${allTenders.length.toLocaleString()} tenders. Preparing dashboard...`);
+
+                // Prepare UI
                 filteredTenders = [...allTenders];
                 populateRegionFilter();
                 populateProjectSubTypeFilter();
+                populateAuthorityFilter();
                 updateCharts();
                 renderTable();
+
+                // Small delay for visual feedback before hiding
+                await new Promise(resolve => setTimeout(resolve, 300));
                 hideLoading();
-
-                // Load remaining data in background
-                const { data: allData, error: allError } = await supabaseClient
-                    .from('tenders')
-                    .select('*')
-                    .is('deleted_at', null)
-                    .order('publication_date', { ascending: false });
-
-                if (!allError && allData) {
-                    allTenders = allData;
-                    filteredTenders = [...allTenders];
-                    populateRegionFilter();
-                    populateProjectSubTypeFilter();
-                    updateCharts();
-                    renderTable();
-                }
 
             } catch (error) {
                 console.error('Error loading data:', error);
@@ -1418,6 +1732,7 @@
             const inputMap = {
                 'status': 'filterStatus',
                 'region': 'filterRegion',
+                'authority': 'filterAuthority',
                 'project_type': 'filterProjectType',
                 'project_sub_type': 'filterProjectSubType'
             };
@@ -1481,7 +1796,7 @@
             }
 
             tbody.innerHTML = pageData.map((tender, idx) => `
-                <tr>
+                <tr onclick="openTenderDetail('${tender.external_id}')" title="Click to open on SIMAP">
                     <td>${start + idx + 1}</td>
                     ${columns.map(col => `
                         <td title="${escapeHtml(getPlainValue(tender[col.key], col))}">
@@ -1494,6 +1809,12 @@
 
         function updateTableInfo() {
             // Info is now shown in pagination
+        }
+
+        function openTenderDetail(externalId) {
+            if (externalId) {
+                window.open(`https://www.simap.ch/en/project-detail/${externalId}`, '_blank');
+            }
         }
 
         // ========================================
@@ -1606,7 +1927,7 @@
 
             const status = document.getElementById('filterStatus').value;
             const region = document.getElementById('filterRegion').value;
-            const authorityType = document.getElementById('filterAuthorityType').value;
+            const authority = document.getElementById('filterAuthority').value;
             const projectType = document.getElementById('filterProjectType').value;
             const projectSubType = document.getElementById('filterProjectSubType').value;
             const deadlineFrom = document.getElementById('filterDeadlineFrom').value;
@@ -1616,7 +1937,7 @@
 
             if (status) activeFilters.status = status;
             if (region) activeFilters.region = region;
-            if (authorityType) activeFilters.authority_type = authorityType;
+            if (authority) activeFilters.authority = authority;
             if (projectType) activeFilters.project_type = projectType;
             if (projectSubType) activeFilters.project_sub_type = projectSubType;
             if (deadlineFrom) activeFilters.deadline_from = deadlineFrom;
@@ -1647,9 +1968,6 @@
 
                 // Region filter
                 if (activeFilters.region && tender.region !== activeFilters.region) return false;
-
-                // Authority type filter
-                if (activeFilters.authority_type && tender.authority_type !== activeFilters.authority_type) return false;
 
                 // Project type filter
                 if (activeFilters.project_type && tender.project_type !== activeFilters.project_type) return false;
@@ -1699,7 +2017,6 @@
             const filterLabels = {
                 status: 'Status',
                 region: 'Region',
-                authority_type: 'Authority Type',
                 authority: 'Authority',
                 project_type: 'Project',
                 project_sub_type: 'Sub-Type',
@@ -1742,7 +2059,7 @@
             const inputMap = {
                 status: 'filterStatus',
                 region: 'filterRegion',
-                authority_type: 'filterAuthorityType',
+                authority: 'filterAuthority',
                 project_type: 'filterProjectType',
                 project_sub_type: 'filterProjectSubType',
                 deadline_from: 'filterDeadlineFrom',
@@ -1770,7 +2087,7 @@
         function resetFilters() {
             document.getElementById('filterStatus').value = '';
             document.getElementById('filterRegion').value = '';
-            document.getElementById('filterAuthorityType').value = '';
+            document.getElementById('filterAuthority').value = '';
             document.getElementById('filterProjectType').value = '';
             document.getElementById('filterProjectSubType').value = '';
             document.getElementById('filterDeadlineFrom').value = '';
@@ -1802,6 +2119,20 @@
                 option.value = subType;
                 // Capitalize and replace underscores
                 option.textContent = subType.charAt(0).toUpperCase() + subType.slice(1).replace(/_/g, ' ');
+                select.appendChild(option);
+            });
+        }
+
+        function populateAuthorityFilter() {
+            // Get unique authorities sorted alphabetically
+            const authorities = [...new Set(allTenders.map(t => extractAuthority(t.authority)).filter(Boolean))].sort();
+            const select = document.getElementById('filterAuthority');
+            // Clear existing options except "All"
+            select.innerHTML = '<option value="">All</option>';
+            authorities.forEach(auth => {
+                const option = document.createElement('option');
+                option.value = auth;
+                option.textContent = auth;
                 select.appendChild(option);
             });
         }
@@ -1958,9 +2289,16 @@
             overlay.innerHTML = `
                 <div class="loading-spinner"></div>
                 <div class="loading-text">Loading Dashboard</div>
-                <div class="loading-subtext">Fetching tender data...</div>
+                <div class="loading-subtext" id="loadingSubtext">Fetching tender data...</div>
             `;
             document.querySelector('.admin-container').classList.remove('loaded');
+        }
+
+        function updateLoadingProgress(message) {
+            const subtext = document.getElementById('loadingSubtext');
+            if (subtext) {
+                subtext.textContent = message;
+            }
         }
 
         function hideLoading() {
