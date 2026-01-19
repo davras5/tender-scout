@@ -93,6 +93,14 @@ python simap_sync.py --limit 50 --dry-run
 | `--type TYPE` | Filter by project type (can be repeated) |
 | `--limit N` | Maximum number of tenders to fetch (for testing) |
 | `--dry-run` | Preview mode - fetch from API but don't write to database |
+| `--verbose`, `-v` | Enable verbose/debug logging to console |
+| `--log-file PATH` | Log file path (default: `simap_sync.log`) |
+| `--no-log-file` | Disable file logging (only log to console) |
+
+**Logging Behavior:**
+- Console: Shows INFO level and above (or DEBUG with `--verbose`)
+- Log file: Only captures WARNING and ERROR messages to keep file size small
+- Log file is **overwritten** on each run (not appended)
 
 ### Usage Examples
 
@@ -173,10 +181,15 @@ overall_performance_study, request_for_information
 open, selective, invitation, direct, no_process
 ```
 
+`projectTypes` - Project types (different from sub-types):
+```
+tender, competition, study, request_for_information
+```
+
 `newestPubTypes` - Publication types:
 ```
 advance_notice, request_for_information, tender, competition, study_contract,
-award_tender, award_study_contract, award_competition, direct_award,
+award, award_tender, award_study_contract, award_competition, direct_award,
 participant_selection, revocation, abandonment, selective_offering_phase
 ```
 
@@ -287,10 +300,22 @@ The worker logs to stdout with timestamps:
 2026-01-19 06:01:30 [INFO] ============================================================
 ```
 
+**Log File (`simap_sync.log`):**
+
+By default, warnings and errors are written to `simap_sync.log`. This file is overwritten on each run to keep it small and focused on issues from the latest sync.
+
+```bash
+# Check the log file for errors after a run
+cat simap_sync.log
+
+# Example error log entry:
+2026-01-19 06:00:15 [ERROR] __main__: Error upserting tender 12345: APIError: {...}
+```
+
 **For production, consider:**
-- Redirecting logs to a file or log aggregation service
-- Setting up alerts for non-zero error counts
+- Setting up alerts for non-zero error counts or non-empty log files
 - Using the exit code (non-zero if errors occurred) for CI/CD pipelines
+- Archiving log files before each run if you need history
 
 ---
 

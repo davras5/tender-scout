@@ -144,6 +144,7 @@ erDiagram
     tenders {
         uuid id PK
         varchar external_id
+        varchar publication_id
         varchar source
         varchar source_url
         jsonb title "multilingual de/fr/it/en"
@@ -155,11 +156,12 @@ erDiagram
         varchar lots_type
         jsonb authority "multilingual de/fr/it/en"
         varchar authority_type
-        text description
+        jsonb description "multilingual de/fr/it/en"
         decimal price_min
         decimal price_max
         varchar currency
         timestamptz deadline
+        timestamptz offer_opening
         timestamptz publication_date
         varchar pub_type
         varchar status
@@ -169,8 +171,11 @@ erDiagram
         jsonb order_address
         varchar language
         jsonb cpv_codes "array of codes"
+        jsonb bkp_codes "Swiss BKP codes"
+        jsonb npk_codes "Swiss NPK codes"
         boolean corrected
         jsonb raw_data
+        timestamptz details_fetched_at
         timestamptz created_at
         timestamptz updated_at
         timestamptz deleted_at "nullable"
@@ -367,26 +372,24 @@ AI-generated or user-defined search criteria for tender matching.
 
 Public procurement opportunities from SIMAP, TED, and other sources.
 
+**Core Fields (from search API):**
+
 | Attribute        | Type        | Description                          |
 |------------------|-------------|--------------------------------------|
 | id               | UUID (PK)   | Unique identifier                    |
 | external_id      | VARCHAR     | Source system ID (SIMAP project ID or TED ref) |
+| publication_id   | VARCHAR     | SIMAP publication UUID (needed for detail API) |
 | source           | VARCHAR     | Origin: 'simap', 'ted', 'eu'         |
 | source_url       | VARCHAR     | Link to original tender              |
 | title            | JSONB       | Multilingual title `{"de": "...", "fr": "...", "it": "...", "en": "..."}` |
 | project_number   | VARCHAR     | SIMAP project number (e.g., "13485") |
 | publication_number | VARCHAR   | SIMAP publication number (e.g., "13485-02") |
-| project_type     | VARCHAR     | 'tender', 'competition', 'study'     |
+| project_type     | VARCHAR     | 'tender', 'competition', 'study', 'request_for_information' |
 | project_sub_type | VARCHAR     | 'construction', 'service', 'supply', etc. |
-| process_type     | VARCHAR     | 'open', 'selective', 'invitation', 'direct' |
+| process_type     | VARCHAR     | 'open', 'selective', 'invitation', 'direct', 'no_process' |
 | lots_type        | VARCHAR     | 'with', 'without'                    |
 | authority        | JSONB       | Multilingual contracting authority `{"de": "...", ...}` |
 | authority_type   | VARCHAR     | Type: municipal, cantonal, federal   |
-| description      | TEXT        | Full tender description (from detail API) |
-| price_min        | DECIMAL     | Minimum estimated value (CHF)        |
-| price_max        | DECIMAL     | Maximum estimated value (CHF)        |
-| currency         | VARCHAR     | Currency code (CHF, EUR)             |
-| deadline         | TIMESTAMPTZ | Submission deadline (from detail API) |
 | publication_date | TIMESTAMPTZ | When tender was published            |
 | pub_type         | VARCHAR     | Publication type (see values below)  |
 | status           | VARCHAR     | 'open', 'closing_soon', 'closed'     |
@@ -397,10 +400,54 @@ Public procurement opportunities from SIMAP, TED, and other sources.
 | language         | VARCHAR     | Primary language (de, fr, it, en)    |
 | cpv_codes        | JSONB       | CPV classification codes `["45210000", ...]` |
 | corrected        | BOOLEAN     | Whether publication has been corrected |
-| raw_data         | JSONB       | Original API response                |
+| raw_data         | JSONB       | Original search API response         |
 | created_at       | TIMESTAMPTZ | Record creation timestamp            |
 | updated_at       | TIMESTAMPTZ | Last sync timestamp                  |
 | deleted_at       | TIMESTAMPTZ | Soft delete timestamp, nullable      |
+
+**Detail Fields (from publication-details API):**
+
+| Attribute        | Type        | Description                          |
+|------------------|-------------|--------------------------------------|
+| details_fetched_at | TIMESTAMPTZ | When details were last fetched     |
+| description      | JSONB       | Multilingual description `{"de": "...", ...}` |
+| deadline         | TIMESTAMPTZ | Offer submission deadline            |
+| offer_opening    | TIMESTAMPTZ | When offers will be opened           |
+| qna_deadlines    | JSONB       | Q&A deadline objects `[{date, note}]` |
+| proc_office_address | JSONB    | Full procurement office address with contact |
+| procurement_recipient_address | JSONB | Recipient address           |
+| offer_address    | JSONB       | Where to submit offers               |
+| order_address_description | JSONB | Multilingual address description  |
+| documents_languages | TEXT[]   | Languages documents available in     |
+| offer_languages  | TEXT[]      | Languages offers can be submitted in |
+| publication_languages | TEXT[] | Languages publication available in   |
+| documents_source_type | VARCHAR | How documents are provided          |
+| offer_types      | TEXT[]      | Types of offer submissions accepted  |
+| state_contract_area | BOOLEAN  | Whether state contract area tender   |
+| publication_ted  | BOOLEAN     | Whether published on TED             |
+| construction_type | VARCHAR    | execution, planning, etc.            |
+| construction_category | VARCHAR | structural_engineering, etc.        |
+| bkp_codes        | JSONB       | Swiss BKP codes `[{code, label}]`    |
+| npk_codes        | JSONB       | Swiss NPK codes `[{code, label}]`    |
+| oag_codes        | JSONB       | Swiss OAG codes `[{code, label}]`    |
+| additional_cpv_codes | JSONB   | Extra CPV codes beyond main one      |
+| variants_allowed | VARCHAR     | yes, no, not_specified               |
+| partial_offers_allowed | VARCHAR | yes, no, not_specified             |
+| execution_deadline_type | VARCHAR | not_specified, fixed, period, days |
+| execution_period | JSONB       | Period object if applicable          |
+| execution_days   | INTEGER     | Number of days if applicable         |
+| consortium_allowed | VARCHAR   | yes, no, not_specified               |
+| subcontractor_allowed | VARCHAR | yes, no, not_specified              |
+| terms_type       | VARCHAR     | in_documents, specified, etc.        |
+| remedies_notice  | JSONB       | Multilingual legal remedies notice   |
+| qualification_criteria | JSONB | Array of qualification criteria     |
+| award_criteria   | JSONB       | Array of award criteria with weights |
+| lots             | JSONB       | Array of lot objects if applicable   |
+| has_project_documents | BOOLEAN | Whether documents are available     |
+| price_min        | DECIMAL     | Minimum estimated value (CHF)        |
+| price_max        | DECIMAL     | Maximum estimated value (CHF)        |
+| currency         | VARCHAR     | Currency code (CHF, EUR)             |
+| raw_detail_data  | JSONB       | Original detail API response         |
 
 **Publication Types (`pub_type`):**
 | Value | Description |
@@ -410,6 +457,7 @@ Public procurement opportunities from SIMAP, TED, and other sources.
 | `tender` | Active tender accepting submissions |
 | `competition` | Design/architecture competition |
 | `study_contract` | Study contract announcement |
+| `award` | Generic award notification (from SIMAP API) |
 | `award_tender` | Award notification for tender |
 | `award_study_contract` | Award for study contract |
 | `award_competition` | Competition winner announcement |
@@ -443,7 +491,9 @@ Public procurement opportunities from SIMAP, TED, and other sources.
 
 ##### SIMAP API Integration
 
-The SIMAP API (`https://www.simap.ch/api/publications/v2/project/project-search`) returns project data in the following structure:
+**Search API (v2):** `https://www.simap.ch/api/publications/v2/project/project-search`
+
+Returns project listings with basic information. Requires at least one filter parameter (e.g., `projectSubTypes`).
 
 **Example SIMAP API Response:**
 ```json
@@ -503,9 +553,9 @@ The SIMAP API (`https://www.simap.ch/api/publications/v2/project/project-search`
 | `title` | `title` | Store as JSONB directly |
 | `projectNumber` | `project_number` | e.g., "13485" |
 | `publicationNumber` | `publication_number` | e.g., "13485-02" |
-| `projectType` | `project_type` | tender, competition, study |
+| `projectType` | `project_type` | tender, competition, study, request_for_information |
 | `projectSubType` | `project_sub_type` | construction, service, supply |
-| `processType` | `process_type` | open, selective, invitation, direct |
+| `processType` | `process_type` | open, selective, invitation, direct, no_process |
 | `lotsType` | `lots_type` | with, without |
 | `publicationDate` | `publication_date` | Parse to TIMESTAMPTZ |
 | `pubType` | `pub_type` | tender, award, revocation, etc. |
@@ -535,7 +585,102 @@ The search endpoint requires at least one filter. Key parameters:
 | `newestPublicationUntil` | date | Filter by publication date (until) |
 | `lastItem` | string | Pagination cursor (format: `YYYYMMDD\|projectNumber`) |
 
-**Pagination:** Uses rolling pagination with `lastItem` from previous response.
+**Pagination:** Uses rolling pagination with `lastItem` from previous response. Format: `YYYYMMDD|projectNumber`.
+
+##### SIMAP Publication Details API (v1)
+
+**Detail API:** `https://www.simap.ch/api/publications/v1/project/{projectId}/publication-details/{publicationId}`
+
+Returns comprehensive tender details including procurement terms, dates, criteria, and addresses.
+
+**Example Request:**
+```bash
+curl -X 'GET' \
+  'https://www.simap.ch/api/publications/v1/project/f95391ed-581e-43be-b044-ff7aba5e4b56/publication-details/31194cfe-5d92-4c53-97f0-831447c00c1d' \
+  -H 'accept: application/json'
+```
+
+**Detail API Response Structure:**
+```json
+{
+  "project-info": {
+    "procOfficeAddress": {...},      // Full procurement office address
+    "procurementRecipientAddress": {...},
+    "offerAddress": {...},
+    "documentsLanguages": ["de"],
+    "offerLanguages": ["de"],
+    "documentsSourceType": "documents_source_simap",
+    "offerTypes": ["offer_external"],
+    "stateContractArea": false,
+    "publicationTed": false
+  },
+  "procurement": {
+    "orderDescription": {"de": "...", ...},  // Multilingual description
+    "cpvCode": {"code": "45214210", "label": {...}},
+    "bkpCodes": [{"code": "421", "label": {...}}],
+    "npkCodes": [],
+    "oagCodes": [{"code": "1.2.2", "label": {...}}],
+    "constructionType": "execution",
+    "constructionCategory": "structural_engineering",
+    "variants": "yes",
+    "partialOffers": "yes",
+    "executionDeadlineType": "not_specified"
+  },
+  "terms": {
+    "termsType": "in_documents",
+    "consortiumAllowed": "yes",
+    "subContractorAllowed": "not_specified",
+    "remediesNotice": {"de": "...", ...}
+  },
+  "dates": {
+    "offerDeadline": "2026-02-05T16:00:00+01:00",
+    "offerOpening": {"dateTime": "2026-02-05T00:00:00+01:00"},
+    "qnas": [{"date": "2026-01-22", "note": {...}}]
+  },
+  "criteria": {
+    "qualificationCriteria": [],
+    "awardCriteria": []
+  },
+  "lots": [],
+  "hasProjectDocuments": true
+}
+```
+
+**Detail API → Tenders Table Mapping:**
+
+| Detail API Field | Tenders Column | Notes |
+|-----------------|----------------|-------|
+| `dates.offerDeadline` | `deadline` | Offer submission deadline |
+| `dates.offerOpening.dateTime` | `offer_opening` | When offers are opened |
+| `dates.qnas` | `qna_deadlines` | Q&A deadline array |
+| `procurement.orderDescription` | `description` | Multilingual description |
+| `procurement.cpvCode` | `cpv_codes` | Main CPV classification |
+| `procurement.bkpCodes` | `bkp_codes` | Swiss BKP codes array |
+| `procurement.npkCodes` | `npk_codes` | Swiss NPK codes array |
+| `procurement.oagCodes` | `oag_codes` | Swiss OAG codes array |
+| `procurement.additionalCpvCodes` | `additional_cpv_codes` | Extra CPV codes |
+| `procurement.constructionType` | `construction_type` | execution, planning, etc. |
+| `procurement.constructionCategory` | `construction_category` | structural_engineering, etc. |
+| `procurement.variants` | `variants_allowed` | yes/no/not_specified |
+| `procurement.partialOffers` | `partial_offers_allowed` | yes/no/not_specified |
+| `project-info.procOfficeAddress` | `proc_office_address` | Full address JSONB |
+| `project-info.offerAddress` | `offer_address` | Where to submit offers |
+| `project-info.documentsLanguages` | `documents_languages` | TEXT array |
+| `project-info.offerLanguages` | `offer_languages` | TEXT array |
+| `project-info.documentsSourceType` | `documents_source_type` | How docs are provided |
+| `project-info.offerTypes` | `offer_types` | TEXT array |
+| `project-info.stateContractArea` | `state_contract_area` | Boolean |
+| `project-info.publicationTed` | `publication_ted` | Boolean |
+| `terms.consortiumAllowed` | `consortium_allowed` | yes/no/not_specified |
+| `terms.subContractorAllowed` | `subcontractor_allowed` | yes/no/not_specified |
+| `terms.termsType` | `terms_type` | in_documents, specified, etc. |
+| `terms.remediesNotice` | `remedies_notice` | Multilingual JSONB |
+| `criteria.qualificationCriteria` | `qualification_criteria` | JSONB array |
+| `criteria.awardCriteria` | `award_criteria` | JSONB array |
+| `lots` | `lots` | JSONB array |
+| `hasProjectDocuments` | `has_project_documents` | Boolean |
+| (timestamp) | `details_fetched_at` | When details were fetched |
+| (full response) | `raw_detail_data` | Original detail response |
 
 ---
 
@@ -621,278 +766,14 @@ Swiss construction standards (Normpositionen-Katalog).
 
 Implementation details for PostgreSQL/Supabase deployment.
 
-### SQL Schema
+### SQL Files
 
-```sql
--- ============================================
--- Tender Scout - Supabase Schema
--- Version: 1.0
--- ============================================
+The SQL implementation files are located in the `SQL/` folder:
 
--- Enable required extensions
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
--- ============================================
--- 1. USERS (managed by Supabase Auth)
--- ============================================
--- Note: The auth.users table is managed by Supabase Auth.
--- We reference it via auth.uid() in RLS policies.
--- Additional user metadata can be stored in auth.users.raw_user_meta_data
-
--- ============================================
--- 2. SUBSCRIPTIONS
--- ============================================
-CREATE TABLE subscriptions (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
-    stripe_customer_id VARCHAR(255) NOT NULL UNIQUE,
-    stripe_subscription_id VARCHAR(255) UNIQUE,
-    plan VARCHAR(20) NOT NULL DEFAULT 'pro' CHECK (plan IN ('free', 'pro')),
-    status VARCHAR(20) NOT NULL DEFAULT 'trialing' CHECK (status IN ('trialing', 'active', 'past_due', 'cancelled')),
-    trial_ends_at TIMESTAMPTZ,
-    current_period_start TIMESTAMPTZ,
-    current_period_end TIMESTAMPTZ,
-    cancelled_at TIMESTAMPTZ,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
--- ============================================
--- 3. COMPANIES
--- ============================================
-CREATE TABLE companies (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR(255) NOT NULL,
-    uid VARCHAR(20) UNIQUE, -- Swiss UID (CHE-xxx.xxx.xxx)
-    city VARCHAR(100) NOT NULL,
-    address VARCHAR(255),
-    company_type VARCHAR(50) NOT NULL,
-    zefix_data JSONB,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    deleted_at TIMESTAMPTZ
-);
-
--- ============================================
--- 4. USER_PROFILES
--- ============================================
-CREATE TABLE user_profiles (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-    company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
-    name VARCHAR(255) NOT NULL,
-    role VARCHAR(100) NOT NULL,
-    is_default BOOLEAN NOT NULL DEFAULT false,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    deleted_at TIMESTAMPTZ,
-    UNIQUE (user_id, company_id)
-);
-
--- ============================================
--- 5. SEARCH_PROFILES
--- ============================================
-CREATE TABLE search_profiles (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_profile_id UUID NOT NULL UNIQUE REFERENCES user_profiles(id) ON DELETE CASCADE,
-    industry VARCHAR(100),
-    company_size VARCHAR(20),
-    keywords TEXT[] DEFAULT '{}',
-    exclude_keywords TEXT[] DEFAULT '{}',
-    regions TEXT[] DEFAULT '{}',
-    cpv_codes JSONB DEFAULT '[]',
-    npk_codes JSONB DEFAULT '[]',
-    ai_generated BOOLEAN NOT NULL DEFAULT false,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    last_matched_at TIMESTAMPTZ
-);
-
--- ============================================
--- 6. TENDERS
--- ============================================
-CREATE TABLE tenders (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    external_id VARCHAR(100) NOT NULL,
-    source VARCHAR(20) NOT NULL CHECK (source IN ('simap', 'ted', 'eu')),
-    source_url VARCHAR(500),
-    title JSONB NOT NULL, -- Multilingual: {"de": "...", "fr": "...", "it": "...", "en": "..."}
-    project_number VARCHAR(50),
-    publication_number VARCHAR(50),
-    project_type VARCHAR(50) CHECK (project_type IN ('tender', 'competition', 'study')),
-    project_sub_type VARCHAR(50) CHECK (project_sub_type IN (
-        'construction', 'service', 'supply',
-        'project_competition', 'idea_competition', 'overall_performance_competition',
-        'project_study', 'idea_study', 'overall_performance_study',
-        'request_for_information'
-    )),
-    process_type VARCHAR(20) CHECK (process_type IN ('open', 'selective', 'invitation', 'direct', 'no_process')),
-    lots_type VARCHAR(20) CHECK (lots_type IN ('with', 'without')),
-    authority JSONB, -- Multilingual: {"de": "...", "fr": "...", "it": "...", "en": "..."}
-    authority_type VARCHAR(50) CHECK (authority_type IN ('municipal', 'cantonal', 'federal', 'other')),
-    description TEXT,
-    price_min DECIMAL(15, 2),
-    price_max DECIMAL(15, 2),
-    currency VARCHAR(3) DEFAULT 'CHF',
-    deadline TIMESTAMPTZ,
-    publication_date TIMESTAMPTZ NOT NULL,
-    pub_type VARCHAR(50) CHECK (pub_type IN (
-        'advance_notice', 'request_for_information', 'tender', 'competition',
-        'study_contract', 'award_tender', 'award_study_contract', 'award_competition',
-        'direct_award', 'participant_selection', 'revocation', 'abandonment',
-        'selective_offering_phase'
-    )),
-    status VARCHAR(20) NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'closing_soon', 'closed')),
-    status_changed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    region VARCHAR(10), -- Canton code: BE, ZH, VD, etc.
-    country VARCHAR(5) DEFAULT 'CH',
-    order_address JSONB, -- Full address from SIMAP: {countryId, cantonId, postalCode, city}
-    language VARCHAR(5) DEFAULT 'de' CHECK (language IN ('de', 'fr', 'it', 'en')),
-    cpv_codes JSONB DEFAULT '[]',
-    corrected BOOLEAN DEFAULT false,
-    raw_data JSONB,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    deleted_at TIMESTAMPTZ,
-    UNIQUE (external_id, source)
-);
-
--- ============================================
--- 7. USER_TENDER_ACTIONS
--- ============================================
-CREATE TABLE user_tender_actions (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_profile_id UUID NOT NULL REFERENCES user_profiles(id) ON DELETE CASCADE,
-    tender_id UUID NOT NULL REFERENCES tenders(id) ON DELETE CASCADE,
-    bookmarked BOOLEAN NOT NULL DEFAULT false,
-    applied BOOLEAN NOT NULL DEFAULT false,
-    hidden BOOLEAN NOT NULL DEFAULT false,
-    match_score INTEGER CHECK (match_score >= 0 AND match_score <= 100),
-    notes TEXT,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    UNIQUE (user_profile_id, tender_id)
-);
-
--- ============================================
--- 8. CPV_CODES (Lookup)
--- ============================================
-CREATE TABLE cpv_codes (
-    code VARCHAR(20) PRIMARY KEY,
-    label_de VARCHAR(500) NOT NULL,
-    label_fr VARCHAR(500),
-    label_it VARCHAR(500),
-    label_en VARCHAR(500),
-    parent_code VARCHAR(20) REFERENCES cpv_codes(code)
-);
-
--- ============================================
--- 9. NPK_CODES (Lookup)
--- ============================================
-CREATE TABLE npk_codes (
-    code VARCHAR(20) PRIMARY KEY,
-    name_de VARCHAR(500) NOT NULL,
-    name_fr VARCHAR(500),
-    name_it VARCHAR(500),
-    parent_code VARCHAR(20) REFERENCES npk_codes(code)
-);
-
--- ============================================
--- TRIGGERS: Auto-update updated_at
--- ============================================
-CREATE OR REPLACE FUNCTION update_updated_at()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = NOW();
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER subscriptions_updated_at
-    BEFORE UPDATE ON subscriptions
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-
-CREATE TRIGGER companies_updated_at
-    BEFORE UPDATE ON companies
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-
-CREATE TRIGGER user_profiles_updated_at
-    BEFORE UPDATE ON user_profiles
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-
-CREATE TRIGGER search_profiles_updated_at
-    BEFORE UPDATE ON search_profiles
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-
-CREATE TRIGGER tenders_updated_at
-    BEFORE UPDATE ON tenders
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-
-CREATE TRIGGER user_tender_actions_updated_at
-    BEFORE UPDATE ON user_tender_actions
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-
--- ============================================
--- TRIGGER: Ensure only one default profile per user
--- ============================================
-CREATE OR REPLACE FUNCTION ensure_single_default_profile()
-RETURNS TRIGGER AS $$
-BEGIN
-    IF NEW.is_default = true THEN
-        UPDATE user_profiles
-        SET is_default = false
-        WHERE user_id = NEW.user_id
-          AND id != NEW.id
-          AND is_default = true;
-    END IF;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER user_profiles_single_default
-    BEFORE INSERT OR UPDATE ON user_profiles
-    FOR EACH ROW EXECUTE FUNCTION ensure_single_default_profile();
-```
-
-### Indexes
-
-#### Primary Indexes (auto-created)
-- All primary keys (UUID) are automatically indexed
-- Unique constraints auto-create indexes: `companies.uid`, `subscriptions.user_id`, `subscriptions.stripe_customer_id`, `tenders(external_id, source)`
-
-#### Recommended Performance Indexes
-
-```sql
--- Tender queries (dashboard, filtering)
-CREATE INDEX idx_tenders_status_deadline ON tenders(status, deadline)
-    WHERE deleted_at IS NULL;
-CREATE INDEX idx_tenders_region ON tenders(region)
-    WHERE deleted_at IS NULL;
-CREATE INDEX idx_tenders_cpv_gin ON tenders USING GIN(cpv_codes);
-
--- Search profile queries
-CREATE INDEX idx_search_profiles_cpv_gin ON search_profiles USING GIN(cpv_codes);
-CREATE INDEX idx_search_profiles_npk_gin ON search_profiles USING GIN(npk_codes);
-CREATE INDEX idx_search_profiles_last_matched ON search_profiles(last_matched_at);
-
--- User tender actions (dashboard, filtering)
-CREATE INDEX idx_actions_profile_score ON user_tender_actions(user_profile_id, match_score DESC);
-CREATE INDEX idx_actions_profile_status ON user_tender_actions(user_profile_id, bookmarked, applied, hidden);
-CREATE INDEX idx_actions_tender ON user_tender_actions(tender_id);
-
--- Soft delete filters
-CREATE INDEX idx_companies_active ON companies(id) WHERE deleted_at IS NULL;
-CREATE INDEX idx_user_profiles_active ON user_profiles(user_id) WHERE deleted_at IS NULL;
-CREATE INDEX idx_tenders_active ON tenders(id) WHERE deleted_at IS NULL;
-
--- Subscription queries
-CREATE INDEX idx_subscriptions_status ON subscriptions(status);
-CREATE INDEX idx_subscriptions_trial_ends ON subscriptions(trial_ends_at) WHERE status = 'trialing';
-
--- Lookup tables (hierarchy queries)
-CREATE INDEX idx_cpv_parent ON cpv_codes(parent_code);
-CREATE INDEX idx_npk_parent ON npk_codes(parent_code);
-```
+| File | Description |
+|------|-------------|
+| [`Schema.sql`](SQL/Schema.sql) | Complete table definitions, triggers, and indexes |
+| [`Row-Level Security Policies & Data Constraints.sql`](SQL/Row-Level%20Security%20Policies%20&%20Data%20Constraints.sql) | RLS policies for all tables |
 
 #### Index Notes
 - GIN indexes on JSONB enable fast `@>`, `?`, `?|` operators for code matching
@@ -910,29 +791,18 @@ CREATE INDEX idx_npk_parent ON npk_codes(parent_code);
 
 #### Row Level Security (RLS) Policies
 
-```sql
--- Users can only see their own active profiles
-user_profiles: auth.uid() = user_id AND deleted_at IS NULL
+See [`SQL/Row-Level Security Policies & Data Constraints.sql`](SQL/Row-Level%20Security%20Policies%20&%20Data%20Constraints.sql) for full implementation.
 
--- Users can only see/modify their own subscription
-subscriptions: auth.uid() = user_id
-
--- Companies are readable by all authenticated users, modifiable by linked users
-companies (SELECT): auth.role() = 'authenticated' AND deleted_at IS NULL
-companies (UPDATE): id IN (SELECT company_id FROM user_profiles WHERE user_id = auth.uid() AND deleted_at IS NULL)
-
--- Users can only see/modify their own search profiles (for active user_profiles)
-search_profiles: user_profile_id IN (SELECT id FROM user_profiles WHERE user_id = auth.uid() AND deleted_at IS NULL)
-
--- Users can only see/modify their own tender actions (for active user_profiles)
-user_tender_actions: user_profile_id IN (SELECT id FROM user_profiles WHERE user_id = auth.uid() AND deleted_at IS NULL)
-
--- Tenders are readable by all authenticated users (active only)
-tenders: auth.role() = 'authenticated' AND deleted_at IS NULL
-
--- Code tables are readable by all
-cpv_codes, npk_codes: true (public read)
-```
+**Policy Summary:**
+| Table | SELECT | INSERT/UPDATE/DELETE |
+|-------|--------|---------------------|
+| `tenders` | Authenticated users (non-deleted) | Service role only |
+| `companies` | Authenticated users (non-deleted) | Linked users via user_profiles |
+| `user_profiles` | Own profiles only | Own profiles only |
+| `search_profiles` | Own (via user_profiles) | Own (via user_profiles) |
+| `user_tender_actions` | Own (via user_profiles) | Own (via user_profiles) |
+| `subscriptions` | Own only | Service role only |
+| `cpv_codes`, `npk_codes` | Public | - |
 
 #### Realtime Subscriptions
 - Subscribe to `tenders` for new tender notifications
@@ -960,7 +830,7 @@ cpv_codes, npk_codes: true (public read)
 
 ```bash
 # Install dependencies
-cd workers && pip install -r requirements.txt
+cd workers/simap_sync && pip install -r requirements.txt
 
 # Set environment variables
 export SUPABASE_URL="https://your-project.supabase.co"
@@ -971,9 +841,25 @@ python simap_sync.py --days 7
 
 # Dry run (preview without database writes)
 python simap_sync.py --days 7 --dry-run
+
+# Sync with publication details (fetches detailed info for each tender)
+python simap_sync.py --days 7 --fetch-details
+
+# Only fetch details for existing tenders (no new search)
+python simap_sync.py --details-only --fetch-details --details-limit 100
+
+# Adjust rate limiting for detail API calls (default: 0.5 seconds)
+python simap_sync.py --fetch-details --rate-limit 1.0
 ```
 
-See [`workers/README.md`](../workers/README.md) for full documentation.
+**Worker Features:**
+- **Pagination**: Automatic rolling pagination with `lastItem` cursor
+- **Rate Limiting**: Configurable delay between detail API calls (default 0.5s)
+- **Retry Logic**: Automatic retry with backoff for transient failures
+- **Batch Processing**: Database queries paginated in batches of 100
+- **Error Handling**: Detailed logging of failures with statistics
+
+See [`workers/simap_sync/README.md`](../workers/simap_sync/README.md) for full documentation.
 
 ---
 
@@ -1291,6 +1177,7 @@ flowchart LR
 
 | Date       | Version | Changes                    |
 |------------|---------|----------------------------|
+| 2026-01-19 | 1.4     | Add SIMAP publication-details API integration: new detail fields (description, deadline, addresses, codes, terms, criteria), rate limiting, retry logic, batch pagination |
 | 2026-01-19 | 1.3     | Add SIMAP sync worker implementation (workers/simap_sync.py), update scheduled jobs table with implementation links |
 | 2026-01-19 | 1.2     | Update tenders entity with actual SIMAP API structure: add multilingual JSONB fields (title, authority), new columns (project_number, publication_number, project_type, project_sub_type, process_type, lots_type, pub_type, country, order_address, corrected), document SIMAP API response format and field mapping |
 | 2026-01-18 | 1.1     | Remove Expert Review section, fix redundant indexes, correct auto-index documentation, add soft delete filters to RLS policies |

@@ -7,13 +7,15 @@ Daily scheduled job that fetches public procurement tenders from the Swiss SIMAP
 and syncs them to the Supabase database.
 
 Architecture:
-    1. Fetch projects from SIMAP API (with pagination)
+    1. Fetch projects from SIMAP API v2 search endpoint (with pagination)
     2. Transform SIMAP data to match our database schema
     3. Upsert to Supabase 'tenders' table (insert new, update existing)
     4. Update tender statuses based on deadlines
+    5. Optionally fetch detailed information from SIMAP API v1 publication-details endpoint
 
 SIMAP API Documentation:
-    https://www.simap.ch/api-doc/#/publications/getPublicProjectSearch
+    Search: https://www.simap.ch/api-doc/#/publications/getPublicProjectSearch
+    Details: https://www.simap.ch/api/publications/v1/project/{projectId}/publication-details/{publicationId}
 
 Usage:
     python simap_sync.py --supabase-url URL --supabase-key KEY
@@ -21,6 +23,8 @@ Usage:
     python simap_sync.py --type construction # Only fetch construction tenders
     python simap_sync.py --limit 100        # Limit to first 100 tenders (for testing)
     python simap_sync.py --dry-run          # Preview without database writes
+    python simap_sync.py --fetch-details    # Also fetch publication details
+    python simap_sync.py --details-only --fetch-details --details-limit 50  # Only fetch details
 
 Required (via args or environment variables):
     --supabase-url / SUPABASE_URL  - Supabase project URL
@@ -34,6 +38,7 @@ import argparse
 import logging
 import os
 import sys
+import time
 from datetime import datetime, timedelta
 from typing import Optional
 
@@ -53,7 +58,7 @@ def setup_logging(verbose: bool = False, log_file: Optional[str] = None) -> None
 
     Args:
         verbose: Enable debug level logging
-        log_file: Path to log file (errors and above go here)
+        log_file: Path to log file (warnings and errors only)
     """
     # Set log level
     log_level = logging.DEBUG if verbose else logging.INFO
@@ -65,10 +70,10 @@ def setup_logging(verbose: bool = False, log_file: Optional[str] = None) -> None
 
     handlers = [console_handler]
 
-    # File handler - captures all logs (especially errors for debugging)
+    # File handler - captures only warnings and errors to keep file size small
     if log_file:
-        file_handler = logging.FileHandler(log_file, mode='a', encoding='utf-8')
-        file_handler.setLevel(logging.DEBUG)  # Capture everything in file
+        file_handler = logging.FileHandler(log_file, mode='w', encoding='utf-8')
+        file_handler.setLevel(logging.WARNING)  # Only warnings and errors in file
         file_handler.setFormatter(logging.Formatter(
             "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
         ))
@@ -88,8 +93,18 @@ def setup_logging(verbose: bool = False, log_file: Optional[str] = None) -> None
 # Swiss public procurement platform. The API is public and requires no auth.
 # API Docs: https://www.simap.ch/api-doc/
 
-SIMAP_API_BASE = "https://www.simap.ch/api/publications/v2/project"
-SIMAP_SEARCH_ENDPOINT = f"{SIMAP_API_BASE}/project-search"
+SIMAP_API_BASE_V2 = "https://www.simap.ch/api/publications/v2/project"
+SIMAP_API_BASE_V1 = "https://www.simap.ch/api/publications/v1/project"
+SIMAP_SEARCH_ENDPOINT = f"{SIMAP_API_BASE_V2}/project-search"
+
+# Detail endpoint uses v1 API: /project/{projectId}/publication-details/{publicationId}
+# Example: https://www.simap.ch/api/publications/v1/project/f95391ed-581e-43be-b044-ff7aba5e4b56/publication-details/31194cfe-5d92-4c53-97f0-831447c00c1d
+
+# Rate limiting and retry configuration
+DETAIL_API_DELAY_SECONDS = 0.5  # Delay between detail API calls to avoid rate limiting
+DETAIL_API_MAX_RETRIES = 3     # Maximum retries for transient failures
+DETAIL_API_RETRY_DELAY = 2.0   # Delay between retries (seconds)
+DATABASE_BATCH_SIZE = 100       # Batch size for paginated database queries
 
 # All project sub-types supported by SIMAP API
 # These are used as filter parameters in the API request
@@ -135,6 +150,7 @@ class SimapSyncWorker:
         supabase_url: str,
         supabase_key: str,
         dry_run: bool = False,
+        detail_api_delay: float = DETAIL_API_DELAY_SECONDS,
     ):
         """
         Initialize the sync worker.
@@ -143,8 +159,10 @@ class SimapSyncWorker:
             supabase_url: Supabase project URL (e.g., https://xxx.supabase.co)
             supabase_key: Supabase service role key (sb_secret_... or legacy JWT)
             dry_run: If True, fetch from API but don't write to database
+            detail_api_delay: Delay in seconds between detail API calls
         """
         self.dry_run = dry_run
+        self.detail_api_delay = detail_api_delay
 
         # Initialize Supabase client
         # Uses service role key to bypass RLS for server-side operations
@@ -159,10 +177,12 @@ class SimapSyncWorker:
 
         # Statistics for logging and monitoring
         self.stats = {
-            "fetched": 0,   # Total projects fetched from SIMAP
-            "inserted": 0,  # New tenders inserted
-            "updated": 0,   # Existing tenders updated
-            "errors": 0,    # Errors encountered
+            "fetched": 0,           # Total projects fetched from SIMAP search
+            "inserted": 0,          # New tenders inserted
+            "updated": 0,           # Existing tenders updated
+            "details_fetched": 0,   # Details fetched from detail API
+            "details_errors": 0,    # Errors fetching details
+            "errors": 0,            # General errors encountered
         }
 
     # -------------------------------------------------------------------------
@@ -341,7 +361,356 @@ class SimapSyncWorker:
             "language": language,
             "raw_data": project,                         # Store original for debugging
             "updated_at": datetime.utcnow().isoformat(),
+
+            # Publication ID needed for fetching details
+            "publication_id": project.get("publicationId"),
         }
+
+    # -------------------------------------------------------------------------
+    # FETCH PUBLICATION DETAILS FROM SIMAP API
+    # -------------------------------------------------------------------------
+    def fetch_publication_details(self, project_id: str, publication_id: str) -> Optional[dict]:
+        """
+        Fetch detailed publication information from SIMAP API v1 with retry logic.
+
+        The detail endpoint provides much more information than the search endpoint,
+        including: procurement details, terms, dates, criteria, addresses, etc.
+
+        API endpoint:
+            GET /api/publications/v1/project/{projectId}/publication-details/{publicationId}
+
+        Args:
+            project_id: SIMAP project UUID (e.g., "f95391ed-581e-43be-b044-ff7aba5e4b56")
+            publication_id: SIMAP publication UUID (e.g., "31194cfe-5d92-4c53-97f0-831447c00c1d")
+
+        Returns:
+            Detail data dictionary if successful, None if failed after retries
+        """
+        url = f"{SIMAP_API_BASE_V1}/{project_id}/publication-details/{publication_id}"
+
+        for attempt in range(1, DETAIL_API_MAX_RETRIES + 1):
+            try:
+                response = self.http_client.get(url)
+                response.raise_for_status()
+                return response.json()
+            except httpx.HTTPStatusError as e:
+                status_code = e.response.status_code
+                # Don't retry on 4xx errors (client errors) except 429 (rate limit)
+                if 400 <= status_code < 500 and status_code != 429:
+                    logger.warning(f"HTTP {status_code} fetching details for {project_id}/{publication_id}")
+                    return None
+                # Retry on 429 (rate limit) or 5xx (server errors)
+                if attempt < DETAIL_API_MAX_RETRIES:
+                    logger.warning(f"HTTP {status_code} fetching details, retrying in {DETAIL_API_RETRY_DELAY}s (attempt {attempt}/{DETAIL_API_MAX_RETRIES})")
+                    time.sleep(DETAIL_API_RETRY_DELAY)
+                else:
+                    logger.warning(f"HTTP {status_code} fetching details for {project_id}/{publication_id} after {attempt} attempts")
+                    return None
+            except httpx.TimeoutException:
+                if attempt < DETAIL_API_MAX_RETRIES:
+                    logger.warning(f"Timeout fetching details, retrying in {DETAIL_API_RETRY_DELAY}s (attempt {attempt}/{DETAIL_API_MAX_RETRIES})")
+                    time.sleep(DETAIL_API_RETRY_DELAY)
+                else:
+                    logger.warning(f"Timeout fetching details for {project_id}/{publication_id} after {attempt} attempts")
+                    return None
+            except Exception as e:
+                logger.warning(f"Error fetching details for {project_id}/{publication_id}: {e}")
+                return None
+
+        return None
+
+    def transform_publication_details(self, details: dict) -> dict:
+        """
+        Transform SIMAP publication details to database schema.
+
+        Maps the detailed API response to our extended tenders table columns.
+        See documentation/DATABASE.md for full schema details.
+
+        Args:
+            details: Raw detail data from SIMAP publication-details API
+
+        Returns:
+            Transformed data with detail fields for updating tenders table
+        """
+        # Extract main sections from detail response
+        project_info = details.get("project-info", {})
+        procurement = details.get("procurement", {})
+        terms = details.get("terms", {})
+        dates = details.get("dates", {})
+        criteria = details.get("criteria", {})
+
+        # Extract description from procurement section (multilingual)
+        description = procurement.get("orderDescription")
+
+        # Extract deadline from dates section
+        deadline = dates.get("offerDeadline")
+
+        # Extract offer opening datetime
+        offer_opening_data = dates.get("offerOpening", {})
+        offer_opening = offer_opening_data.get("dateTime") if offer_opening_data else None
+
+        # Extract Q&A deadlines (array of objects with date and note)
+        qna_deadlines = dates.get("qnas", [])
+
+        # Extract classification codes (arrays of {code, label} objects)
+        bkp_codes = procurement.get("bkpCodes", [])
+        npk_codes = procurement.get("npkCodes", [])
+        oag_codes = procurement.get("oagCodes", [])
+        additional_cpv_codes = procurement.get("additionalCpvCodes", [])
+
+        # Extract main CPV code if present and not already set
+        cpv_code = procurement.get("cpvCode")
+        cpv_codes = [cpv_code] if cpv_code else []
+
+        # Extract addresses
+        proc_office_address = project_info.get("procOfficeAddress")
+        procurement_recipient_address = project_info.get("procurementRecipientAddress")
+        offer_address = project_info.get("offerAddress")
+
+        # Extract order address description (multilingual)
+        order_address_description = procurement.get("orderAddressDescription")
+
+        # Extract order address for region extraction
+        order_address = procurement.get("orderAddress", {})
+
+        # Extract language arrays
+        documents_languages = project_info.get("documentsLanguages", [])
+        offer_languages = project_info.get("offerLanguages", [])
+        publication_languages = project_info.get("publicationLanguages", [])
+        offer_types = project_info.get("offerTypes", [])
+
+        # Extract yes/no/not_specified fields
+        variants_allowed = procurement.get("variants")
+        partial_offers_allowed = procurement.get("partialOffers")
+        consortium_allowed = terms.get("consortiumAllowed")
+        subcontractor_allowed = terms.get("subContractorAllowed")
+
+        # Extract execution timeline
+        execution_deadline_type = procurement.get("executionDeadlineType")
+        execution_period = procurement.get("executionPeriod")
+        execution_days = procurement.get("executionDays")
+
+        # Extract criteria arrays
+        qualification_criteria = criteria.get("qualificationCriteria", [])
+        award_criteria = criteria.get("awardCriteria", [])
+
+        # Extract lots array
+        lots = details.get("lots", [])
+
+        return {
+            # Dates
+            "deadline": deadline,
+            "offer_opening": offer_opening,
+            "qna_deadlines": qna_deadlines if qna_deadlines else [],
+
+            # Description
+            "description": description,
+
+            # Classification codes
+            "cpv_codes": cpv_codes if cpv_codes else [],
+            "bkp_codes": bkp_codes if bkp_codes else [],
+            "npk_codes": npk_codes if npk_codes else [],
+            "oag_codes": oag_codes if oag_codes else [],
+            "additional_cpv_codes": additional_cpv_codes if additional_cpv_codes else [],
+
+            # Addresses
+            "proc_office_address": proc_office_address,
+            "procurement_recipient_address": procurement_recipient_address,
+            "offer_address": offer_address,
+            "order_address_description": order_address_description,
+
+            # Update region from detail if available
+            "region": order_address.get("cantonId") if order_address else None,
+            "country": order_address.get("countryId") if order_address else None,
+
+            # Languages and offer types
+            "documents_languages": documents_languages if documents_languages else [],
+            "offer_languages": offer_languages if offer_languages else [],
+            "publication_languages": publication_languages if publication_languages else [],
+            "offer_types": offer_types if offer_types else [],
+            "documents_source_type": project_info.get("documentsSourceType"),
+
+            # Project info flags
+            "state_contract_area": project_info.get("stateContractArea", False),
+            "publication_ted": project_info.get("publicationTed", False),
+
+            # Procurement details
+            "construction_type": procurement.get("constructionType"),
+            "construction_category": procurement.get("constructionCategory"),
+            "variants_allowed": variants_allowed,
+            "partial_offers_allowed": partial_offers_allowed,
+            "execution_deadline_type": execution_deadline_type,
+            "execution_period": execution_period,
+            "execution_days": execution_days,
+
+            # Terms
+            "consortium_allowed": consortium_allowed,
+            "subcontractor_allowed": subcontractor_allowed,
+            "terms_type": terms.get("termsType"),
+            "remedies_notice": terms.get("remediesNotice"),
+
+            # Criteria
+            "qualification_criteria": qualification_criteria if qualification_criteria else [],
+            "award_criteria": award_criteria if award_criteria else [],
+
+            # Lots
+            "lots": lots if lots else [],
+
+            # Documents
+            "has_project_documents": details.get("hasProjectDocuments", False),
+
+            # Raw detail data for debugging
+            "raw_detail_data": details,
+
+            # Track when details were fetched
+            "details_fetched_at": datetime.utcnow().isoformat(),
+            "updated_at": datetime.utcnow().isoformat(),
+        }
+
+    def fetch_and_update_details(
+        self,
+        tender_id: str,
+        external_id: str,
+        publication_id: str,
+    ) -> bool:
+        """
+        Fetch publication details and update the tender record.
+
+        Args:
+            tender_id: Database tender UUID
+            external_id: SIMAP project UUID (used as external_id)
+            publication_id: SIMAP publication UUID
+
+        Returns:
+            True if details were successfully fetched and updated, False otherwise
+        """
+        if not external_id or not publication_id:
+            logger.debug(f"Missing project_id or publication_id for tender {tender_id}")
+            return False
+
+        # Fetch details from SIMAP API
+        details = self.fetch_publication_details(external_id, publication_id)
+        if not details:
+            self.stats["details_errors"] += 1
+            return False
+
+        # Transform to database format
+        detail_data = self.transform_publication_details(details)
+
+        # Filter out None values to avoid overwriting existing data with nulls
+        detail_data = {k: v for k, v in detail_data.items() if v is not None}
+
+        try:
+            # Update tender with detail data
+            self.supabase.table("tenders").update(detail_data).eq("id", tender_id).execute()
+            self.stats["details_fetched"] += 1
+            return True
+        except Exception as e:
+            logger.error(f"Error updating tender {tender_id} with details: {e}")
+            self.stats["details_errors"] += 1
+            return False
+
+    def fetch_details_for_tenders(
+        self,
+        limit: Optional[int] = None,
+        only_missing: bool = True,
+    ) -> None:
+        """
+        Fetch publication details for tenders that don't have them yet.
+
+        This method queries the database for tenders missing details in batches
+        and fetches them from the SIMAP API with rate limiting.
+
+        Args:
+            limit: Maximum number of tenders to fetch details for
+            only_missing: If True, only fetch for tenders without details_fetched_at
+        """
+        if self.dry_run:
+            logger.info("[DRY RUN] Would fetch tender details")
+            return
+
+        logger.info("Fetching publication details for tenders...")
+
+        total_processed = 0
+        offset = 0
+
+        try:
+            while True:
+                # Calculate batch size respecting overall limit
+                batch_size = DATABASE_BATCH_SIZE
+                if limit:
+                    remaining = limit - total_processed
+                    if remaining <= 0:
+                        logger.info(f"Reached limit of {limit} tenders")
+                        break
+                    batch_size = min(batch_size, remaining)
+
+                # Build query for tenders needing details with pagination
+                query = self.supabase.table("tenders").select(
+                    "id, external_id, publication_id, project_number"
+                ).eq("source", "simap").is_("deleted_at", "null")
+
+                if only_missing:
+                    query = query.is_("details_fetched_at", "null")
+
+                # Add pagination
+                query = query.range(offset, offset + batch_size - 1)
+
+                result = query.execute()
+                tenders = result.data if result.data else []
+
+                if not tenders:
+                    if offset == 0:
+                        logger.info("No tenders found needing details")
+                    else:
+                        logger.info("No more tenders to process")
+                    break
+
+                logger.info(f"Processing batch of {len(tenders)} tenders (offset: {offset})")
+
+                for i, tender in enumerate(tenders, 1):
+                    tender_id = tender.get("id")
+                    external_id = tender.get("external_id")
+                    publication_id = tender.get("publication_id")
+                    project_number = tender.get("project_number", "unknown")
+
+                    if not publication_id:
+                        logger.debug(f"Skipping tender {project_number}: no publication_id")
+                        continue
+
+                    logger.info(f"Fetching details {total_processed + i}: {project_number}")
+
+                    success = self.fetch_and_update_details(
+                        tender_id=tender_id,
+                        external_id=external_id,
+                        publication_id=publication_id,
+                    )
+
+                    if not success:
+                        logger.warning(f"Failed to fetch details for {project_number}")
+
+                    # Rate limiting: wait between API calls to avoid hitting rate limits
+                    if self.detail_api_delay > 0:
+                        time.sleep(self.detail_api_delay)
+
+                total_processed += len(tenders)
+
+                # If we got fewer results than batch size, we've reached the end
+                if len(tenders) < batch_size:
+                    break
+
+                # Move to next batch
+                # Note: Since we're processing missing details and marking them as fetched,
+                # the offset should stay at 0 for subsequent batches (new records will appear)
+                # unless we're not in only_missing mode
+                if not only_missing:
+                    offset += batch_size
+
+            logger.info(f"Total tenders processed: {total_processed}")
+
+        except Exception as e:
+            logger.error(f"Error fetching tender details: {e}")
+            self.stats["errors"] += 1
 
     # -------------------------------------------------------------------------
     # UPSERT TENDERS TO DATABASE
@@ -452,19 +821,24 @@ class SimapSyncWorker:
         project_sub_types: Optional[list[str]] = None,
         days_back: Optional[int] = None,
         limit: Optional[int] = None,
+        fetch_details: bool = False,
+        details_limit: Optional[int] = None,
     ) -> dict:
         """
         Run the complete sync process.
 
         Steps:
-        1. Fetch projects from SIMAP API
+        1. Fetch projects from SIMAP API (search endpoint)
         2. Upsert to database
         3. Update tender statuses
+        4. Optionally fetch publication details for tenders missing them
 
         Args:
             project_sub_types: Specific types to sync (default: all types)
             days_back: Only fetch publications from last N days
             limit: Maximum number of projects to fetch (for testing)
+            fetch_details: Whether to fetch publication details from detail API
+            details_limit: Maximum number of details to fetch (for testing)
 
         Returns:
             Statistics dictionary with fetched/inserted/updated/errors counts
@@ -479,6 +853,9 @@ class SimapSyncWorker:
 
         if limit:
             logger.info(f"LIMIT MODE - Will fetch maximum {limit} projects")
+
+        if fetch_details:
+            logger.info("DETAILS MODE - Will fetch publication details")
 
         # Calculate date range for incremental sync
         publication_from = None
@@ -509,13 +886,24 @@ class SimapSyncWorker:
             # Step 3: Update statuses based on deadlines
             self.update_tender_statuses()
 
+        # Step 4: Optionally fetch publication details
+        if fetch_details:
+            logger.info("-" * 60)
+            logger.info("Fetching publication details...")
+            self.fetch_details_for_tenders(
+                limit=details_limit,
+                only_missing=True,
+            )
+
         # Log statistics
         logger.info("-" * 60)
         logger.info("Sync Statistics:")
-        logger.info(f"  Fetched:  {self.stats['fetched']}")
-        logger.info(f"  Inserted: {self.stats['inserted']}")
-        logger.info(f"  Updated:  {self.stats['updated']}")
-        logger.info(f"  Errors:   {self.stats['errors']}")
+        logger.info(f"  Fetched:         {self.stats['fetched']}")
+        logger.info(f"  Inserted:        {self.stats['inserted']}")
+        logger.info(f"  Updated:         {self.stats['updated']}")
+        logger.info(f"  Details fetched: {self.stats['details_fetched']}")
+        logger.info(f"  Details errors:  {self.stats['details_errors']}")
+        logger.info(f"  Errors:          {self.stats['errors']}")
         logger.info("=" * 60)
 
         return self.stats
@@ -540,9 +928,17 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
+  # Basic sync (search endpoint only)
   python simap_sync.py --supabase-url URL --supabase-key KEY --limit 50 --dry-run
   python simap_sync.py --days 7 --type construction
   python simap_sync.py --limit 100
+
+  # Sync with details (fetches detailed info for each tender)
+  python simap_sync.py --days 7 --fetch-details
+  python simap_sync.py --fetch-details --details-limit 50
+
+  # Only fetch details for existing tenders (no new search)
+  python simap_sync.py --details-only --fetch-details --details-limit 100
         """,
     )
 
@@ -585,6 +981,28 @@ Examples:
         "--dry-run",
         action="store_true",
         help="Preview without database writes",
+    )
+    parser.add_argument(
+        "--fetch-details",
+        action="store_true",
+        help="Fetch publication details from SIMAP detail API",
+    )
+    parser.add_argument(
+        "--details-limit",
+        type=int,
+        default=None,
+        help="Maximum number of tender details to fetch (for testing)",
+    )
+    parser.add_argument(
+        "--details-only",
+        action="store_true",
+        help="Only fetch details, skip project search (use with --fetch-details)",
+    )
+    parser.add_argument(
+        "--rate-limit",
+        type=float,
+        default=DETAIL_API_DELAY_SECONDS,
+        help=f"Delay between detail API calls in seconds (default: {DETAIL_API_DELAY_SECONDS})",
     )
     parser.add_argument(
         "--verbose", "-v",
@@ -631,15 +1049,29 @@ Examples:
         supabase_url=supabase_url,
         supabase_key=supabase_key,
         dry_run=args.dry_run,
+        detail_api_delay=args.rate_limit,
     )
 
     try:
-        # Run sync
-        stats = worker.run(
-            project_sub_types=args.types,
-            days_back=args.days,
-            limit=args.limit,
-        )
+        # Handle details-only mode
+        if args.details_only:
+            if not args.fetch_details:
+                logger.warning("--details-only requires --fetch-details, enabling it")
+            logger.info("Details-only mode - skipping project search")
+            worker.fetch_details_for_tenders(
+                limit=args.details_limit,
+                only_missing=True,
+            )
+            stats = worker.stats
+        else:
+            # Run full sync
+            stats = worker.run(
+                project_sub_types=args.types,
+                days_back=args.days,
+                limit=args.limit,
+                fetch_details=args.fetch_details,
+                details_limit=args.details_limit,
+            )
 
         # Exit with error code if there were errors
         # This allows CI/CD pipelines to detect failures
