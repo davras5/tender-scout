@@ -9,6 +9,7 @@ Usage:
     python simap_sync.py                    # Full sync (all project types)
     python simap_sync.py --days 7           # Only fetch last 7 days
     python simap_sync.py --type construction # Only fetch construction tenders
+    python simap_sync.py --limit 100        # Limit to first 100 tenders (for testing)
     python simap_sync.py --dry-run          # Preview without database writes
 
 Environment variables required:
@@ -92,6 +93,7 @@ class SimapSyncWorker:
         publication_from: Optional[str] = None,
         publication_until: Optional[str] = None,
         swiss_only: bool = True,
+        limit: Optional[int] = None,
     ) -> list[dict]:
         """
         Fetch projects from SIMAP API with pagination.
@@ -101,6 +103,7 @@ class SimapSyncWorker:
             publication_from: Filter by publication date (YYYY-MM-DD)
             publication_until: Filter by publication date (YYYY-MM-DD)
             swiss_only: Only fetch Swiss projects
+            limit: Maximum number of projects to fetch (for testing)
 
         Returns:
             List of project dictionaries
@@ -158,6 +161,12 @@ class SimapSyncWorker:
             all_projects.extend(projects)
             self.stats["fetched"] += len(projects)
             logger.info(f"Fetched {len(projects)} projects (total: {len(all_projects)})")
+
+            # Check if we've reached the limit
+            if limit and len(all_projects) >= limit:
+                all_projects = all_projects[:limit]  # Trim to exact limit
+                logger.info(f"Reached limit of {limit} projects")
+                break
 
             # Check for next page
             last_item = pagination.get("lastItem")
@@ -291,6 +300,7 @@ class SimapSyncWorker:
         self,
         project_sub_types: Optional[list[str]] = None,
         days_back: Optional[int] = None,
+        limit: Optional[int] = None,
     ) -> dict:
         """
         Run the sync process.
@@ -298,6 +308,7 @@ class SimapSyncWorker:
         Args:
             project_sub_types: Specific types to sync (default: all)
             days_back: Only fetch publications from last N days
+            limit: Maximum number of projects to fetch (for testing)
 
         Returns:
             Statistics dictionary
@@ -308,6 +319,9 @@ class SimapSyncWorker:
 
         if self.dry_run:
             logger.info("DRY RUN MODE - No database writes will be performed")
+
+        if limit:
+            logger.info(f"LIMIT MODE - Will fetch maximum {limit} projects")
 
         # Calculate date range
         publication_from = None
@@ -326,6 +340,7 @@ class SimapSyncWorker:
             project_sub_types=types_to_fetch,
             publication_from=publication_from,
             publication_until=publication_until,
+            limit=limit,
         )
 
         if projects:
@@ -373,6 +388,12 @@ def main():
         help="Specific project type(s) to sync (can be repeated)",
     )
     parser.add_argument(
+        "--limit",
+        type=int,
+        default=None,
+        help="Maximum number of tenders to fetch (for testing)",
+    )
+    parser.add_argument(
         "--dry-run",
         action="store_true",
         help="Preview without database writes",
@@ -398,6 +419,7 @@ def main():
         stats = worker.run(
             project_sub_types=args.types,
             days_back=args.days,
+            limit=args.limit,
         )
 
         # Exit with error code if there were errors
