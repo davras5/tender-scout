@@ -66,36 +66,26 @@ python simap_sync.py \
 ## Usage Examples
 
 ```bash
-# === Prerequisites (choose one) ===
-
-# Option 1: Environment variables (recommended)
-export SUPABASE_URL="https://xxx.supabase.co"
-export SUPABASE_KEY="your-service-role-key"
-
-# Option 2: Command line arguments
-python simap_sync.py --supabase-url URL --supabase-key KEY --days 7
-
-# === Examples below assume env vars are set ===
-
 # Daily Operations
-python simap_sync.py --days 1                    # Daily incremental sync (recommended)
-python simap_sync.py --days 7                    # Weekly sync
+python simap_sync.py --supabase-url URL --supabase-key KEY --days 1                    # Daily incremental sync (recommended)
+python simap_sync.py --supabase-url URL --supabase-key KEY --days 7                    # Weekly sync
 
 # Filtered Sync
-python simap_sync.py --days 7 --type construction              # Construction only
-python simap_sync.py --days 7 --type service --type supply     # Multiple types
+python simap_sync.py --supabase-url URL --supabase-key KEY --days 7 --type construction              # Construction only
+python simap_sync.py --supabase-url URL --supabase-key KEY --days 7 --type service --type supply     # Multiple types
 
 # Testing & Debugging
-python simap_sync.py --limit 10 --dry-run                      # Preview 10 records
-python simap_sync.py --limit 5 --details-limit 3 --verbose     # Debug with limited data
+python simap_sync.py --supabase-url URL --supabase-key KEY --limit 50 --dry-run                      # Preview 50 records
+python simap_sync.py --supabase-url URL --supabase-key KEY --limit 10 --dry-run                      # Preview 10 records
+python simap_sync.py --supabase-url URL --supabase-key KEY --limit 5 --details-limit 3 --verbose     # Debug with limited data
 
 # Performance Options
-python simap_sync.py --days 7 --skip-details                   # Fast: search only
-python simap_sync.py --days 7 --rate-limit 2.0                 # Slow: 2s between API calls
+python simap_sync.py --supabase-url URL --supabase-key KEY --days 7 --skip-details                   # Fast: search only
+python simap_sync.py --supabase-url URL --supabase-key KEY --days 7 --rate-limit 2.0                 # Slow: 2s between API calls
 
 # Backfill Operations
-python simap_sync.py --details-only --details-limit 100        # Fetch missing details
-python simap_sync.py --details-only                            # All missing details
+python simap_sync.py --supabase-url URL --supabase-key KEY --details-only --details-limit 100        # Fetch missing details
+python simap_sync.py --supabase-url URL --supabase-key KEY --details-only                            # All missing details
 ```
 
 ---
