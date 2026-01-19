@@ -832,25 +832,58 @@ See [`SQL/Row-Level Security Policies & Data Constraints.sql`](SQL/Row-Level%20S
 # Install dependencies
 cd workers/simap_sync && pip install -r requirements.txt
 
-# Set environment variables
+# === Prerequisites (choose one) ===
+
+# Option 1: Environment variables (recommended for scripts/cron)
 export SUPABASE_URL="https://your-project.supabase.co"
 export SUPABASE_KEY="your-service-role-key"
 
-# Run full sync with details (default behavior)
-python simap_sync.py --days 7
+# Option 2: Command line arguments
+python simap_sync.py --supabase-url URL --supabase-key KEY --days 7
 
-# Dry run (preview without database writes)
-python simap_sync.py --days 7 --dry-run
+# === Examples below assume env vars are set ===
 
-# Sync without details (search only)
-python simap_sync.py --days 7 --skip-details
+# Daily Operations
+python simap_sync.py --days 1                    # Daily incremental sync (recommended)
+python simap_sync.py --days 7                    # Weekly sync
 
-# Only fetch details for existing tenders (no new search)
-python simap_sync.py --details-only --details-limit 100
+# Filtered Sync
+python simap_sync.py --days 7 --type construction              # Construction only
+python simap_sync.py --days 7 --type service --type supply     # Multiple types
 
-# Adjust rate limiting for detail API calls (default: 0.5 seconds)
-python simap_sync.py --days 7 --rate-limit 1.0
+# Testing & Debugging
+python simap_sync.py --limit 10 --dry-run                      # Preview 10 records
+python simap_sync.py --limit 5 --details-limit 3 --verbose     # Debug with limited data
+python simap_sync.py --days 1 --verbose --log-file debug.log   # Full logging
+
+# Performance Options
+python simap_sync.py --days 7 --skip-details                   # Fast: search only
+python simap_sync.py --days 7 --rate-limit 2.0                 # Slow: 2s between API calls
+
+# Backfill Operations
+python simap_sync.py --details-only --details-limit 100        # Fetch missing details
+python simap_sync.py --details-only                            # All missing details
 ```
+
+**Command Line Options:**
+
+| Option | Required | Default | Description |
+|--------|----------|---------|-------------|
+| `--supabase-url` | Yes* | env var | Supabase project URL |
+| `--supabase-key` | Yes* | env var | Supabase service role key |
+| `--days N` | No | all | Only fetch publications from last N days |
+| `--type TYPE` | No | all | Project type filter (can repeat) |
+| `--limit N` | No | unlimited | Max tenders to fetch from search API |
+| `--details-limit N` | No | unlimited | Max details to fetch from detail API |
+| `--dry-run` | No | false | Preview without database writes |
+| `--skip-details` | No | false | Skip fetching publication details |
+| `--details-only` | No | false | Only fetch details, skip project search |
+| `--rate-limit N` | No | 0.5 | Delay between detail API calls (seconds) |
+| `--verbose, -v` | No | false | Enable debug logging |
+| `--log-file PATH` | No | simap_sync.log | Log file path |
+| `--no-log-file` | No | false | Disable file logging |
+
+*Required via args or `SUPABASE_URL`/`SUPABASE_KEY` environment variables.
 
 **Worker Features:**
 - **Details by Default**: Publication details are fetched automatically (use `--skip-details` to disable)

@@ -1,18 +1,29 @@
-# Tender Scout Workers
-
-Background jobs for syncing and processing tender data.
-
----
-
-## SIMAP Sync Worker
+# SIMAP Sync Worker
 
 Daily scheduled job that fetches public procurement tenders from the Swiss SIMAP API and syncs them to the Supabase database.
 
-### Quick Start
+---
+
+## What the Worker Does
+
+1. **Fetches tenders** from SIMAP search API for all project types (with pagination)
+2. **Transforms data** to match our database schema (see `documentation/DATABASE.md`)
+3. **Upserts records** to the `tenders` table (insert new, update existing)
+4. **Updates statuses** based on deadlines:
+   - `open` → `closing_soon` (7 days before deadline)
+   - `closing_soon` → `closed` (after deadline)
+5. **Fetches details** from SIMAP publication-details API (by default):
+   - Procurement terms, dates, criteria, addresses
+   - BKP/NPK/CPV classification codes
+   - Rate-limited with automatic retry on transient failures
+
+---
+
+## Quick Start
 
 ```bash
 # 1. Install dependencies
-cd workers
+cd workers/simap_sync
 pip install -r requirements.txt
 
 # 2. Run with credentials (test mode)
@@ -25,36 +36,80 @@ python simap_sync.py \
 
 ---
 
-### SIMAP API Reference
+## Command Line Options
 
-**Official Documentation:** https://www.simap.ch/api-doc/#/publications/getPublicProjectSearch
+| Option | Required | Default | Description |
+|--------|----------|---------|-------------|
+| `--supabase-url URL` | Yes* | env var | Supabase project URL |
+| `--supabase-key KEY` | Yes* | env var | Supabase secret key |
+| `--days N` | No | all | Only fetch publications from last N days |
+| `--type TYPE` | No | all | Filter by project type (can be repeated) |
+| `--limit N` | No | unlimited | Maximum tenders to fetch from search API |
+| `--details-limit N` | No | unlimited | Maximum details to fetch from detail API |
+| `--dry-run` | No | false | Preview mode - don't write to database |
+| `--skip-details` | No | false | Skip fetching publication details |
+| `--details-only` | No | false | Only fetch details, skip project search |
+| `--rate-limit N` | No | 0.5 | Delay between detail API calls (seconds) |
+| `--verbose`, `-v` | No | false | Enable verbose/debug logging |
+| `--log-file PATH` | No | simap_sync.log | Log file path |
+| `--no-log-file` | No | false | Disable file logging |
 
-SIMAP (Système d'information sur les marchés publics) is the official Swiss public procurement platform. The API provides access to all public tenders published in Switzerland.
+*Required via args or `SUPABASE_URL`/`SUPABASE_KEY` environment variables.
 
-**API Endpoint:**
-```
-GET https://www.simap.ch/api/publications/v2/project/project-search
-```
-
-**Key Points:**
-- The API is **public** and requires no authentication for read access
-- At least one filter parameter is required (e.g., `projectSubTypes` or `orderAddressCountryOnlySwitzerland`)
-- Uses **rolling pagination** with a `lastItem` cursor (format: `YYYYMMDD|projectNumber`)
-- Returns multilingual data (German, French, Italian, English)
-- Default page size is 20 items
+**Logging Behavior:**
+- Console: Shows INFO level and above (or DEBUG with `--verbose`)
+- Log file: Only captures WARNING and ERROR messages to keep file size small
+- Log file is **overwritten** on each run (not appended)
 
 ---
 
-### Setup
-
-#### 1. Install Dependencies
+## Usage Examples
 
 ```bash
-cd workers
+# === Prerequisites (choose one) ===
+
+# Option 1: Environment variables (recommended)
+export SUPABASE_URL="https://xxx.supabase.co"
+export SUPABASE_KEY="your-service-role-key"
+
+# Option 2: Command line arguments
+python simap_sync.py --supabase-url URL --supabase-key KEY --days 7
+
+# === Examples below assume env vars are set ===
+
+# Daily Operations
+python simap_sync.py --days 1                    # Daily incremental sync (recommended)
+python simap_sync.py --days 7                    # Weekly sync
+
+# Filtered Sync
+python simap_sync.py --days 7 --type construction              # Construction only
+python simap_sync.py --days 7 --type service --type supply     # Multiple types
+
+# Testing & Debugging
+python simap_sync.py --limit 10 --dry-run                      # Preview 10 records
+python simap_sync.py --limit 5 --details-limit 3 --verbose     # Debug with limited data
+
+# Performance Options
+python simap_sync.py --days 7 --skip-details                   # Fast: search only
+python simap_sync.py --days 7 --rate-limit 2.0                 # Slow: 2s between API calls
+
+# Backfill Operations
+python simap_sync.py --details-only --details-limit 100        # Fetch missing details
+python simap_sync.py --details-only                            # All missing details
+```
+
+---
+
+## Setup
+
+### 1. Install Dependencies
+
+```bash
+cd workers/simap_sync
 pip install -r requirements.txt
 ```
 
-#### 2. Get Supabase Credentials
+### 2. Get Supabase Credentials
 
 1. Go to your [Supabase Dashboard](https://supabase.com/dashboard)
 2. Select your project
@@ -63,7 +118,7 @@ pip install -r requirements.txt
 
 > **Important:** Use the **secret key** (not the publishable key) for server-side operations.
 
-#### 3. Run the Worker
+### 3. Run the Worker
 
 **Option A: Pass credentials directly (recommended for testing)**
 ```bash
@@ -83,47 +138,99 @@ python simap_sync.py --limit 50 --dry-run
 
 ---
 
-### Command Line Options
+## Scheduling
 
-| Option | Description |
-|--------|-------------|
-| `--supabase-url URL` | Supabase project URL (or use `SUPABASE_URL` env var) |
-| `--supabase-key KEY` | Supabase secret key (or use `SUPABASE_KEY` env var) |
-| `--days N` | Only fetch publications from last N days |
-| `--type TYPE` | Filter by project type (can be repeated) |
-| `--limit N` | Maximum number of tenders to fetch (for testing) |
-| `--dry-run` | Preview mode - fetch from API but don't write to database |
-| `--verbose`, `-v` | Enable verbose/debug logging to console |
-| `--log-file PATH` | Log file path (default: `simap_sync.log`) |
-| `--no-log-file` | Disable file logging (only log to console) |
+### Option 1: Cron (Linux/macOS)
 
-**Logging Behavior:**
-- Console: Shows INFO level and above (or DEBUG with `--verbose`)
-- Log file: Only captures WARNING and ERROR messages to keep file size small
-- Log file is **overwritten** on each run (not appended)
+Add to crontab (`crontab -e`):
 
-### Usage Examples
-
-```bash
-# Test run - fetch 50 tenders, don't write to DB
-python simap_sync.py --supabase-url URL --supabase-key KEY --limit 50 --dry-run
-
-# Production - sync last 7 days
-python simap_sync.py --days 7
-
-# Sync only construction tenders
-python simap_sync.py --type construction
-
-# Sync multiple types
-python simap_sync.py --type construction --type service
-
-# Full sync - all project types, all available data
-python simap_sync.py
+```cron
+# Run daily at 6:00 AM
+0 6 * * * cd /path/to/tender-scout/workers && /usr/bin/python3 simap_sync.py --days 7 >> /var/log/simap-sync.log 2>&1
 ```
+
+### Option 2: GitHub Actions
+
+Create `.github/workflows/simap-sync.yml`:
+
+```yaml
+name: SIMAP Sync
+
+on:
+  schedule:
+    - cron: '0 6 * * *'  # Daily at 6:00 AM UTC
+  workflow_dispatch:      # Manual trigger
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r workers/requirements.txt
+
+      - name: Run sync
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: python workers/simap_sync.py --days 7
+```
+
+### Option 3: Supabase Edge Functions (with pg_cron)
+
+Use Supabase's built-in cron scheduling to trigger an Edge Function that calls this worker.
 
 ---
 
-### Project Types
+## Monitoring
+
+The worker logs to stdout with timestamps:
+
+```
+2026-01-19 06:00:00 [INFO] ============================================================
+2026-01-19 06:00:00 [INFO] SIMAP Tender Sync Worker
+2026-01-19 06:00:00 [INFO] ============================================================
+2026-01-19 06:00:00 [INFO] Project types: construction, service, supply, ...
+2026-01-19 06:00:01 [INFO] Fetching page 1...
+2026-01-19 06:00:02 [INFO] Fetched 20 projects (total: 20)
+...
+2026-01-19 06:01:30 [INFO] ------------------------------------------------------------
+2026-01-19 06:01:30 [INFO] Sync Statistics:
+2026-01-19 06:01:30 [INFO]   Fetched:         1250
+2026-01-19 06:01:30 [INFO]   Inserted:        45
+2026-01-19 06:01:30 [INFO]   Updated:         1205
+2026-01-19 06:01:30 [INFO]   Details fetched: 1250
+2026-01-19 06:01:30 [INFO]   Details errors:  3
+2026-01-19 06:01:30 [INFO]   Errors:          0
+2026-01-19 06:01:30 [INFO] ============================================================
+```
+
+**Log File (`simap_sync.log`):**
+
+By default, warnings and errors are written to `simap_sync.log`. This file is overwritten on each run to keep it small and focused on issues from the latest sync.
+
+```bash
+# Check the log file for errors after a run
+cat simap_sync.log
+
+# Example error log entry:
+2026-01-19 06:00:15 [ERROR] __main__: Error upserting tender 12345: APIError: {...}
+```
+
+**For production, consider:**
+- Setting up alerts for non-zero error counts or non-empty log files
+- Using the exit code (non-zero if errors occurred) for CI/CD pipelines
+- Archiving log files before each run if you need history
+
+---
+
+## Project Types
 
 The worker supports all SIMAP project sub-types:
 
@@ -142,7 +249,25 @@ The worker supports all SIMAP project sub-types:
 
 ---
 
-### SIMAP API Filter Parameters
+## SIMAP API Reference
+
+**Official Documentation:** https://www.simap.ch/api-doc/#/publications/getPublicProjectSearch
+
+SIMAP (Système d'information sur les marchés publics) is the official Swiss public procurement platform. The API provides access to all public tenders published in Switzerland.
+
+**API Endpoint:**
+```
+GET https://www.simap.ch/api/publications/v2/project/project-search
+```
+
+**Key Points:**
+- The API is **public** and requires no authentication for read access
+- At least one filter parameter is required (e.g., `projectSubTypes` or `orderAddressCountryOnlySwitzerland`)
+- Uses **rolling pagination** with a `lastItem` cursor (format: `YYYYMMDD|projectNumber`)
+- Returns multilingual data (German, French, Italian, English)
+- Default page size is 20 items
+
+### Filter Parameters
 
 **Available Filters:**
 
@@ -218,108 +343,7 @@ For the complete API specification, visit the [SIMAP API Documentation](https://
 
 ---
 
-### Scheduling
-
-#### Option 1: Cron (Linux/macOS)
-
-Add to crontab (`crontab -e`):
-
-```cron
-# Run daily at 6:00 AM
-0 6 * * * cd /path/to/tender-scout/workers && /usr/bin/python3 simap_sync.py --days 7 >> /var/log/simap-sync.log 2>&1
-```
-
-#### Option 2: GitHub Actions
-
-Create `.github/workflows/simap-sync.yml`:
-
-```yaml
-name: SIMAP Sync
-
-on:
-  schedule:
-    - cron: '0 6 * * *'  # Daily at 6:00 AM UTC
-  workflow_dispatch:      # Manual trigger
-
-jobs:
-  sync:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install dependencies
-        run: pip install -r workers/requirements.txt
-
-      - name: Run sync
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-        run: python workers/simap_sync.py --days 7
-```
-
-#### Option 3: Supabase Edge Functions (with pg_cron)
-
-Use Supabase's built-in cron scheduling to trigger an Edge Function that calls this worker.
-
----
-
-### What the Worker Does
-
-1. **Fetches tenders** from SIMAP API for all project types (with pagination)
-2. **Transforms data** to match our database schema (see `documentation/DATABASE.md`)
-3. **Upserts records** to the `tenders` table (insert new, update existing)
-4. **Updates statuses** based on deadlines:
-   - `open` → `closing_soon` (7 days before deadline)
-   - `closing_soon` → `closed` (after deadline)
-
----
-
-### Monitoring
-
-The worker logs to stdout with timestamps:
-
-```
-2026-01-19 06:00:00 [INFO] ============================================================
-2026-01-19 06:00:00 [INFO] SIMAP Tender Sync Worker
-2026-01-19 06:00:00 [INFO] ============================================================
-2026-01-19 06:00:00 [INFO] Project types: construction, service, supply, ...
-2026-01-19 06:00:01 [INFO] Fetching page 1...
-2026-01-19 06:00:02 [INFO] Fetched 20 projects (total: 20)
-...
-2026-01-19 06:01:30 [INFO] ------------------------------------------------------------
-2026-01-19 06:01:30 [INFO] Sync Statistics:
-2026-01-19 06:01:30 [INFO]   Fetched:  1250
-2026-01-19 06:01:30 [INFO]   Inserted: 45
-2026-01-19 06:01:30 [INFO]   Updated:  1205
-2026-01-19 06:01:30 [INFO]   Errors:   0
-2026-01-19 06:01:30 [INFO] ============================================================
-```
-
-**Log File (`simap_sync.log`):**
-
-By default, warnings and errors are written to `simap_sync.log`. This file is overwritten on each run to keep it small and focused on issues from the latest sync.
-
-```bash
-# Check the log file for errors after a run
-cat simap_sync.log
-
-# Example error log entry:
-2026-01-19 06:00:15 [ERROR] __main__: Error upserting tender 12345: APIError: {...}
-```
-
-**For production, consider:**
-- Setting up alerts for non-zero error counts or non-empty log files
-- Using the exit code (non-zero if errors occurred) for CI/CD pipelines
-- Archiving log files before each run if you need history
-
----
-
-### Troubleshooting
+## Troubleshooting
 
 | Issue | Solution |
 |-------|----------|
@@ -331,9 +355,11 @@ cat simap_sync.log
 
 ---
 
-### API Rate Limits
+## API Rate Limits
 
 The SIMAP API doesn't document specific rate limits, but the worker:
 - Uses pagination (20 items per page by default)
 - Has a safety limit of 1000 pages per run
 - Includes proper error handling for failed requests
+- Rate-limits detail API calls (default: 0.5s between requests)
+- Automatic retry with backoff for transient failures (429, 5xx errors)

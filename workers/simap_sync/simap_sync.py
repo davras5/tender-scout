@@ -17,18 +17,69 @@ SIMAP API Documentation:
     Search: https://www.simap.ch/api-doc/#/publications/getPublicProjectSearch
     Details: https://www.simap.ch/api/publications/v1/project/{projectId}/publication-details/{publicationId}
 
-Usage:
-    python simap_sync.py --supabase-url URL --supabase-key KEY
-    python simap_sync.py --days 7           # Only fetch last 7 days
-    python simap_sync.py --type construction # Only fetch construction tenders
-    python simap_sync.py --limit 100        # Limit to first 100 tenders (for testing)
-    python simap_sync.py --dry-run          # Preview without database writes
-    python simap_sync.py --skip-details     # Skip fetching publication details
-    python simap_sync.py --details-only --details-limit 50  # Only fetch details (no search)
+Usage Examples:
+    # === Setup (choose one method) ===
 
-Required (via args or environment variables):
-    --supabase-url / SUPABASE_URL  - Supabase project URL
-    --supabase-key / SUPABASE_KEY  - Supabase service role key (or sb_secret_... key)
+    # Method 1: Environment variables (recommended for scripts/cron)
+    export SUPABASE_URL="https://xxx.supabase.co"
+    export SUPABASE_KEY="your-service-role-key"
+    python simap_sync.py --days 7
+
+    # Method 2: Command line arguments
+    python simap_sync.py --supabase-url URL --supabase-key KEY --days 7
+
+    # === Examples below assume env vars are set ===
+
+    # Daily incremental sync (recommended for scheduled jobs)
+    python simap_sync.py --days 1
+
+    # Weekly sync with specific project types
+    python simap_sync.py --days 7 --type construction --type service
+
+    # Test run: limited records, no database writes
+    python simap_sync.py --limit 10 --details-limit 5 --dry-run
+
+    # Fast sync without details (search data only)
+    python simap_sync.py --days 7 --skip-details
+
+    # Backfill details for existing tenders
+    python simap_sync.py --details-only --details-limit 100
+
+    # Slow rate limit for API-sensitive operations
+    python simap_sync.py --days 7 --rate-limit 2.0
+
+    # Verbose logging with file output
+    python simap_sync.py --days 7 --verbose --log-file sync.log
+
+Command Line Options:
+    Required (via args or environment variables):
+        --supabase-url      Supabase project URL (or SUPABASE_URL env var)
+        --supabase-key      Supabase service role key (or SUPABASE_KEY env var)
+
+    Optional - Filtering:
+        --days N            Only fetch publications from last N days (default: all)
+        --type TYPE         Project type filter, can repeat (default: all types)
+                            Values: construction, service, supply, project_competition,
+                            idea_competition, overall_performance_competition,
+                            project_study, idea_study, overall_performance_study,
+                            request_for_information
+
+    Optional - Limits:
+        --limit N           Max tenders to fetch from search API (default: unlimited)
+        --details-limit N   Max details to fetch from detail API (default: unlimited)
+
+    Optional - Modes:
+        --dry-run           Preview without database writes
+        --skip-details      Skip fetching publication details (details on by default)
+        --details-only      Only fetch details, skip project search
+
+    Optional - Performance:
+        --rate-limit N      Delay between detail API calls in seconds (default: 0.5)
+
+    Optional - Logging:
+        --verbose, -v       Enable debug logging
+        --log-file PATH     Log file path (default: simap_sync.log)
+        --no-log-file       Disable file logging (console only)
 
 Author: Tender Scout Team
 Last Updated: 2026-01-19
@@ -39,7 +90,7 @@ import logging
 import os
 import sys
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 import httpx
@@ -122,9 +173,6 @@ PROJECT_SUB_TYPES = [
     "request_for_information",           # Request for information (RFI)
 ]
 
-# Default page size for API requests (SIMAP default is 20)
-DEFAULT_PAGE_SIZE = 100
-
 
 # =============================================================================
 # SIMAP SYNC WORKER CLASS
@@ -140,9 +188,16 @@ class SimapSyncWorker:
     - Updating tender statuses based on deadlines
 
     Example:
+        # Using context manager (recommended)
+        with SimapSyncWorker(supabase_url, supabase_key) as worker:
+            stats = worker.run(days_back=7, limit=100)
+
+        # Or manual cleanup
         worker = SimapSyncWorker(supabase_url, supabase_key)
-        stats = worker.run(days_back=7, limit=100)
-        worker.close()
+        try:
+            stats = worker.run(days_back=7, limit=100)
+        finally:
+            worker.close()
     """
 
     def __init__(
@@ -184,6 +239,15 @@ class SimapSyncWorker:
             "details_errors": 0,    # Errors fetching details
             "errors": 0,            # General errors encountered
         }
+
+    def __enter__(self):
+        """Context manager entry - returns self for use in with statements."""
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Context manager exit - ensures resources are cleaned up."""
+        self.close()
+        return False  # Don't suppress exceptions
 
     # -------------------------------------------------------------------------
     # FETCH PROJECTS FROM SIMAP API
@@ -360,7 +424,7 @@ class SimapSyncWorker:
             # Metadata
             "language": language,
             "raw_data": project,                         # Store original for debugging
-            "updated_at": datetime.utcnow().isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat(),
 
             # Publication ID needed for fetching details
             "publication_id": project.get("publicationId"),
@@ -567,8 +631,8 @@ class SimapSyncWorker:
             "raw_detail_data": details,
 
             # Track when details were fetched
-            "details_fetched_at": datetime.utcnow().isoformat(),
-            "updated_at": datetime.utcnow().isoformat(),
+            "details_fetched_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat(),
         }
 
     def fetch_and_update_details(
@@ -791,7 +855,7 @@ class SimapSyncWorker:
             logger.info("[DRY RUN] Would update tender statuses")
             return
 
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         closing_soon_threshold = now + timedelta(days=7)
 
         try:
@@ -866,7 +930,7 @@ class SimapSyncWorker:
         publication_until = None
 
         if days_back:
-            publication_from = (datetime.utcnow() - timedelta(days=days_back)).strftime("%Y-%m-%d")
+            publication_from = (datetime.now(timezone.utc) - timedelta(days=days_back)).strftime("%Y-%m-%d")
             logger.info(f"Fetching publications from {publication_from}")
 
         # Use all types if not specified
@@ -931,18 +995,35 @@ def main():
         description="Sync SIMAP tenders to Supabase database",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-Examples:
-  # Full sync with details (default behavior)
-  python simap_sync.py --supabase-url URL --supabase-key KEY
-  python simap_sync.py --days 7 --type construction
-  python simap_sync.py --limit 100 --details-limit 50
+Prerequisites (choose one):
+  # Option 1: Environment variables (recommended)
+  export SUPABASE_URL="https://xxx.supabase.co"
+  export SUPABASE_KEY="your-service-role-key"
 
-  # Sync without details (search only)
-  python simap_sync.py --days 7 --skip-details
-  python simap_sync.py --limit 100 --skip-details --dry-run
+  # Option 2: Command line arguments
+  python simap_sync.py --supabase-url URL --supabase-key KEY --days 7
 
-  # Only fetch details for existing tenders (no new search)
-  python simap_sync.py --details-only --details-limit 100
+Examples (assuming env vars are set):
+  # === Daily Operations ===
+  python simap_sync.py --days 1                    # Daily incremental sync (recommended)
+  python simap_sync.py --days 7                    # Weekly sync
+
+  # === Filtered Sync ===
+  python simap_sync.py --days 7 --type construction              # Construction only
+  python simap_sync.py --days 7 --type service --type supply     # Multiple types
+
+  # === Testing & Debugging ===
+  python simap_sync.py --limit 10 --dry-run                      # Preview 10 records
+  python simap_sync.py --limit 5 --details-limit 3 --verbose     # Debug with limited data
+  python simap_sync.py --days 1 --verbose --log-file debug.log   # Full logging
+
+  # === Performance Options ===
+  python simap_sync.py --days 7 --skip-details                   # Fast: search only
+  python simap_sync.py --days 7 --rate-limit 2.0                 # Slow: 2s between API calls
+
+  # === Backfill Operations ===
+  python simap_sync.py --details-only --details-limit 100        # Fetch missing details
+  python simap_sync.py --details-only                            # All missing details
         """,
     )
 
@@ -1000,7 +1081,7 @@ Examples:
     parser.add_argument(
         "--details-only",
         action="store_true",
-        help="Only fetch details, skip project search (use with --fetch-details)",
+        help="Only fetch details for existing tenders, skip project search",
     )
     parser.add_argument(
         "--rate-limit",
@@ -1048,15 +1129,13 @@ Examples:
         logger.error("Missing Supabase key. Use --supabase-key or set SUPABASE_KEY env var")
         sys.exit(1)
 
-    # Initialize worker
-    worker = SimapSyncWorker(
+    # Initialize and run worker using context manager for automatic cleanup
+    with SimapSyncWorker(
         supabase_url=supabase_url,
         supabase_key=supabase_key,
         dry_run=args.dry_run,
         detail_api_delay=args.rate_limit,
-    )
-
-    try:
+    ) as worker:
         # Handle details-only mode
         if args.details_only:
             if args.skip_details:
@@ -1081,10 +1160,6 @@ Examples:
         # This allows CI/CD pipelines to detect failures
         if stats["errors"] > 0:
             sys.exit(1)
-
-    finally:
-        # Always clean up resources
-        worker.close()
 
 
 if __name__ == "__main__":
