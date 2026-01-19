@@ -6,6 +6,50 @@ Background jobs for syncing and processing tender data.
 
 Daily scheduled job that fetches public procurement tenders from the Swiss SIMAP API and syncs them to the Supabase database.
 
+### SIMAP API Reference
+
+**Official Documentation:** https://www.simap.ch/api-doc/#/publications/getPublicProjectSearch
+
+SIMAP (Système d'information sur les marchés publics) is the official Swiss public procurement platform. The API provides access to all public tenders published in Switzerland.
+
+**API Endpoint:**
+```
+GET https://www.simap.ch/api/publications/v2/project/project-search
+```
+
+**Key Points:**
+- The API is **public** and requires no authentication for read access
+- At least one filter parameter is required (e.g., `projectSubTypes` or `orderAddressCountryOnlySwitzerland`)
+- Uses **rolling pagination** with a `lastItem` cursor (format: `YYYYMMDD|projectNumber`)
+- Returns multilingual data (German, French, Italian, English)
+- Default page size is 20 items
+
+**Available Filters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `search` | string | Free text search (3-1000 chars) |
+| `lang` | array | Languages to search: `de`, `en`, `fr`, `it` |
+| `projectSubTypes` | array | `construction`, `service`, `supply`, etc. |
+| `processTypes` | array | `open`, `selective`, `invitation`, `direct`, `no_process` |
+| `newestPubTypes` | array | `tender`, `award`, `revocation`, etc. |
+| `cpvCodes` | array | CPV classification codes |
+| `npkCodes` | array | NPK codes (Swiss construction standards) |
+| `bkpCodes` | array | BKP codes (Swiss construction cost codes) |
+| `orderAddressCantons` | array | Canton codes: `BE`, `ZH`, `VD`, etc. |
+| `orderAddressCountryOnlySwitzerland` | boolean | Filter to Swiss projects only |
+| `newestPublicationFrom` | date | Publication date from (YYYY-MM-DD) |
+| `newestPublicationUntil` | date | Publication date until (YYYY-MM-DD) |
+| `lastItem` | string | Pagination cursor from previous response |
+
+**Example Request:**
+```bash
+curl -X GET "https://www.simap.ch/api/publications/v2/project/project-search?projectSubTypes=construction&lang=de&orderAddressCountryOnlySwitzerland=true" \
+  -H "accept: application/json"
+```
+
+For the complete API specification, visit the [SIMAP API Documentation](https://www.simap.ch/api-doc/).
+
 ### Setup
 
 1. Install dependencies:
