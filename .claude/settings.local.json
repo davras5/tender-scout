@@ -6,7 +6,11 @@
       "Bash(ffmpeg:*)",
       "Bash(choco:*)",
       "Bash(scoop --version:*)",
-      "Bash(winget:*)"
+      "Bash(winget:*)",
+      "Bash(python -m http.server:*)",
+      "Bash(timeout:*)",
+      "Bash(curl:*)",
+      "Bash(grep:*)"
     ]
   }
 }
