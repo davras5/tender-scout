@@ -505,10 +505,42 @@
             padding: var(--space-3) var(--space-4);
             font-size: var(--text-sm);
             border-bottom: 1px solid var(--color-border-subtle);
-            max-width: 300px;
+            max-width: 250px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+        }
+
+        /* Optimize column widths */
+        .data-table th:first-child,
+        .data-table td:first-child {
+            width: 40px;
+            max-width: 40px;
+        }
+
+        .data-table td:nth-child(2) { /* Project # */
+            max-width: 100px;
+        }
+
+        .data-table td:nth-child(3) { /* Title */
+            max-width: 220px;
+        }
+
+        .data-table td:nth-child(4) { /* Authority */
+            max-width: 180px;
+        }
+
+        .data-table td:nth-child(5) { /* Region */
+            max-width: 80px;
+        }
+
+        .data-table td:nth-child(6),
+        .data-table td:nth-child(7) { /* Published, Deadline */
+            max-width: 90px;
+        }
+
+        .data-table td:nth-child(8) { /* Status */
+            max-width: 110px;
         }
 
         .data-table tbody tr {
@@ -1379,9 +1411,9 @@
             { key: 'title', label: 'Title', default: true, render: (v) => extractText(v) },
             { key: 'authority', label: 'Authority', default: true, render: (v) => extractAuthority(v) },
             { key: 'region', label: 'Region', default: true },
+            { key: 'publication_date', label: 'Published', default: true, render: (v) => formatDate(v) },
             { key: 'deadline', label: 'Deadline', default: true, render: (v) => formatDate(v) },
             { key: 'status', label: 'Status', default: true, render: (v) => renderStatus(v) },
-            { key: 'publication_date', label: 'Publication Date', default: false, render: (v) => formatDate(v) },
             { key: 'project_type', label: 'Project Type', default: false },
             { key: 'project_sub_type', label: 'Project Sub-Type', default: false },
             { key: 'process_type', label: 'Process Type', default: false },
@@ -1603,10 +1635,10 @@
                 }
             });
 
-            // Render legend (clickable)
+            // Render legend (clickable) with title for full name on hover
             const legendEl = document.getElementById(legendId);
             legendEl.innerHTML = displayLabels.map((label, i) => `
-                <div class="legend-item${filterKey ? ' clickable' : ''}" ${filterKey && labels[i] !== 'Other' && labels[i] !== 'unknown' ? `onclick="applyChartFilter('${filterKey}', '${labels[i].replace(/'/g, "\\'")}')"` : ''}>
+                <div class="legend-item${filterKey ? ' clickable' : ''}" title="${escapeHtml(labels[i])}" ${filterKey && labels[i] !== 'Other' && labels[i] !== 'unknown' ? `onclick="applyChartFilter('${filterKey}', '${labels[i].replace(/'/g, "\\'")}')"` : ''}>
                     <div class="legend-color" style="background: ${colors[i]}"></div>
                     <span>${label}</span>
                     <span class="legend-value">${data[i]}</span>
