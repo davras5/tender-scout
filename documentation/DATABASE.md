@@ -836,23 +836,24 @@ cd workers/simap_sync && pip install -r requirements.txt
 export SUPABASE_URL="https://your-project.supabase.co"
 export SUPABASE_KEY="your-service-role-key"
 
-# Run sync (all project types, last 7 days)
+# Run full sync with details (default behavior)
 python simap_sync.py --days 7
 
 # Dry run (preview without database writes)
 python simap_sync.py --days 7 --dry-run
 
-# Sync with publication details (fetches detailed info for each tender)
-python simap_sync.py --days 7 --fetch-details
+# Sync without details (search only)
+python simap_sync.py --days 7 --skip-details
 
 # Only fetch details for existing tenders (no new search)
-python simap_sync.py --details-only --fetch-details --details-limit 100
+python simap_sync.py --details-only --details-limit 100
 
 # Adjust rate limiting for detail API calls (default: 0.5 seconds)
-python simap_sync.py --fetch-details --rate-limit 1.0
+python simap_sync.py --days 7 --rate-limit 1.0
 ```
 
 **Worker Features:**
+- **Details by Default**: Publication details are fetched automatically (use `--skip-details` to disable)
 - **Pagination**: Automatic rolling pagination with `lastItem` cursor
 - **Rate Limiting**: Configurable delay between detail API calls (default 0.5s)
 - **Retry Logic**: Automatic retry with backoff for transient failures

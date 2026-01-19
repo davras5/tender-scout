@@ -23,8 +23,8 @@ Usage:
     python simap_sync.py --type construction # Only fetch construction tenders
     python simap_sync.py --limit 100        # Limit to first 100 tenders (for testing)
     python simap_sync.py --dry-run          # Preview without database writes
-    python simap_sync.py --fetch-details    # Also fetch publication details
-    python simap_sync.py --details-only --fetch-details --details-limit 50  # Only fetch details
+    python simap_sync.py --skip-details     # Skip fetching publication details
+    python simap_sync.py --details-only --details-limit 50  # Only fetch details (no search)
 
 Required (via args or environment variables):
     --supabase-url / SUPABASE_URL  - Supabase project URL
@@ -452,6 +452,9 @@ class SimapSyncWorker:
         # Extract Q&A deadlines (array of objects with date and note)
         qna_deadlines = dates.get("qnas", [])
 
+        # Extract offer validity period
+        offer_validity_days = dates.get("offerValidityDeadlineDays")
+
         # Extract classification codes (arrays of {code, label} objects)
         bkp_codes = procurement.get("bkpCodes", [])
         npk_codes = procurement.get("npkCodes", [])
@@ -502,6 +505,7 @@ class SimapSyncWorker:
             "deadline": deadline,
             "offer_opening": offer_opening,
             "qna_deadlines": qna_deadlines if qna_deadlines else [],
+            "offer_validity_days": offer_validity_days,
 
             # Description
             "description": description,
@@ -821,7 +825,7 @@ class SimapSyncWorker:
         project_sub_types: Optional[list[str]] = None,
         days_back: Optional[int] = None,
         limit: Optional[int] = None,
-        fetch_details: bool = False,
+        fetch_details: bool = True,
         details_limit: Optional[int] = None,
     ) -> dict:
         """
@@ -831,13 +835,13 @@ class SimapSyncWorker:
         1. Fetch projects from SIMAP API (search endpoint)
         2. Upsert to database
         3. Update tender statuses
-        4. Optionally fetch publication details for tenders missing them
+        4. Fetch publication details for tenders missing them (default: enabled)
 
         Args:
             project_sub_types: Specific types to sync (default: all types)
             days_back: Only fetch publications from last N days
             limit: Maximum number of projects to fetch (for testing)
-            fetch_details: Whether to fetch publication details from detail API
+            fetch_details: Whether to fetch publication details (default: True)
             details_limit: Maximum number of details to fetch (for testing)
 
         Returns:
@@ -854,8 +858,8 @@ class SimapSyncWorker:
         if limit:
             logger.info(f"LIMIT MODE - Will fetch maximum {limit} projects")
 
-        if fetch_details:
-            logger.info("DETAILS MODE - Will fetch publication details")
+        if not fetch_details:
+            logger.info("SKIP DETAILS MODE - Will skip publication details")
 
         # Calculate date range for incremental sync
         publication_from = None
@@ -928,17 +932,17 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Basic sync (search endpoint only)
-  python simap_sync.py --supabase-url URL --supabase-key KEY --limit 50 --dry-run
+  # Full sync with details (default behavior)
+  python simap_sync.py --supabase-url URL --supabase-key KEY
   python simap_sync.py --days 7 --type construction
-  python simap_sync.py --limit 100
+  python simap_sync.py --limit 100 --details-limit 50
 
-  # Sync with details (fetches detailed info for each tender)
-  python simap_sync.py --days 7 --fetch-details
-  python simap_sync.py --fetch-details --details-limit 50
+  # Sync without details (search only)
+  python simap_sync.py --days 7 --skip-details
+  python simap_sync.py --limit 100 --skip-details --dry-run
 
   # Only fetch details for existing tenders (no new search)
-  python simap_sync.py --details-only --fetch-details --details-limit 100
+  python simap_sync.py --details-only --details-limit 100
         """,
     )
 
@@ -983,9 +987,9 @@ Examples:
         help="Preview without database writes",
     )
     parser.add_argument(
-        "--fetch-details",
+        "--skip-details",
         action="store_true",
-        help="Fetch publication details from SIMAP detail API",
+        help="Skip fetching publication details (details are fetched by default)",
     )
     parser.add_argument(
         "--details-limit",
@@ -1055,8 +1059,8 @@ Examples:
     try:
         # Handle details-only mode
         if args.details_only:
-            if not args.fetch_details:
-                logger.warning("--details-only requires --fetch-details, enabling it")
+            if args.skip_details:
+                logger.warning("--details-only conflicts with --skip-details, ignoring --skip-details")
             logger.info("Details-only mode - skipping project search")
             worker.fetch_details_for_tenders(
                 limit=args.details_limit,
@@ -1064,12 +1068,12 @@ Examples:
             )
             stats = worker.stats
         else:
-            # Run full sync
+            # Run full sync (details fetched by default unless --skip-details)
             stats = worker.run(
                 project_sub_types=args.types,
                 days_back=args.days,
                 limit=args.limit,
-                fetch_details=args.fetch_details,
+                fetch_details=not args.skip_details,
                 details_limit=args.details_limit,
             )
 
