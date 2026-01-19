@@ -124,12 +124,25 @@ python simap_sync.py --days 7
 python simap_sync.py --type construction
 python simap_sync.py --type construction --type service
 
+# Limit number of tenders (for testing)
+python simap_sync.py --limit 100
+
 # Preview mode (no database writes)
 python simap_sync.py --dry-run
 
-# Combine options
-python simap_sync.py --days 7 --type construction --dry-run
+# Combine options for testing
+python simap_sync.py --limit 50 --dry-run
+python simap_sync.py --days 7 --type construction --limit 100
 ```
+
+### Command Line Options
+
+| Option | Description |
+|--------|-------------|
+| `--days N` | Only fetch publications from last N days |
+| `--type TYPE` | Filter by project type (can be repeated) |
+| `--limit N` | Maximum number of tenders to fetch (for testing) |
+| `--dry-run` | Preview mode - fetch from API but don't write to database |
 
 ### Project Types
 
