@@ -356,7 +356,18 @@ class SimapSyncWorker:
                     self.stats["inserted"] += 1
 
             except Exception as e:
-                logger.error(f"Error upserting tender {project.get('id')}: {e}")
+                # Log detailed error information for debugging
+                project_id = project.get('id', 'unknown')
+                project_number = project.get('projectNumber', 'unknown')
+                logger.error(f"Error upserting tender {project_number} (ID: {project_id}): {type(e).__name__}: {e}")
+
+                # Log the tender data that failed (truncated for readability)
+                try:
+                    tender_data = self.transform_project(project)
+                    logger.debug(f"Failed tender data: {tender_data}")
+                except Exception:
+                    pass
+
                 self.stats["errors"] += 1
 
     # -------------------------------------------------------------------------
@@ -545,8 +556,18 @@ Examples:
         action="store_true",
         help="Preview without database writes",
     )
+    parser.add_argument(
+        "--verbose", "-v",
+        action="store_true",
+        help="Enable verbose/debug logging",
+    )
 
     args = parser.parse_args()
+
+    # Set log level based on verbose flag
+    if args.verbose:
+        logging.getLogger().setLevel(logging.DEBUG)
+        logger.debug("Verbose logging enabled")
 
     # Get Supabase credentials from args or environment variables
     # Args take precedence over env vars
