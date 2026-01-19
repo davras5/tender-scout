@@ -258,6 +258,13 @@ The worker supports all SIMAP project sub-types:
 
 **Official Documentation:** https://www.simap.ch/api-doc/#/publications/getPublicProjectSearch
 
+**Request API Client Credentials:** https://forms.office.com/pages/responsepage.aspx?id=o2w6IQhIR0CKyoFNLN5EdGFhHlNcfO1OgKkZv7DGPcRUOExMVldHSlpKVFZHMk5YOVRXU1g0VzlWSS4u
+(Microsoft Forms - covers both production and test/integration environments)
+
+**Additional Guides:** https://kissimap.ch/de/anleitungen (tutorials and how-tos)
+
+**Community Forum:** https://kissimap.ch/de/forum (for questions and discussions)
+
 SIMAP (Système d'information sur les marchés publics) is the official Swiss public procurement platform. The API provides access to all public tenders published in Switzerland.
 
 **API Endpoint:**
@@ -399,3 +406,31 @@ Potential enhancements for scaling and performance:
 - **Checkpoint/resume**: Save progress to allow resuming interrupted syncs
 - **Dead letter queue**: Track and retry permanently failed records
 - **Circuit breaker**: Automatically back off when SIMAP API is degraded
+
+### Authenticated Document Sync
+Access the full tender documents (the 3rd layer of SIMAP data) via authenticated API:
+
+**Prerequisites:**
+- SIMAP vendor account with OAuth2 credentials (client_id, client_secret) - [Request credentials here](https://forms.office.com/pages/responsepage.aspx?id=o2w6IQhIR0CKyoFNLN5EdGFhHlNcfO1OgKkZv7DGPcRUOExMVldHSlpKVFZHMk5YOVRXU1g0VzlWSS4u)
+- User must be registered and approved on SIMAP platform
+
+**Implementation Flow:**
+1. **OAuth2 Authentication**: Implement Authorization Code flow (`/oauth/authorize` → `/oauth/token`)
+2. **Express Interest**: Call `PUT /publications/v1/project/{projectId}/interest` for each tender
+3. **List Documents**: Fetch available documents via `GET /vendors/v1/my/projects/{projectId}/documents`
+4. **Download Documents**: Get download token from `GET /project-documents/v1/docs/{documentId}` and download
+
+**Key API Endpoints:**
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/oauth/authorize` | GET | Start OAuth2 authorization flow |
+| `/oauth/token` | POST | Exchange code for access token |
+| `/publications/v1/project/{id}/interest` | PUT | Express interest in a tender |
+| `/vendors/v1/my/projects/{id}/documents` | GET | List available documents |
+| `/project-documents/v1/docs/{id}` | GET | Get document download token |
+
+**Features to Build:**
+- **Auto-express interest**: Automatically express interest for bookmarked tenders
+- **Document indexing**: Download and parse PDF/DOC files for full-text search
+- **Attachment metadata**: Store document list in `tenders.documents` JSONB column
+- **Secure credential storage**: Use environment variables or secrets manager for OAuth tokens
