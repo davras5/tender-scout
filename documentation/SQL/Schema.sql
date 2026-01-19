@@ -20,6 +20,7 @@ DROP TABLE IF EXISTS tenders CASCADE;
 DROP TABLE IF EXISTS companies CASCADE;
 DROP TABLE IF EXISTS npk_codes CASCADE;
 DROP TABLE IF EXISTS cpv_codes CASCADE;
+DROP TABLE IF EXISTS sync_state CASCADE;
 
 -- Drop functions (will also drop associated triggers)
 DROP FUNCTION IF EXISTS update_updated_at() CASCADE;
@@ -113,7 +114,7 @@ CREATE TABLE tenders (
     title JSONB NOT NULL, -- Multilingual: {"de": "...", "fr": "...", "it": "...", "en": "..."}
     project_number VARCHAR(50),
     publication_number VARCHAR(50),
-    project_type VARCHAR(50) CHECK (project_type IN ('tender', 'competition', 'study', 'request_for_information')),
+    project_type VARCHAR(50) CHECK (project_type IN ('tender', 'competition', 'study', 'study_contract', 'request_for_information')),
     project_sub_type VARCHAR(50) CHECK (project_sub_type IN (
         'construction', 'service', 'supply',
         'project_competition', 'idea_competition', 'overall_performance_competition',

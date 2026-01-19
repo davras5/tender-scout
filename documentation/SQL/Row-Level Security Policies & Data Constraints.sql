@@ -284,6 +284,18 @@ CREATE POLICY "subscriptions_all_service_role" ON public.subscriptions
     WITH CHECK (true);
 
 -- ============================================
+-- 9. SYNC_STATE (worker checkpoints)
+-- ============================================
+ALTER TABLE public.sync_state ENABLE ROW LEVEL SECURITY;
+
+-- Only service role can access sync_state (for sync worker)
+CREATE POLICY "sync_state_all_service_role" ON public.sync_state
+    FOR ALL
+    TO service_role
+    USING (true)
+    WITH CHECK (true);
+
+-- ============================================
 -- UNIQUE CONSTRAINT FOR TENDERS
 -- ============================================
 -- Ensure no duplicate tenders from same source

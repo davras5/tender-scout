@@ -158,11 +158,12 @@ def write_run_summary(log_file: str, stats: dict, dry_run: bool = False) -> None
         f"\n{'=' * 60}\n"
         f"RUN SUMMARY - {timestamp}\n"
         f"{'=' * 60}\n"
-        f"{mode}Fetched: {stats.get('fetched', 0)} | "
-        f"Inserted: {stats.get('inserted', 0)} | "
-        f"Updated: {stats.get('updated', 0)} | "
-        f"Details: {stats.get('details_fetched', 0)} | "
-        f"Errors: {stats.get('errors', 0)}\n"
+        f"{mode}Fetched:         {stats.get('fetched', 0)}\n"
+        f"{mode}Inserted:        {stats.get('inserted', 0)}\n"
+        f"{mode}Updated:         {stats.get('updated', 0)}\n"
+        f"{mode}Details fetched: {stats.get('details_fetched', 0)}\n"
+        f"{mode}Details errors:  {stats.get('details_errors', 0)}\n"
+        f"{mode}Errors:          {stats.get('errors', 0)}\n"
         f"{'=' * 60}\n"
     )
 
@@ -810,12 +811,12 @@ class SimapSyncWorker:
         Returns:
             Transformed data with detail fields for updating tenders table
         """
-        # Extract main sections from detail response
-        project_info = details.get("project-info", {})
-        procurement = details.get("procurement", {})
-        terms = details.get("terms", {})
-        dates = details.get("dates", {})
-        criteria = details.get("criteria", {})
+        # Extract main sections from detail response (use 'or {}' to handle explicit null)
+        project_info = details.get("project-info") or {}
+        procurement = details.get("procurement") or {}
+        terms = details.get("terms") or {}
+        dates = details.get("dates") or {}
+        criteria = details.get("criteria") or {}
 
         # Extract description from procurement section (multilingual)
         description = procurement.get("orderDescription")
@@ -824,8 +825,8 @@ class SimapSyncWorker:
         deadline = dates.get("offerDeadline")
 
         # Extract offer opening datetime
-        offer_opening_data = dates.get("offerOpening", {})
-        offer_opening = offer_opening_data.get("dateTime") if offer_opening_data else None
+        offer_opening_data = dates.get("offerOpening") or {}
+        offer_opening = offer_opening_data.get("dateTime")
 
         # Extract Q&A deadlines (array of objects with date and note)
         qna_deadlines = dates.get("qnas", [])
@@ -852,7 +853,7 @@ class SimapSyncWorker:
         order_address_description = procurement.get("orderAddressDescription")
 
         # Extract order address for region extraction
-        order_address = procurement.get("orderAddress", {})
+        order_address = procurement.get("orderAddress") or {}
 
         # Extract language arrays
         documents_languages = project_info.get("documentsLanguages", [])
@@ -1199,29 +1200,19 @@ class SimapSyncWorker:
         if not updates:
             return
 
-        # Batch update in chunks
-        for i in range(0, len(updates), UPSERT_BATCH_SIZE):
-            batch = updates[i:i + UPSERT_BATCH_SIZE]
+        # Update each tender individually (upsert doesn't work well for partial updates)
+        for update in updates:
             try:
-                self.supabase.table("tenders").upsert(
-                    batch,
-                    on_conflict="id",
-                ).execute()
-                self.stats["details_fetched"] += len(batch)
-                logger.info(f"Batch updated {len(batch)} tender details")
+                tender_id = update.get("id")
+                # Create update dict without 'id' field
+                update_data = {k: v for k, v in update.items() if k != "id"}
+                self.supabase.table("tenders").update(update_data).eq("id", tender_id).execute()
+                self.stats["details_fetched"] += 1
             except Exception as e:
-                logger.error(f"Batch detail update error: {e}")
-                # Fallback to individual updates
-                for update in batch:
-                    try:
-                        tender_id = update.get("id")
-                        # Create update dict without 'id' field (don't mutate original)
-                        update_data = {k: v for k, v in update.items() if k != "id"}
-                        self.supabase.table("tenders").update(update_data).eq("id", tender_id).execute()
-                        self.stats["details_fetched"] += 1
-                    except Exception as inner_e:
-                        logger.error(f"Individual detail update error for {tender_id}: {inner_e}")
-                        self.stats["details_errors"] += 1
+                logger.error(f"Detail update error for {tender_id}: {e}")
+                self.stats["details_errors"] += 1
+
+        logger.info(f"Updated {self.stats['details_fetched']} tender details")
 
     # -------------------------------------------------------------------------
     # UPDATE TENDER STATUSES
