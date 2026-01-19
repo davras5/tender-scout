@@ -6,15 +6,15 @@ Daily scheduled job that fetches public procurement tenders from the SIMAP API
 and syncs them to the Supabase database.
 
 Usage:
-    python simap_sync.py                    # Full sync (all project types)
+    python simap_sync.py --supabase-url URL --supabase-key KEY
     python simap_sync.py --days 7           # Only fetch last 7 days
     python simap_sync.py --type construction # Only fetch construction tenders
     python simap_sync.py --limit 100        # Limit to first 100 tenders (for testing)
     python simap_sync.py --dry-run          # Preview without database writes
 
-Environment variables required:
-    SUPABASE_URL        - Supabase project URL
-    SUPABASE_KEY        - Supabase service role key (for server-side operations)
+Required (via args or environment variables):
+    --supabase-url / SUPABASE_URL  - Supabase project URL
+    --supabase-key / SUPABASE_KEY  - Supabase service role key (or sb_secret_... key)
 """
 
 import argparse
@@ -374,6 +374,18 @@ def main():
         description="Sync SIMAP tenders to Supabase database"
     )
     parser.add_argument(
+        "--supabase-url",
+        type=str,
+        default=None,
+        help="Supabase project URL (or set SUPABASE_URL env var)",
+    )
+    parser.add_argument(
+        "--supabase-key",
+        type=str,
+        default=None,
+        help="Supabase service role key (or set SUPABASE_KEY env var)",
+    )
+    parser.add_argument(
         "--days",
         type=int,
         default=None,
@@ -400,12 +412,16 @@ def main():
     )
     args = parser.parse_args()
 
-    # Get environment variables
-    supabase_url = os.environ.get("SUPABASE_URL")
-    supabase_key = os.environ.get("SUPABASE_KEY")
+    # Get Supabase credentials from args or environment variables
+    supabase_url = args.supabase_url or os.environ.get("SUPABASE_URL")
+    supabase_key = args.supabase_key or os.environ.get("SUPABASE_KEY")
 
-    if not supabase_url or not supabase_key:
-        logger.error("Missing required environment variables: SUPABASE_URL, SUPABASE_KEY")
+    if not supabase_url:
+        logger.error("Missing Supabase URL. Use --supabase-url or set SUPABASE_URL env var")
+        sys.exit(1)
+
+    if not supabase_key:
+        logger.error("Missing Supabase key. Use --supabase-key or set SUPABASE_KEY env var")
         sys.exit(1)
 
     # Initialize and run worker

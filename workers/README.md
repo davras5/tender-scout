@@ -114,6 +114,14 @@ export SUPABASE_KEY="your-service-role-key"
 ### Usage
 
 ```bash
+# Pass credentials directly (recommended for testing)
+python simap_sync.py --supabase-url "https://xxx.supabase.co" --supabase-key "sb_secret_xxx" --limit 50 --dry-run
+
+# Or use environment variables
+export SUPABASE_URL="https://xxx.supabase.co"
+export SUPABASE_KEY="sb_secret_xxx"
+python simap_sync.py --limit 50 --dry-run
+
 # Full sync - all project types, all available data
 python simap_sync.py
 
@@ -139,6 +147,8 @@ python simap_sync.py --days 7 --type construction --limit 100
 
 | Option | Description |
 |--------|-------------|
+| `--supabase-url URL` | Supabase project URL (or use `SUPABASE_URL` env var) |
+| `--supabase-key KEY` | Supabase secret key (or use `SUPABASE_KEY` env var) |
 | `--days N` | Only fetch publications from last N days |
 | `--type TYPE` | Filter by project type (can be repeated) |
 | `--limit N` | Maximum number of tenders to fetch (for testing) |
