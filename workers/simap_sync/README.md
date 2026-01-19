@@ -71,32 +71,31 @@ python simap_sync.py \
 
 ```bash
 # Daily sync (last 24 hours)
-python simap_sync.py --days 1
+python simap_sync.py --supabase-url "https://xxx.supabase.co" --supabase-key "your-key" --days 1
 
 # Weekly sync
-python simap_sync.py --days 7
+python simap_sync.py --supabase-url "https://xxx.supabase.co" --supabase-key "your-key" --days 7
 
 # Filter by type
-python simap_sync.py --days 7 --type construction
-python simap_sync.py --days 7 --type service --type supply
+python simap_sync.py --supabase-url "https://xxx.supabase.co" --supabase-key "your-key" --days 7 --type construction
 
-# Skip details (faster, search data only)
-python simap_sync.py --days 7 --skip-details
+# Skip details (faster)
+python simap_sync.py --supabase-url "https://xxx.supabase.co" --supabase-key "your-key" --days 7 --skip-details
 
-# Parallel tuning (default: 10 concurrent)
-python simap_sync.py --days 7 --max-concurrent 20
+# More parallel API calls
+python simap_sync.py --supabase-url "https://xxx.supabase.co" --supabase-key "your-key" --days 7 --max-concurrent 20
 
 # Resume interrupted sync
-python simap_sync.py --days 30 --resume
+python simap_sync.py --supabase-url "https://xxx.supabase.co" --supabase-key "your-key" --days 30 --resume
 
 # Backfill missing details
-python simap_sync.py --details-only --details-limit 100
+python simap_sync.py --supabase-url "https://xxx.supabase.co" --supabase-key "your-key" --details-only --details-limit 100
 
 # Dry run (no database writes)
-python simap_sync.py --limit 50 --dry-run
+python simap_sync.py --supabase-url "https://xxx.supabase.co" --supabase-key "your-key" --limit 50 --dry-run
 
-# Verbose with custom log
-python simap_sync.py --days 1 --verbose --log-file debug.log
+# Verbose logging
+python simap_sync.py --supabase-url "https://xxx.supabase.co" --supabase-key "your-key" --days 1 --verbose
 ```
 
 ---
