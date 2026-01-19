@@ -69,32 +69,108 @@ python simap_sync.py \
 
 ## Usage Examples
 
+> **Note:** Examples below assume credentials are set via environment variables:
+> ```bash
+> export SUPABASE_URL="https://xxx.supabase.co"
+> export SUPABASE_KEY="your-service-role-key"
+> ```
+> Or pass them directly: `--supabase-url URL --supabase-key KEY`
+
+### Daily Operations (Recommended)
+
 ```bash
-# Daily Operations
-python simap_sync.py --supabase-url URL --supabase-key KEY --days 1                    # Daily incremental sync (recommended)
-python simap_sync.py --supabase-url URL --supabase-key KEY --days 7                    # Weekly sync
+# Daily incremental sync - fetches last 24 hours of publications
+python simap_sync.py --days 1
 
-# Filtered Sync
-python simap_sync.py --supabase-url URL --supabase-key KEY --days 7 --type construction              # Construction only
-python simap_sync.py --supabase-url URL --supabase-key KEY --days 7 --type service --type supply     # Multiple types
+# Weekly sync - good for catching up after weekends
+python simap_sync.py --days 7
 
-# Testing & Debugging
-python simap_sync.py --supabase-url URL --supabase-key KEY --limit 50 --dry-run                      # Preview 50 records
-python simap_sync.py --supabase-url URL --supabase-key KEY --limit 10 --dry-run                      # Preview 10 records
-python simap_sync.py --supabase-url URL --supabase-key KEY --limit 5 --details-limit 3 --verbose     # Debug with limited data
+# Monthly backfill - useful for initial data population
+python simap_sync.py --days 30
+```
 
-# Performance Options
-python simap_sync.py --supabase-url URL --supabase-key KEY --days 7 --skip-details                   # Fast: search only
-python simap_sync.py --supabase-url URL --supabase-key KEY --days 7 --max-concurrent 20              # Fast: 20 parallel API calls
-python simap_sync.py --supabase-url URL --supabase-key KEY --days 7 --max-concurrent 5               # Conservative: 5 parallel calls
+### Filtered Sync
 
-# Backfill Operations
-python simap_sync.py --supabase-url URL --supabase-key KEY --details-only --details-limit 100        # Fetch missing details
-python simap_sync.py --supabase-url URL --supabase-key KEY --details-only                            # All missing details
+```bash
+# Construction tenders only
+python simap_sync.py --days 7 --type construction
 
-# Resume/Checkpoint Operations
-python simap_sync.py --supabase-url URL --supabase-key KEY --days 30 --resume          # Resume interrupted sync
-python simap_sync.py --supabase-url URL --supabase-key KEY --days 7 --no-checkpoint    # Disable checkpoints (testing)
+# Multiple types: services and supplies
+python simap_sync.py --days 7 --type service --type supply
+
+# All competition types
+python simap_sync.py --days 7 --type project_competition --type idea_competition
+```
+
+### Performance Tuning
+
+```bash
+# Fast mode: skip details, search data only
+python simap_sync.py --days 7 --skip-details
+
+# High throughput: 20 parallel API calls (use with caution)
+python simap_sync.py --days 7 --max-concurrent 20
+
+# Conservative: 5 parallel calls with 2s delay between batches
+python simap_sync.py --days 7 --max-concurrent 5 --rate-limit 2.0
+
+# Default: 10 parallel calls with 0.5s delay between batches
+python simap_sync.py --days 7
+```
+
+### Resume & Checkpoints
+
+```bash
+# Resume an interrupted sync (continues from last checkpoint)
+python simap_sync.py --days 30 --resume
+
+# Disable checkpoints (useful for testing)
+python simap_sync.py --days 7 --no-checkpoint
+
+# Check sync state in database
+# SELECT * FROM sync_state WHERE id = 'simap_search';
+```
+
+### Backfill Operations
+
+```bash
+# Fetch missing details for 100 existing tenders
+python simap_sync.py --details-only --details-limit 100
+
+# Fetch ALL missing details (may take a while)
+python simap_sync.py --details-only
+
+# Backfill with conservative rate limiting
+python simap_sync.py --details-only --max-concurrent 5 --rate-limit 1.0
+```
+
+### Testing & Debugging
+
+```bash
+# Dry run: preview without database writes
+python simap_sync.py --limit 50 --dry-run
+
+# Verbose logging with limited data
+python simap_sync.py --limit 5 --details-limit 3 --verbose
+
+# Debug with custom log file
+python simap_sync.py --days 1 --verbose --log-file debug.log
+
+# Console only (no log file)
+python simap_sync.py --days 1 --verbose --no-log-file
+```
+
+### Production Examples
+
+```bash
+# Recommended daily cron job
+python simap_sync.py --days 1 --log-file /var/log/simap-sync.log
+
+# Weekly full sync with all types
+python simap_sync.py --days 7 --verbose
+
+# Initial data load (first run)
+python simap_sync.py --limit 1000 --verbose
 ```
 
 ---
