@@ -86,6 +86,7 @@ Last Updated: 2026-01-19
 """
 
 import argparse
+import asyncio
 import logging
 import os
 import sys
@@ -191,6 +192,16 @@ DETAIL_API_MAX_RETRIES = 3     # Maximum retries for transient failures
 DETAIL_API_RETRY_DELAY = 2.0   # Delay between retries (seconds)
 DATABASE_BATCH_SIZE = 100       # Batch size for paginated database queries
 
+# Batch processing configuration
+UPSERT_BATCH_SIZE = 100         # Batch size for upsert operations
+MAX_CONCURRENT_DETAILS = 10     # Default max concurrent detail API calls
+
+# Checkpoint state IDs
+SYNC_STATE_ID = "simap_search"
+
+# Status threshold
+CLOSING_SOON_DAYS = 7  # Days before deadline to mark as "closing_soon"
+
 # All project sub-types supported by SIMAP API
 # These are used as filter parameters in the API request
 # See: https://www.simap.ch/api-doc/#/publications/getPublicProjectSearch
@@ -240,6 +251,8 @@ class SimapSyncWorker:
         supabase_key: str,
         dry_run: bool = False,
         detail_api_delay: float = DETAIL_API_DELAY_SECONDS,
+        max_concurrent: int = MAX_CONCURRENT_DETAILS,
+        enable_checkpoints: bool = True,
     ):
         """
         Initialize the sync worker.
@@ -249,9 +262,13 @@ class SimapSyncWorker:
             supabase_key: Supabase service role key (sb_secret_... or legacy JWT)
             dry_run: If True, fetch from API but don't write to database
             detail_api_delay: Delay in seconds between detail API calls
+            max_concurrent: Maximum concurrent detail API calls (for parallel processing)
+            enable_checkpoints: If True, save progress checkpoints for resume capability
         """
         self.dry_run = dry_run
         self.detail_api_delay = detail_api_delay
+        self.max_concurrent = max_concurrent
+        self.enable_checkpoints = enable_checkpoints
 
         # Initialize Supabase client
         # Uses service role key to bypass RLS for server-side operations
@@ -264,6 +281,9 @@ class SimapSyncWorker:
             headers={"Accept": "application/json"},
         )
 
+        # Async HTTP client for parallel detail fetching (lazy initialized)
+        self.async_http_client: Optional[httpx.AsyncClient] = None
+
         # Statistics for logging and monitoring
         self.stats = {
             "fetched": 0,           # Total projects fetched from SIMAP search
@@ -274,14 +294,118 @@ class SimapSyncWorker:
             "errors": 0,            # General errors encountered
         }
 
-    def __enter__(self):
+    def __enter__(self) -> "SimapSyncWorker":
         """Context manager entry - returns self for use in with statements."""
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type, exc_val, exc_tb) -> bool:
         """Context manager exit - ensures resources are cleaned up."""
         self.close()
         return False  # Don't suppress exceptions
+
+    # -------------------------------------------------------------------------
+    # CHECKPOINT MANAGEMENT (for resume capability)
+    # -------------------------------------------------------------------------
+    def _load_checkpoint(self, state_id: str) -> Optional[dict]:
+        """
+        Load last sync state from database.
+
+        Args:
+            state_id: Checkpoint identifier (e.g., 'simap_search')
+
+        Returns:
+            Checkpoint data dict or None if not found
+        """
+        try:
+            result = (
+                self.supabase.table("sync_state")
+                .select("*")
+                .eq("id", state_id)
+                .maybe_single()
+                .execute()
+            )
+            return result.data
+        except Exception as e:
+            logger.debug(f"Could not load checkpoint {state_id}: {e}")
+            return None
+
+    def _save_checkpoint(
+        self,
+        state_id: str,
+        cursor: Optional[str],
+        status: str,
+        records: int,
+        metadata: Optional[dict] = None,
+    ) -> None:
+        """
+        Save sync state checkpoint to database.
+
+        Args:
+            state_id: Checkpoint identifier (e.g., 'simap_search')
+            cursor: Pagination cursor to resume from
+            status: Current status ('in_progress', 'completed', 'interrupted', 'failed')
+            records: Number of records processed
+            metadata: Additional state data (filters, page number, etc.)
+        """
+        if self.dry_run or not self.enable_checkpoints:
+            return
+
+        state = {
+            "id": state_id,
+            "last_cursor": cursor,
+            "last_run_at": datetime.now(timezone.utc).isoformat(),
+            "last_run_status": status,
+            "records_processed": records,
+            "metadata": metadata or {},
+        }
+
+        try:
+            self.supabase.table("sync_state").upsert(
+                state, on_conflict="id"
+            ).execute()
+            logger.debug(f"Checkpoint saved: {state_id} ({status}, {records} records)")
+        except Exception as e:
+            logger.warning(f"Could not save checkpoint {state_id}: {e}")
+
+    def _clear_checkpoint(self, state_id: str) -> None:
+        """
+        Clear a checkpoint after successful completion.
+
+        Args:
+            state_id: Checkpoint identifier to clear
+        """
+        if self.dry_run or not self.enable_checkpoints:
+            return
+
+        try:
+            self.supabase.table("sync_state").delete().eq("id", state_id).execute()
+            logger.debug(f"Checkpoint cleared: {state_id}")
+        except Exception as e:
+            logger.debug(f"Could not clear checkpoint {state_id}: {e}")
+
+    # -------------------------------------------------------------------------
+    # ASYNC CLIENT FOR PARALLEL PROCESSING
+    # -------------------------------------------------------------------------
+    async def _get_async_client(self) -> httpx.AsyncClient:
+        """
+        Get or create async HTTP client for parallel requests.
+
+        Returns:
+            Async HTTP client instance
+        """
+        if self.async_http_client is None:
+            self.async_http_client = httpx.AsyncClient(
+                timeout=30.0,
+                headers={"Accept": "application/json"},
+                limits=httpx.Limits(max_connections=self.max_concurrent + 5),
+            )
+        return self.async_http_client
+
+    async def _close_async_client(self) -> None:
+        """Close async HTTP client if it exists."""
+        if self.async_http_client is not None:
+            await self.async_http_client.aclose()
+            self.async_http_client = None
 
     # -------------------------------------------------------------------------
     # FETCH PROJECTS FROM SIMAP API
@@ -293,6 +417,7 @@ class SimapSyncWorker:
         publication_until: Optional[str] = None,
         swiss_only: bool = True,
         limit: Optional[int] = None,
+        resume: bool = False,
     ) -> list[dict]:
         """
         Fetch projects from SIMAP API with pagination.
@@ -306,12 +431,23 @@ class SimapSyncWorker:
             publication_until: Filter by publication date until (YYYY-MM-DD)
             swiss_only: Only fetch Swiss projects (recommended)
             limit: Maximum number of projects to fetch (for testing)
+            resume: If True, attempt to resume from last checkpoint
 
         Returns:
             List of project dictionaries from SIMAP API
         """
         all_projects = []
         last_item = None  # Pagination cursor
+
+        # Load checkpoint if resuming
+        if resume and self.enable_checkpoints:
+            checkpoint = self._load_checkpoint(SYNC_STATE_ID)
+            if checkpoint and checkpoint.get("last_run_status") in ("in_progress", "interrupted"):
+                last_item = checkpoint.get("last_cursor")
+                if last_item:
+                    prev_status = checkpoint.get("last_run_status")
+                    prev_records = checkpoint.get("records_processed", 0)
+                    logger.info(f"Resuming from checkpoint ({prev_status}, {prev_records} records): {last_item}")
 
         # Build query parameters
         # Note: SIMAP API requires at least one filter parameter
@@ -334,64 +470,105 @@ class SimapSyncWorker:
         if publication_until:
             params["newestPublicationUntil"] = publication_until
 
-        # Pagination loop
+        # Pagination loop with error handling for checkpoint save
         page = 1
-        while True:
-            # Add pagination cursor for subsequent pages
-            if last_item:
-                params["lastItem"] = last_item
+        error_occurred = False
 
-            logger.info(f"Fetching page {page}...")
+        try:
+            while True:
+                # Add pagination cursor for subsequent pages
+                if last_item:
+                    params["lastItem"] = last_item
 
-            # Make API request
-            try:
-                response = self.http_client.get(
-                    SIMAP_SEARCH_ENDPOINT,
-                    params=params,
+                logger.info(f"Fetching page {page}...")
+
+                # Make API request
+                try:
+                    response = self.http_client.get(
+                        SIMAP_SEARCH_ENDPOINT,
+                        params=params,
+                    )
+                    response.raise_for_status()
+                    data = response.json()
+                except httpx.HTTPStatusError as e:
+                    logger.error(f"HTTP error fetching projects: {e}")
+                    self.stats["errors"] += 1
+                    error_occurred = True
+                    break
+                except Exception as e:
+                    logger.error(f"Error fetching projects: {e}")
+                    self.stats["errors"] += 1
+                    error_occurred = True
+                    break
+
+                # Extract projects and pagination info from response
+                projects = data.get("projects", [])
+                pagination = data.get("pagination", {})
+
+                # No more projects to fetch
+                if not projects:
+                    logger.info("No more projects to fetch")
+                    break
+
+                # Add projects to result list
+                all_projects.extend(projects)
+                self.stats["fetched"] += len(projects)
+                logger.info(f"Fetched {len(projects)} projects (total: {len(all_projects)})")
+
+                # Check if we've reached the limit (for testing)
+                if limit and len(all_projects) >= limit:
+                    all_projects = all_projects[:limit]  # Trim to exact limit
+                    logger.info(f"Reached limit of {limit} projects")
+                    break
+
+                # Get pagination cursor for next page
+                # Format: YYYYMMDD|projectNumber (e.g., "20260119|26624")
+                last_item = pagination.get("lastItem")
+                if not last_item:
+                    break  # No more pages
+
+                # Save checkpoint after each page for resume capability
+                self._save_checkpoint(
+                    SYNC_STATE_ID,
+                    cursor=last_item,
+                    status="in_progress",
+                    records=len(all_projects),
+                    metadata={"page": page, "types": project_sub_types or []},
                 )
-                response.raise_for_status()
-                data = response.json()
-            except httpx.HTTPStatusError as e:
-                logger.error(f"HTTP error fetching projects: {e}")
-                self.stats["errors"] += 1
-                break
-            except Exception as e:
-                logger.error(f"Error fetching projects: {e}")
-                self.stats["errors"] += 1
-                break
 
-            # Extract projects and pagination info from response
-            projects = data.get("projects", [])
-            pagination = data.get("pagination", {})
+                page += 1
 
-            # No more projects to fetch
-            if not projects:
-                logger.info("No more projects to fetch")
-                break
+                # Safety limit to prevent infinite loops
+                if page > 1000:
+                    logger.warning("Reached maximum page limit (1000)")
+                    break
 
-            # Add projects to result list
-            all_projects.extend(projects)
-            self.stats["fetched"] += len(projects)
-            logger.info(f"Fetched {len(projects)} projects (total: {len(all_projects)})")
+        except KeyboardInterrupt:
+            # Handle Ctrl+C gracefully - save checkpoint for resume
+            logger.warning("Interrupted by user (Ctrl+C)")
+            error_occurred = True
+            raise  # Re-raise to exit
 
-            # Check if we've reached the limit (for testing)
-            if limit and len(all_projects) >= limit:
-                all_projects = all_projects[:limit]  # Trim to exact limit
-                logger.info(f"Reached limit of {limit} projects")
-                break
-
-            # Get pagination cursor for next page
-            # Format: YYYYMMDD|projectNumber (e.g., "20260119|26624")
-            last_item = pagination.get("lastItem")
-            if not last_item:
-                break  # No more pages
-
-            page += 1
-
-            # Safety limit to prevent infinite loops
-            if page > 1000:
-                logger.warning("Reached maximum page limit (1000)")
-                break
+        finally:
+            # Save final checkpoint status
+            if error_occurred:
+                # Save interrupted status so we can resume later
+                self._save_checkpoint(
+                    SYNC_STATE_ID,
+                    cursor=last_item,
+                    status="interrupted",
+                    records=len(all_projects),
+                    metadata={"page": page, "types": project_sub_types or []},
+                )
+            else:
+                # Mark search as completed
+                self._save_checkpoint(
+                    SYNC_STATE_ID,
+                    cursor=None,
+                    status="completed",
+                    records=len(all_projects),
+                    metadata={"types": project_sub_types or []},
+                )
 
         return all_projects
 
@@ -516,6 +693,109 @@ class SimapSyncWorker:
                 return None
 
         return None
+
+    async def fetch_publication_details_async(
+        self,
+        tender_id: str,
+        project_id: str,
+        publication_id: str,
+        semaphore: asyncio.Semaphore,
+    ) -> Optional[dict]:
+        """
+        Async version of detail fetching with semaphore-controlled concurrency.
+
+        Args:
+            tender_id: Database tender UUID (for result tracking)
+            project_id: SIMAP project UUID
+            publication_id: SIMAP publication UUID
+            semaphore: Asyncio semaphore for concurrency control
+
+        Returns:
+            Dict with tender_id and data if successful, None if failed
+        """
+        async with semaphore:
+            client = await self._get_async_client()
+            url = f"{SIMAP_API_BASE_V1}/{project_id}/publication-details/{publication_id}"
+
+            for attempt in range(1, DETAIL_API_MAX_RETRIES + 1):
+                try:
+                    response = await client.get(url)
+                    response.raise_for_status()
+                    return {"tender_id": tender_id, "data": response.json()}
+                except httpx.HTTPStatusError as e:
+                    status_code = e.response.status_code
+                    # Don't retry on 4xx errors (client errors) except 429 (rate limit)
+                    if 400 <= status_code < 500 and status_code != 429:
+                        logger.debug(f"HTTP {status_code} fetching details for {project_id}")
+                        return None
+                    # Retry on 429 (rate limit) or 5xx (server errors)
+                    if attempt < DETAIL_API_MAX_RETRIES:
+                        logger.debug(f"HTTP {status_code}, retrying (attempt {attempt}/{DETAIL_API_MAX_RETRIES})")
+                        await asyncio.sleep(DETAIL_API_RETRY_DELAY)
+                    else:
+                        return None
+                except httpx.TimeoutException:
+                    if attempt < DETAIL_API_MAX_RETRIES:
+                        await asyncio.sleep(DETAIL_API_RETRY_DELAY)
+                    else:
+                        return None
+                except Exception as e:
+                    logger.debug(f"Error fetching details for {project_id}: {e}")
+                    return None
+
+            return None
+
+    async def fetch_details_parallel(
+        self,
+        tenders: list[dict],
+    ) -> list[dict]:
+        """
+        Fetch details for multiple tenders in parallel with controlled concurrency.
+
+        Args:
+            tenders: List of tender dicts with id, external_id, publication_id
+
+        Returns:
+            List of successful results with tender_id and data
+        """
+        semaphore = asyncio.Semaphore(self.max_concurrent)
+
+        tasks = []
+        for tender in tenders:
+            tender_id = tender.get("id")
+            external_id = tender.get("external_id")
+            publication_id = tender.get("publication_id")
+
+            if not external_id or not publication_id:
+                continue
+
+            task = self.fetch_publication_details_async(
+                tender_id=tender_id,
+                project_id=external_id,
+                publication_id=publication_id,
+                semaphore=semaphore,
+            )
+            tasks.append(task)
+
+        if not tasks:
+            return []
+
+        # Run all tasks concurrently
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        # Filter out None values and exceptions
+        # Note: None results are from 4xx responses (not found, etc.) - not counted as errors
+        # Only actual exceptions are counted as errors
+        successful = []
+        for result in results:
+            if result and not isinstance(result, Exception) and result.get("data"):
+                successful.append(result)
+            elif isinstance(result, Exception):
+                logger.debug(f"Detail fetch exception: {result}")
+                self.stats["details_errors"] += 1
+            # None results (4xx responses) are silently skipped - not errors
+
+        return successful
 
     def transform_publication_details(self, details: dict) -> dict:
         """
@@ -721,7 +1001,7 @@ class SimapSyncWorker:
         Fetch publication details for tenders that don't have them yet.
 
         This method queries the database for tenders missing details in batches
-        and fetches them from the SIMAP API with rate limiting.
+        and fetches them from the SIMAP API using parallel processing.
 
         Args:
             limit: Maximum number of tenders to fetch details for
@@ -731,10 +1011,15 @@ class SimapSyncWorker:
             logger.info("[DRY RUN] Would fetch tender details")
             return
 
-        logger.info("Fetching publication details for tenders...")
+        logger.info(f"Fetching publication details (max concurrent: {self.max_concurrent})...")
 
         total_processed = 0
         offset = 0
+        batch_number = 0
+
+        # Create event loop once for all batches (more efficient)
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
 
         try:
             while True:
@@ -770,32 +1055,23 @@ class SimapSyncWorker:
 
                 logger.info(f"Processing batch of {len(tenders)} tenders (offset: {offset})")
 
-                for i, tender in enumerate(tenders, 1):
-                    tender_id = tender.get("id")
-                    external_id = tender.get("external_id")
-                    publication_id = tender.get("publication_id")
-                    project_number = tender.get("project_number", "unknown")
+                # Rate limiting: wait between batches (not the first batch)
+                if batch_number > 0 and self.detail_api_delay > 0:
+                    logger.debug(f"Rate limiting: waiting {self.detail_api_delay}s between batches")
+                    time.sleep(self.detail_api_delay)
 
-                    if not publication_id:
-                        logger.debug(f"Skipping tender {project_number}: no publication_id")
-                        continue
+                # Use parallel processing to fetch details
+                results = loop.run_until_complete(
+                    self.fetch_details_parallel(tenders)
+                )
 
-                    logger.info(f"Fetching details {total_processed + i}: {project_number}")
-
-                    success = self.fetch_and_update_details(
-                        tender_id=tender_id,
-                        external_id=external_id,
-                        publication_id=publication_id,
-                    )
-
-                    if not success:
-                        logger.warning(f"Failed to fetch details for {project_number}")
-
-                    # Rate limiting: wait between API calls to avoid hitting rate limits
-                    if self.detail_api_delay > 0:
-                        time.sleep(self.detail_api_delay)
+                # Batch update the results to database
+                if results:
+                    logger.info(f"Fetched {len(results)} details, updating database...")
+                    self._batch_update_details(results)
 
                 total_processed += len(tenders)
+                batch_number += 1
 
                 # If we got fewer results than batch size, we've reached the end
                 if len(tenders) < batch_size:
@@ -814,14 +1090,21 @@ class SimapSyncWorker:
             logger.error(f"Error fetching tender details: {e}")
             self.stats["errors"] += 1
 
+        finally:
+            # Clean up async resources
+            if self.async_http_client:
+                loop.run_until_complete(self._close_async_client())
+            loop.close()
+
     # -------------------------------------------------------------------------
     # UPSERT TENDERS TO DATABASE
     # -------------------------------------------------------------------------
     def upsert_tenders(self, projects: list[dict]) -> None:
         """
-        Upsert projects to the tenders table.
+        Batch upsert projects to the tenders table.
 
         Uses Supabase upsert with conflict handling on (external_id, source).
+        Projects are processed in batches for better performance.
         This ensures:
         - New tenders are inserted
         - Existing tenders are updated with latest data
@@ -834,42 +1117,111 @@ class SimapSyncWorker:
             logger.info(f"[DRY RUN] Would upsert {len(projects)} tenders")
             return
 
+        # Transform all projects first
+        tender_records = []
         for project in projects:
             try:
-                # Transform SIMAP data to our schema
-                tender_data = self.transform_project(project)
+                tender_records.append(self.transform_project(project))
+            except Exception as e:
+                project_number = project.get('projectNumber', 'unknown')
+                logger.error(f"Transform error for {project_number}: {e}")
+                self.stats["errors"] += 1
 
-                # Upsert to database
-                # on_conflict specifies the unique constraint columns
+        if not tender_records:
+            return
+
+        # Batch upsert in chunks
+        for i in range(0, len(tender_records), UPSERT_BATCH_SIZE):
+            batch = tender_records[i:i + UPSERT_BATCH_SIZE]
+            try:
                 result = (
                     self.supabase.table("tenders")
-                    .upsert(
-                        tender_data,
-                        on_conflict="external_id,source",
-                    )
+                    .upsert(batch, on_conflict="external_id,source")
                     .execute()
                 )
+                # Supabase returns all affected rows
+                batch_count = len(result.data) if result.data else len(batch)
+                self.stats["updated"] += batch_count
+                logger.info(f"Batch upserted {len(batch)} tenders (batch {i // UPSERT_BATCH_SIZE + 1})")
+            except Exception as e:
+                logger.error(f"Batch upsert error: {e}")
+                # Fallback to individual upserts for this batch
+                self._upsert_individually(batch)
 
-                # Track statistics
+    def _upsert_individually(self, tender_records: list[dict]) -> None:
+        """
+        Fallback method to upsert records one at a time when batch fails.
+
+        Args:
+            tender_records: List of transformed tender records
+        """
+        for tender_data in tender_records:
+            try:
+                result = (
+                    self.supabase.table("tenders")
+                    .upsert(tender_data, on_conflict="external_id,source")
+                    .execute()
+                )
                 if result.data:
                     self.stats["updated"] += 1
                 else:
                     self.stats["inserted"] += 1
-
             except Exception as e:
-                # Log detailed error information for debugging
-                project_id = project.get('id', 'unknown')
-                project_number = project.get('projectNumber', 'unknown')
-                logger.error(f"Error upserting tender {project_number} (ID: {project_id}): {type(e).__name__}: {e}")
-
-                # Log the tender data that failed (truncated for readability)
-                try:
-                    tender_data = self.transform_project(project)
-                    logger.debug(f"Failed tender data: {tender_data}")
-                except Exception:
-                    pass
-
+                external_id = tender_data.get('external_id', 'unknown')
+                logger.error(f"Error upserting tender {external_id}: {e}")
                 self.stats["errors"] += 1
+
+    def _batch_update_details(self, results: list[dict]) -> None:
+        """
+        Batch update tender details after parallel fetching.
+
+        Args:
+            results: List of dicts with tender_id and detail data
+        """
+        if not results or self.dry_run:
+            return
+
+        # Transform and prepare updates
+        updates = []
+        for result in results:
+            if not result or not result.get("data"):
+                continue
+            try:
+                detail_data = self.transform_publication_details(result["data"])
+                # Filter out None values to avoid overwriting existing data
+                detail_data = {k: v for k, v in detail_data.items() if v is not None}
+                detail_data["id"] = result["tender_id"]
+                updates.append(detail_data)
+            except Exception as e:
+                logger.error(f"Transform detail error for {result.get('tender_id')}: {e}")
+                self.stats["details_errors"] += 1
+
+        if not updates:
+            return
+
+        # Batch update in chunks
+        for i in range(0, len(updates), UPSERT_BATCH_SIZE):
+            batch = updates[i:i + UPSERT_BATCH_SIZE]
+            try:
+                self.supabase.table("tenders").upsert(
+                    batch,
+                    on_conflict="id",
+                ).execute()
+                self.stats["details_fetched"] += len(batch)
+                logger.info(f"Batch updated {len(batch)} tender details")
+            except Exception as e:
+                logger.error(f"Batch detail update error: {e}")
+                # Fallback to individual updates
+                for update in batch:
+                    try:
+                        tender_id = update.get("id")
+                        # Create update dict without 'id' field (don't mutate original)
+                        update_data = {k: v for k, v in update.items() if k != "id"}
+                        self.supabase.table("tenders").update(update_data).eq("id", tender_id).execute()
+                        self.stats["details_fetched"] += 1
+                    except Exception as inner_e:
+                        logger.error(f"Individual detail update error for {tender_id}: {inner_e}")
+                        self.stats["details_errors"] += 1
 
     # -------------------------------------------------------------------------
     # UPDATE TENDER STATUSES
@@ -890,7 +1242,7 @@ class SimapSyncWorker:
             return
 
         now = datetime.now(timezone.utc)
-        closing_soon_threshold = now + timedelta(days=7)
+        closing_soon_threshold = now + timedelta(days=CLOSING_SOON_DAYS)
 
         try:
             # Mark as closing_soon (deadline within 7 days but not yet passed)
@@ -925,6 +1277,7 @@ class SimapSyncWorker:
         limit: Optional[int] = None,
         fetch_details: bool = True,
         details_limit: Optional[int] = None,
+        resume: bool = False,
     ) -> dict:
         """
         Run the complete sync process.
@@ -941,6 +1294,7 @@ class SimapSyncWorker:
             limit: Maximum number of projects to fetch (for testing)
             fetch_details: Whether to fetch publication details (default: True)
             details_limit: Maximum number of details to fetch (for testing)
+            resume: If True, attempt to resume from last checkpoint
 
         Returns:
             Statistics dictionary with fetched/inserted/updated/errors counts
@@ -971,12 +1325,16 @@ class SimapSyncWorker:
         types_to_fetch = project_sub_types or PROJECT_SUB_TYPES
         logger.info(f"Project types: {', '.join(types_to_fetch)}")
 
+        if resume:
+            logger.info("RESUME MODE - Will attempt to resume from checkpoint")
+
         # Step 1: Fetch projects from SIMAP API
         projects = self.fetch_projects(
             project_sub_types=types_to_fetch,
             publication_from=publication_from,
             publication_until=publication_until,
             limit=limit,
+            resume=resume,
         )
 
         if projects:
@@ -1010,7 +1368,7 @@ class SimapSyncWorker:
 
         return self.stats
 
-    def close(self):
+    def close(self) -> None:
         """Clean up resources (HTTP client)."""
         self.http_client.close()
 
@@ -1124,6 +1482,22 @@ Examples (assuming env vars are set):
         help=f"Delay between detail API calls in seconds (default: {DETAIL_API_DELAY_SECONDS})",
     )
     parser.add_argument(
+        "--max-concurrent",
+        type=int,
+        default=MAX_CONCURRENT_DETAILS,
+        help=f"Max concurrent detail API calls for parallel processing (default: {MAX_CONCURRENT_DETAILS})",
+    )
+    parser.add_argument(
+        "--resume",
+        action="store_true",
+        help="Resume from last interrupted sync checkpoint",
+    )
+    parser.add_argument(
+        "--no-checkpoint",
+        action="store_true",
+        help="Disable checkpoint saving (for testing)",
+    )
+    parser.add_argument(
         "--verbose", "-v",
         action="store_true",
         help="Enable verbose/debug logging",
@@ -1169,6 +1543,8 @@ Examples (assuming env vars are set):
         supabase_key=supabase_key,
         dry_run=args.dry_run,
         detail_api_delay=args.rate_limit,
+        max_concurrent=args.max_concurrent,
+        enable_checkpoints=not args.no_checkpoint,
     ) as worker:
         # Handle details-only mode
         if args.details_only:
@@ -1188,6 +1564,7 @@ Examples (assuming env vars are set):
                 limit=args.limit,
                 fetch_details=not args.skip_details,
                 details_limit=args.details_limit,
+                resume=args.resume,
             )
 
         # Write run summary to log file (always, even if no errors)

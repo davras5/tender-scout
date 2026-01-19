@@ -248,6 +248,21 @@ CREATE TABLE npk_codes (
 );
 
 -- ============================================
+-- 10. SYNC_STATE (Worker checkpoints)
+-- ============================================
+-- Tracks sync progress for resume capability
+CREATE TABLE sync_state (
+    id TEXT PRIMARY KEY,                    -- 'simap_search', 'simap_details'
+    last_cursor TEXT,                       -- Pagination cursor (e.g., 'YYYYMMDD|projectNumber')
+    last_run_at TIMESTAMPTZ,               -- When sync last ran
+    last_run_status TEXT CHECK (last_run_status IN ('in_progress', 'completed', 'interrupted', 'failed')),
+    records_processed INTEGER DEFAULT 0,    -- Count for current/last run
+    metadata JSONB DEFAULT '{}',            -- Additional state (filters, page number, etc.)
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ============================================
 -- TRIGGERS: Auto-update updated_at
 -- ============================================
 CREATE OR REPLACE FUNCTION update_updated_at()
@@ -280,6 +295,10 @@ CREATE TRIGGER tenders_updated_at
 
 CREATE TRIGGER user_tender_actions_updated_at
     BEFORE UPDATE ON user_tender_actions
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+CREATE TRIGGER sync_state_updated_at
+    BEFORE UPDATE ON sync_state
     FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
 -- ============================================
