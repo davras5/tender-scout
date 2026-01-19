@@ -43,13 +43,43 @@ from supabase import create_client, Client
 # =============================================================================
 # LOGGING CONFIGURATION
 # =============================================================================
-# Logs to stdout with timestamps for easy monitoring and log aggregation
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[logging.StreamHandler(sys.stdout)],
-)
+# Default logging to stdout - file logging added in main() if needed
 logger = logging.getLogger(__name__)
+
+
+def setup_logging(verbose: bool = False, log_file: Optional[str] = None) -> None:
+    """
+    Configure logging with optional file output.
+
+    Args:
+        verbose: Enable debug level logging
+        log_file: Path to log file (errors and above go here)
+    """
+    # Set log level
+    log_level = logging.DEBUG if verbose else logging.INFO
+
+    # Console handler - shows INFO and above
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setLevel(log_level)
+    console_handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(message)s"))
+
+    handlers = [console_handler]
+
+    # File handler - captures all logs (especially errors for debugging)
+    if log_file:
+        file_handler = logging.FileHandler(log_file, mode='a', encoding='utf-8')
+        file_handler.setLevel(logging.DEBUG)  # Capture everything in file
+        file_handler.setFormatter(logging.Formatter(
+            "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+        ))
+        handlers.append(file_handler)
+
+    # Configure root logger
+    logging.basicConfig(
+        level=logging.DEBUG,  # Allow all levels, handlers filter
+        handlers=handlers,
+        force=True,  # Override any existing configuration
+    )
 
 # =============================================================================
 # SIMAP API CONFIGURATION
@@ -561,13 +591,26 @@ Examples:
         action="store_true",
         help="Enable verbose/debug logging",
     )
+    parser.add_argument(
+        "--log-file",
+        type=str,
+        default="simap_sync.log",
+        help="Log file path (default: simap_sync.log)",
+    )
+    parser.add_argument(
+        "--no-log-file",
+        action="store_true",
+        help="Disable file logging (only log to console)",
+    )
 
     args = parser.parse_args()
 
-    # Set log level based on verbose flag
-    if args.verbose:
-        logging.getLogger().setLevel(logging.DEBUG)
-        logger.debug("Verbose logging enabled")
+    # Setup logging (file + console)
+    log_file = None if args.no_log_file else args.log_file
+    setup_logging(verbose=args.verbose, log_file=log_file)
+
+    if log_file:
+        logger.info(f"Logging to file: {log_file}")
 
     # Get Supabase credentials from args or environment variables
     # Args take precedence over env vars
