@@ -137,6 +137,40 @@ def setup_logging(verbose: bool = False, log_file: Optional[str] = None) -> None
         force=True,  # Override any existing configuration
     )
 
+
+def write_run_summary(log_file: str, stats: dict, dry_run: bool = False) -> None:
+    """
+    Write a run summary to the log file, regardless of whether errors occurred.
+
+    This ensures the log file always contains a record of when the sync ran,
+    even if there were no warnings or errors to report.
+
+    Args:
+        log_file: Path to the log file
+        stats: Dictionary containing run statistics
+        dry_run: Whether this was a dry run
+    """
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    mode = "[DRY RUN] " if dry_run else ""
+
+    summary = (
+        f"\n{'=' * 60}\n"
+        f"RUN SUMMARY - {timestamp}\n"
+        f"{'=' * 60}\n"
+        f"{mode}Fetched: {stats.get('fetched', 0)} | "
+        f"Inserted: {stats.get('inserted', 0)} | "
+        f"Updated: {stats.get('updated', 0)} | "
+        f"Details: {stats.get('details_fetched', 0)} | "
+        f"Errors: {stats.get('errors', 0)}\n"
+        f"{'=' * 60}\n"
+    )
+
+    try:
+        with open(log_file, 'a', encoding='utf-8') as f:
+            f.write(summary)
+    except OSError as e:
+        logger.warning(f"Could not write run summary to log file: {e}")
+
 # =============================================================================
 # SIMAP API CONFIGURATION
 # =============================================================================
@@ -1155,6 +1189,10 @@ Examples (assuming env vars are set):
                 fetch_details=not args.skip_details,
                 details_limit=args.details_limit,
             )
+
+        # Write run summary to log file (always, even if no errors)
+        if log_file:
+            write_run_summary(log_file, stats, dry_run=args.dry_run)
 
         # Exit with error code if there were errors
         # This allows CI/CD pipelines to detect failures

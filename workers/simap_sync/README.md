@@ -58,8 +58,9 @@ python simap_sync.py \
 
 **Logging Behavior:**
 - Console: Shows INFO level and above (or DEBUG with `--verbose`)
-- Log file: Only captures WARNING and ERROR messages to keep file size small
+- Log file: Captures WARNING and ERROR messages, plus a run summary
 - Log file is **overwritten** on each run (not appended)
+- **Run summary**: Always appended to log file with timestamp and stats, even if no errors
 
 ---
 
@@ -203,14 +204,28 @@ The worker logs to stdout with timestamps:
 
 **Log File (`simap_sync.log`):**
 
-By default, warnings and errors are written to `simap_sync.log`. This file is overwritten on each run to keep it small and focused on issues from the latest sync.
+By default, warnings/errors and a run summary are written to `simap_sync.log`. This file is overwritten on each run to keep it small and focused on issues from the latest sync.
 
 ```bash
-# Check the log file for errors after a run
+# Check the log file after a run
 cat simap_sync.log
 
-# Example error log entry:
+# Example log file (successful run with no errors):
+============================================================
+RUN SUMMARY - 2026-01-19 06:01:30 UTC
+============================================================
+Fetched: 1250 | Inserted: 45 | Updated: 1205 | Details: 1250 | Errors: 0
+============================================================
+
+# Example log file (run with errors):
 2026-01-19 06:00:15 [ERROR] __main__: Error upserting tender 12345: APIError: {...}
+2026-01-19 06:00:45 [WARNING] __main__: Retry 1/3 for detail API call...
+
+============================================================
+RUN SUMMARY - 2026-01-19 06:01:30 UTC
+============================================================
+Fetched: 1250 | Inserted: 45 | Updated: 1202 | Details: 1247 | Errors: 3
+============================================================
 ```
 
 **For production, consider:**
@@ -353,3 +368,34 @@ The SIMAP API doesn't document specific rate limits, but the worker:
 - Includes proper error handling for failed requests
 - Rate-limits detail API calls (default: 0.5s between requests)
 - Automatic retry with backoff for transient failures (429, 5xx errors)
+
+---
+
+## Future Improvements
+
+Potential enhancements for scaling and performance:
+
+### Parallel Processing
+- **Concurrent detail fetching**: Fetch multiple publication details in parallel using `asyncio` + `httpx.AsyncClient`
+- **Worker pool**: Use `concurrent.futures.ThreadPoolExecutor` for I/O-bound API calls
+- **Estimated improvement**: 5-10x faster detail fetching (currently ~2 details/sec → 10-20/sec)
+
+### Batch Processing
+- **Chunked database writes**: Batch multiple upserts into single transactions (currently one-by-one)
+- **Bulk insert mode**: Use PostgreSQL `COPY` or Supabase bulk insert for initial data loads
+- **Queue-based architecture**: Decouple fetching and processing with Redis/RabbitMQ for large backlogs
+
+### Incremental Sync Optimization
+- **Change detection**: Track `lastItem` cursor between runs to resume from last position
+- **Delta sync**: Only fetch tenders modified since last `updated_at` timestamp
+- **Webhook triggers**: React to SIMAP updates in real-time (if API supports it)
+
+### Monitoring & Observability
+- **Structured logging**: JSON logs for better parsing in log aggregation systems
+- **Metrics export**: Prometheus/StatsD metrics for sync duration, error rates, throughput
+- **Alerting**: Slack/email notifications on sync failures or anomalies
+
+### Resilience
+- **Checkpoint/resume**: Save progress to allow resuming interrupted syncs
+- **Dead letter queue**: Track and retry permanently failed records
+- **Circuit breaker**: Automatically back off when SIMAP API is degraded
