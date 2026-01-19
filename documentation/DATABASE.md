@@ -944,17 +944,36 @@ cpv_codes, npk_codes: true (public read)
 - Tender attachments in `tender-documents` bucket (future)
 
 #### Edge Functions
-- `sync-simap`: Fetch new tenders from SIMAP API
 - `sync-ted`: Fetch new tenders from TED API
 
 #### Scheduled Jobs (Cron)
 
-| Job | Schedule | Description |
-|-----|----------|-------------|
-| `sync-tenders` | Daily 06:00 | Run `sync-simap` and `sync-ted` |
-| `update-tender-status` | Daily 00:00 | Transition tenders: `open` → `closing_soon` (7 days before deadline) → `closed` (past deadline) |
-| `check-trial-expiration` | Daily 00:00 | Downgrade expired trials: set `plan='free'`, `status='active'` where `trial_ends_at < NOW()` |
-| `run-matching` | Daily 07:00 | Execute Python matching job for all profiles × new tenders |
+| Job | Schedule | Description | Implementation |
+|-----|----------|-------------|----------------|
+| `sync-simap` | Daily 06:00 | Fetch tenders from SIMAP API | [`workers/simap_sync.py`](../workers/simap_sync.py) |
+| `sync-ted` | Daily 06:30 | Fetch tenders from TED API | TBD |
+| `update-tender-status` | Daily 00:00 | Transition tenders: `open` → `closing_soon` (7 days before deadline) → `closed` (past deadline) | Included in `simap_sync.py` |
+| `check-trial-expiration` | Daily 00:00 | Downgrade expired trials: set `plan='free'`, `status='active'` where `trial_ends_at < NOW()` | TBD |
+| `run-matching` | Daily 07:00 | Execute Python matching job for all profiles × new tenders | TBD |
+
+**SIMAP Sync Worker Usage:**
+
+```bash
+# Install dependencies
+cd workers && pip install -r requirements.txt
+
+# Set environment variables
+export SUPABASE_URL="https://your-project.supabase.co"
+export SUPABASE_KEY="your-service-role-key"
+
+# Run sync (all project types, last 7 days)
+python simap_sync.py --days 7
+
+# Dry run (preview without database writes)
+python simap_sync.py --days 7 --dry-run
+```
+
+See [`workers/README.md`](../workers/README.md) for full documentation.
 
 ---
 
@@ -1272,6 +1291,7 @@ flowchart LR
 
 | Date       | Version | Changes                    |
 |------------|---------|----------------------------|
+| 2026-01-19 | 1.3     | Add SIMAP sync worker implementation (workers/simap_sync.py), update scheduled jobs table with implementation links |
 | 2026-01-19 | 1.2     | Update tenders entity with actual SIMAP API structure: add multilingual JSONB fields (title, authority), new columns (project_number, publication_number, project_type, project_sub_type, process_type, lots_type, pub_type, country, order_address, corrected), document SIMAP API response format and field mapping |
 | 2026-01-18 | 1.1     | Remove Expert Review section, fix redundant indexes, correct auto-index documentation, add soft delete filters to RLS policies |
 | 2026-01-18 | 1.0     | Add complete SQL schema with CREATE TABLE statements, triggers for updated_at and single default profile |
