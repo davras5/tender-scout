@@ -23,7 +23,11 @@ python -m http.server 8000
 # Then open http://localhost:8000 (or the port shown)
 ```
 
-**Note:** Opening `index.html` directly via `file://` won't work due to CORS restrictions on fetch requests.
+**Access Points:**
+- **Landing page:** `http://localhost:8000/` or `/index.html` - Public marketing site
+- **App dashboard:** `http://localhost:8000/app.html` - Authenticated user dashboard
+
+**Note:** Opening HTML files directly via `file://` won't work due to CORS restrictions on fetch requests.
 
 ## Tech Stack
 
@@ -38,13 +42,28 @@ python -m http.server 8000
 
 ```
 tender-scout/
-├── index.html              # Single-page application (8 views)
-├── README.md
+├── index.html              # Landing page (public-facing site with pricing, features)
+├── app.html                # Main authenticated application
+├── dashboard.html          # Dashboard export with tender feeds
 ├── css/
 │   ├── styles.css          # Core styles (~3,500 lines)
-│   └── tokens.css          # Design system tokens
+│   └── tokens.css          # Design system tokens (CSS variables)
 ├── js/
-│   └── script.js           # Application logic (~1,600 lines)
+│   ├── script.js           # Legacy application logic
+│   ├── app.js              # App entry point (initializes authenticated app)
+│   ├── landing.js          # Landing page entry point
+│   └── modules/            # Modular ES6 modules
+│       ├── constants.js    # View and filter definitions
+│       ├── state.js        # State management and test data loading
+│       ├── navigation.js   # URL routing and view navigation
+│       ├── auth.js         # Authentication UI handlers
+│       ├── company.js      # Company search and Zefix integration
+│       ├── tenders.js      # Tender feed, filters, sorting, bookmarking
+│       ├── tender-detail.js # Individual tender view with match breakdown
+│       ├── profiles.js     # Company profile management
+│       ├── settings.js     # Billing, notifications, team, security settings
+│       ├── ui.js           # Theme toggling, mobile menu, dropdowns
+│       └── utils.js        # Utility helpers (escapeHtml, validation, etc.)
 ├── data/
 │   ├── test_data.json      # Mock companies, tenders, AI recommendations
 │   ├── cpv_codes.json      # EU Common Procurement Vocabulary (8,000+ codes)
@@ -53,16 +72,18 @@ tender-scout/
 │   ├── VISION.md           # Product vision & roadmap
 │   ├── REQUIREMENTS.md     # User stories, wireframes, functional specs
 │   ├── DATABASE.md         # Data model (conceptual, logical, physical)
-│   └── DESIGNGUIDE.md      # Design system & component library
+│   ├── DESIGNGUIDE.md      # Design system & component library
+│   └── SQL/                # SQL migration scripts for Supabase
 ├── workers/
 │   └── simap_sync/         # SIMAP tender synchronization worker
 │       ├── simap_sync.py   # Main sync script
 │       ├── requirements.txt
 │       └── README.md
 ├── assets/                 # Banner images and marketing materials
-└── research/
-    ├── MARKET.md           # Swiss procurement market analysis
-    └── Swiss Public Procurement Market.MD
+├── research/
+│   ├── MARKET.md           # Swiss procurement market analysis
+│   └── Swiss Public Procurement Market.MD
+└── LICENSE.md              # Apache 2.0 license
 ```
 
 ## Features
