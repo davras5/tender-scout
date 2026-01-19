@@ -79,6 +79,23 @@
                 <div id="nav-cta-auth">
                     <button class="btn btn-ghost btn-sm" onclick="logout()">Abmelden</button>
                 </div>
+                <!-- Mobile Theme Toggle -->
+                <button class="mobile-theme-toggle" onclick="toggleTheme()" title="Dunkelmodus umschalten" aria-label="Dunkelmodus umschalten">
+                    <svg class="theme-icon-light" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"/>
+                        <line x1="12" y1="1" x2="12" y2="3"/>
+                        <line x1="12" y1="21" x2="12" y2="23"/>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                        <line x1="1" y1="12" x2="3" y2="12"/>
+                        <line x1="21" y1="12" x2="23" y2="12"/>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                    </svg>
+                    <svg class="theme-icon-dark" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                    </svg>
+                </button>
                 <!-- Mobile Menu Toggle -->
                 <button class="mobile-menu-toggle" onclick="toggleMobileMenu()" aria-label="Menü öffnen">
                     <svg class="menu-icon-open" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -140,47 +157,32 @@
                     Abmelden
                 </button>
             </div>
-        </nav>
 
-        <div class="mobile-menu-footer">
             <!-- Language Selection -->
-            <div class="mobile-menu-pref-section">
-                <span class="mobile-menu-pref-label">Sprache</span>
-                <div class="mobile-menu-pref-list">
-                    <button class="mobile-menu-pref-option is-active" onclick="selectLang('DE'); updateMobileLangSelection('DE')" data-lang="DE">
-                        <span class="mobile-menu-pref-radio"></span>
-                        Deutsch
-                    </button>
-                    <button class="mobile-menu-pref-option" onclick="selectLang('FR'); updateMobileLangSelection('FR')" data-lang="FR">
-                        <span class="mobile-menu-pref-radio"></span>
-                        Français
-                    </button>
-                    <button class="mobile-menu-pref-option" onclick="selectLang('IT'); updateMobileLangSelection('IT')" data-lang="IT">
-                        <span class="mobile-menu-pref-radio"></span>
-                        Italiano
-                    </button>
-                    <button class="mobile-menu-pref-option" onclick="selectLang('EN'); updateMobileLangSelection('EN')" data-lang="EN">
-                        <span class="mobile-menu-pref-radio"></span>
-                        English
-                    </button>
+            <div id="mobile-nav-lang" class="mobile-menu-section">
+                <div class="mobile-menu-pref-section">
+                    <span class="mobile-menu-pref-label">Sprache</span>
+                    <div class="mobile-menu-pref-list">
+                        <button class="mobile-menu-pref-option is-active" onclick="selectLang('DE'); updateMobileLangSelection('DE')" data-lang="DE">
+                            <span class="mobile-menu-pref-radio"></span>
+                            Deutsch
+                        </button>
+                        <button class="mobile-menu-pref-option" onclick="selectLang('FR'); updateMobileLangSelection('FR')" data-lang="FR">
+                            <span class="mobile-menu-pref-radio"></span>
+                            Français
+                        </button>
+                        <button class="mobile-menu-pref-option" onclick="selectLang('IT'); updateMobileLangSelection('IT')" data-lang="IT">
+                            <span class="mobile-menu-pref-radio"></span>
+                            Italiano
+                        </button>
+                        <button class="mobile-menu-pref-option" onclick="selectLang('EN'); updateMobileLangSelection('EN')" data-lang="EN">
+                            <span class="mobile-menu-pref-radio"></span>
+                            English
+                        </button>
+                    </div>
                 </div>
             </div>
-
-            <!-- Theme Selection -->
-            <div class="mobile-menu-pref-section">
-                <span class="mobile-menu-pref-label">Darstellung</span>
-                <div class="mobile-menu-pref-list">
-                    <button class="mobile-menu-pref-option is-active" onclick="setTheme('light'); updateMobileThemeSelection()" data-theme="light">
-                        <span class="mobile-menu-pref-radio"></span>
-                        Hell
-                    </button>
-                    <button class="mobile-menu-pref-option" onclick="setTheme('dark'); updateMobileThemeSelection()" data-theme="dark">
-                        <span class="mobile-menu-pref-radio"></span>
-                        Dunkel
-                    </button>
-                </div>
-            </div>
-        </div>
+        </nav>
     </div>
 
     <!-- VIEWS -->

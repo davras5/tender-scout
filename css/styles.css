@@ -998,6 +998,51 @@ textarea.input-md {
     display: block;
 }
 
+/* Mobile Theme Toggle */
+.mobile-theme-toggle {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    background: none;
+    border: none;
+    color: var(--color-text-primary);
+    cursor: pointer;
+    border-radius: var(--radius-md);
+    transition: background var(--duration-fast) var(--ease-out);
+    position: relative;
+}
+
+.mobile-theme-toggle:hover {
+    background: var(--color-bg-subtle);
+}
+
+.mobile-theme-toggle .theme-icon-light,
+.mobile-theme-toggle .theme-icon-dark {
+    position: absolute;
+    transition: opacity var(--duration-fast) var(--ease-out);
+}
+
+/* Light theme - show sun icon */
+[data-theme="light"] .mobile-theme-toggle .theme-icon-light {
+    opacity: 1;
+}
+
+[data-theme="light"] .mobile-theme-toggle .theme-icon-dark {
+    opacity: 0;
+}
+
+/* Dark theme - show moon icon */
+[data-theme="dark"] .mobile-theme-toggle .theme-icon-light {
+    opacity: 0;
+}
+
+[data-theme="dark"] .mobile-theme-toggle .theme-icon-dark {
+    opacity: 1;
+}
+
 /* Mobile Menu Backdrop */
 .mobile-menu-backdrop {
     position: fixed;
@@ -1249,6 +1294,7 @@ textarea.input-md {
     #nav-cta-auth {
         display: none;
     }
+    .mobile-theme-toggle,
     .mobile-menu-toggle {
         display: flex;
     }
