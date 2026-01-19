@@ -1219,14 +1219,17 @@ class SimapSyncWorker:
     # -------------------------------------------------------------------------
     def update_tender_statuses(self) -> None:
         """
-        Update tender statuses based on deadlines.
+        Update tender statuses based on pub_type and deadlines.
 
         Status transitions:
-        - open -> closing_soon (7 days before deadline)
-        - closing_soon -> closed (after deadline)
+        1. pub_type-based (takes precedence):
+           - award/cancellation/revocation -> closed (tender process is complete)
+        2. deadline-based:
+           - open -> closing_soon (7 days before deadline)
+           - closing_soon -> closed (after deadline)
 
-        Note: This only updates tenders that have a deadline set.
-        Many SIMAP tenders don't include deadline in the search results.
+        Note: Many SIMAP tenders don't include deadline in the search results,
+        but pub_type is always available and reliably indicates closure.
         """
         if self.dry_run:
             logger.info("[DRY RUN] Would update tender statuses")
@@ -1236,7 +1239,18 @@ class SimapSyncWorker:
         closing_soon_threshold = now + timedelta(days=CLOSING_SOON_DAYS)
 
         try:
-            # Mark as closing_soon (deadline within 7 days but not yet passed)
+            # 1. Mark as closed based on pub_type (award, cancellation, revocation)
+            # These pub_types indicate the tender process is complete
+            closed_pub_types = ["award", "cancellation", "revocation"]
+            self.supabase.table("tenders").update({
+                "status": "closed",
+                "status_changed_at": now.isoformat(),
+            }).in_("status", ["open", "closing_soon"]).in_(
+                "pub_type", closed_pub_types
+            ).execute()
+
+            # 2. Mark as closing_soon (deadline within 7 days but not yet passed)
+            # Only for tenders that aren't already closed by pub_type
             self.supabase.table("tenders").update({
                 "status": "closing_soon",
                 "status_changed_at": now.isoformat(),
@@ -1244,7 +1258,7 @@ class SimapSyncWorker:
                 "deadline", closing_soon_threshold.isoformat()
             ).gte("deadline", now.isoformat()).execute()
 
-            # Mark as closed (deadline has passed)
+            # 3. Mark as closed (deadline has passed)
             self.supabase.table("tenders").update({
                 "status": "closed",
                 "status_changed_at": now.isoformat(),

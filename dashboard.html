@@ -1433,10 +1433,13 @@
                 let offset = 0;
 
                 while (offset < totalCount) {
-                    // Update progress
-                    const loaded = Math.min(offset, totalCount);
-                    const percent = totalCount > 0 ? Math.round((loaded / totalCount) * 100) : 0;
-                    updateLoadingProgress(`Loading ${loaded.toLocaleString()} / ${totalCount.toLocaleString()} tenders (${percent}%)`);
+                    // Update progress (show after first batch is loaded)
+                    if (offset > 0) {
+                        const percent = totalCount > 0 ? Math.round((offset / totalCount) * 100) : 0;
+                        updateLoadingProgress(`Loading ${offset.toLocaleString()} / ${totalCount.toLocaleString()} tenders (${percent}%)`);
+                    } else {
+                        updateLoadingProgress(`Loading tenders...`);
+                    }
 
                     // Load next batch
                     const { data: batchData, error: batchError } = await supabaseClient
@@ -1653,6 +1656,10 @@
                 charts[canvasId].destroy();
             }
 
+            // Detect dark mode for grid color
+            const isDarkMode = document.documentElement.dataset.theme === 'dark';
+            const gridColor = isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)';
+
             charts[canvasId] = new Chart(ctx, {
                 type: 'bar',
                 data: {
@@ -1681,7 +1688,7 @@
                         },
                         y: {
                             beginAtZero: true,
-                            grid: { color: 'rgba(0,0,0,0.05)' },
+                            grid: { color: gridColor },
                             ticks: { font: { size: 11 } }
                         }
                     },
@@ -1796,7 +1803,7 @@
             }
 
             tbody.innerHTML = pageData.map((tender, idx) => `
-                <tr onclick="openTenderDetail('${tender.external_id}')" title="Click to open on SIMAP">
+                <tr data-external-id="${escapeHtml(tender.external_id || '')}" title="Click to open on SIMAP">
                     <td>${start + idx + 1}</td>
                     ${columns.map(col => `
                         <td title="${escapeHtml(getPlainValue(tender[col.key], col))}">
@@ -1805,6 +1812,15 @@
                     `).join('')}
                 </tr>
             `).join('');
+
+            // Add click handlers via event delegation (safer than inline onclick)
+            tbody.querySelectorAll('tr[data-external-id]').forEach(row => {
+                row.style.cursor = 'pointer';
+                row.addEventListener('click', () => {
+                    const externalId = row.dataset.externalId;
+                    if (externalId) openTenderDetail(externalId);
+                });
+            });
         }
 
         function updateTableInfo() {
@@ -2360,6 +2376,10 @@
             const next = current === 'dark' ? 'light' : 'dark';
             document.documentElement.dataset.theme = next;
             localStorage.setItem('theme', next);
+            // Re-render charts to update colors for new theme
+            if (allTenders.length > 0) {
+                updateCharts();
+            }
         }
 
         // ========================================
