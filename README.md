@@ -30,6 +30,8 @@ python -m http.server 8000
 - **Frontend:** Pure HTML5, CSS3, JavaScript (ES6+)
 - **No dependencies:** Zero npm packages, no build step
 - **Mobile-first:** Responsive design with dark mode support
+- **Worker:** Python 3.9+ for SIMAP tender synchronization
+- **External APIs:** SIMAP v1/v2 (Swiss public procurement)
 - **Planned Backend:** Supabase (PostgreSQL + Auth), Stripe payments
 
 ## Project Structure
@@ -39,10 +41,10 @@ tender-scout/
 ├── index.html              # Single-page application (8 views)
 ├── README.md
 ├── css/
-│   ├── styles.css          # Core styles (~2,600 lines)
+│   ├── styles.css          # Core styles (~3,500 lines)
 │   └── tokens.css          # Design system tokens
 ├── js/
-│   └── script.js           # Application logic (~1,370 lines)
+│   └── script.js           # Application logic (~1,600 lines)
 ├── data/
 │   ├── test_data.json      # Mock companies, tenders, AI recommendations
 │   ├── cpv_codes.json      # EU Common Procurement Vocabulary (8,000+ codes)
@@ -52,6 +54,12 @@ tender-scout/
 │   ├── REQUIREMENTS.md     # User stories, wireframes, functional specs
 │   ├── DATABASE.md         # Data model (conceptual, logical, physical)
 │   └── DESIGNGUIDE.md      # Design system & component library
+├── workers/
+│   └── simap_sync/         # SIMAP tender synchronization worker
+│       ├── simap_sync.py   # Main sync script
+│       ├── requirements.txt
+│       └── README.md
+├── assets/                 # Banner images and marketing materials
 └── research/
     ├── MARKET.md           # Swiss procurement market analysis
     └── Swiss Public Procurement Market.MD
@@ -70,14 +78,62 @@ tender-scout/
 - Settings (billing, profile, notifications, team, security tabs)
 - Dark/light theme toggle with system preference detection
 - Language selector UI (DE/FR/IT/EN)
+- **SIMAP Sync Worker** - Automated tender synchronization from SIMAP API
 
 ### Planned
 - Supabase backend integration
 - Real Zefix API connection
-- SIMAP/TED tender aggregation
+- TED tender aggregation (EU expansion)
 - Stripe payment processing
 - Email notifications
 - i18n (actual language switching)
+
+## SIMAP Sync Worker
+
+The `workers/simap_sync/` directory contains a Python worker that fetches tender data from the Swiss SIMAP public procurement portal.
+
+### Installation
+
+```bash
+cd workers/simap_sync
+pip install -r requirements.txt
+```
+
+### Usage
+
+```bash
+# Dry run (preview without database writes)
+python simap_sync.py --dry-run --days 7
+
+# Full sync with Supabase
+python simap_sync.py \
+  --supabase-url $SUPABASE_URL \
+  --supabase-key $SUPABASE_KEY \
+  --days 7
+
+# Limit for testing
+python simap_sync.py --dry-run --limit 10 --verbose
+```
+
+### Key Options
+
+| Option | Description |
+|--------|-------------|
+| `--days N` | Fetch publications from last N days |
+| `--type TYPE` | Filter by project type (construction, service, supply) |
+| `--limit N` | Max tenders to fetch (for testing) |
+| `--dry-run` | Preview without database writes |
+| `--skip-details` | Skip fetching publication details |
+| `--verbose` | Enable debug logging |
+
+### Scheduling
+
+```bash
+# Cron (daily at 6 AM)
+0 6 * * * cd /path/to/workers/simap_sync && python simap_sync.py --days 7
+```
+
+See `workers/simap_sync/README.md` for complete documentation.
 
 ## Documentation
 
